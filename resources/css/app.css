@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+a {
+    color: inherit;
+}
+
+.collapse.show {
+    visibility: visible;
+}
+
+.header-container {
+    background: linear-gradient(315deg, #1270E3 0%, #59C2FF 100%);
+}
