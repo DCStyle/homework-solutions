@@ -18,7 +18,7 @@
     <link href="https://fonts.bunny.net/css?family=Roboto" rel="stylesheet">
 
     <!-- Scripts -->
-    @vite(['resources/sass/app.scss', 'resources/js/app.js'])
+    @vite(['resources/js/app.js'])
 </head>
 <body class="bg-gray-100">
     <div id="app">
