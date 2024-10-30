@@ -13,3 +13,37 @@ a {
 .header-container {
     background: linear-gradient(315deg, #1270E3 0%, #59C2FF 100%);
 }
+
+@media only screen and (min-width: 1200px) {
+    .container {
+        max-width:1200px;
+    }
+}
+
+.js-category-toggle-button {
+    &.collapsed {
+        .active {
+            display: none;
+        }
+    }
+
+    &:not(.collapsed) {
+        .inactive {
+            display: none;
+        }
+    }
+}
+
+.category-container {
+    position: relative;
+
+    .category-arrow {
+        background-position: 0 0;
+        background-repeat: no-repeat;
+        width: 114px;
+        height: 18px;
+        position: absolute;
+        top: -17px;
+        right: 5.5%;
+    }
+}

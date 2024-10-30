@@ -24,9 +24,6 @@ class HomeController extends Controller
      */
     public function index()
     {
-        // Fetch only parent categories with their children
-        $categories = Category::whereNull('parent_id')->with('children')->get();
-
-        return view('home', compact('categories'));
+        return view('home');
     }
 }

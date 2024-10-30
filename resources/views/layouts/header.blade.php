@@ -1,4 +1,4 @@
-<nav class="sticky top-0 shadow-md header-container text-white">
+<nav class="sticky top-0 shadow-md header-container text-white z-10">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
@@ -7,11 +7,21 @@
                         {{ config('app.name', 'Laravel') }}
                     </a>
                 </div>
+
+                <div class="hidden ml-6 items-center gap-3 xl:flex">
+                    @foreach($categories as $category)
+                        @if($loop->index < 12)
+                            <a href="{{ route('categories.show', $category->slug) }}" class="text-md border-b-2 border-transparent hover:border-white">
+                                {{ $category->name }}
+                            </a>
+                        @endif
+                    @endforeach
+                </div>
             </div>
 
             <!-- Right Side Of Navbar -->
             <div class="flex items-center">
-                <div class="hidden space-x-4 sm:-my-px sm:ml-10 sm:flex sm:items-center">
+                <div class="hidden items-center xl:flex">
                     @guest
                         @if (Route::has('login'))
                             <a href="{{ route('login') }}" class="flex items-center gap-x-1 text-decoration-none">
@@ -59,6 +69,10 @@
                             </a>
                         @endif
                     @endguest
+                </div>
+
+                <div class="flex items-center xl:hidden">
+                    <span class="iconify text-2xl text-white cursor-pointer" data-icon="mdi-view-grid" data-bs-toggle="modal" data-bs-target="#mobile-category-modal"></span>
                 </div>
             </div>
         </div>

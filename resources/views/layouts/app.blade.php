@@ -32,11 +32,13 @@
             @yield('content')
         </main>
 
+        @include('modals.mobile-category-modal')
+
         <!-- Include the Footer -->
         @include('layouts.footer')
     </div>
 
     <!-- Include external scripts -->
-    @include('layouts.externalScripts');
+    @include('layouts.externalScripts')
 </body>
 </html>
