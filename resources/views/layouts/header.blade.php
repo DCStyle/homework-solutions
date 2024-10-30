@@ -49,6 +49,12 @@
                             </a>
 
                             <div class="bg-white dropdown-menu dropdown-menu-end z-10" aria-labelledby="navbarDropdown">
+                                @if(Auth::user()->isAdmin())
+                                    <a class="dropdown-item text-decoration-none" href="{{ route('admin.dashboard') }}">
+                                        {{ __('Admin Dashboard') }}
+                                    </a>
+                                @endif
+
                                 <a class="dropdown-item text-decoration-none" href="{{ route('logout') }}"
                                    onclick="event.preventDefault();
                                                      document.getElementById('logout-form').submit();">
@@ -60,14 +66,6 @@
                                 </form>
                             </div>
                         </div>
-
-                        <!-- Check if the user is an admin and display the admin button -->
-                        @if(Auth::user()->isAdmin())
-                            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-x-1 text-decoration-none text-white py-1 px-3 rounded-lg">
-                                <span class="iconify" data-icon="mdi-view-dashboard"></span>
-                                {{ __('Admin Dashboard') }}
-                            </a>
-                        @endif
                     @endguest
                 </div>
 
