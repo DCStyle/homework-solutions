@@ -11,6 +11,19 @@ class Book extends Model
     use HasFactory;
     use Sluggable;
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function($book)
+        {
+            if ($book->forceDeleting) {
+                $book->chapters()->detach();
+                $book->posts()->detach();
+            }
+        });
+    }
+
     protected $table = 'books';
 
     protected $fillable = ['name', 'slug', 'description', 'book_group_id'];

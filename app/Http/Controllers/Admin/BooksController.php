@@ -96,7 +96,7 @@ class BooksController extends Controller
     {
         $book = Book::where('slug', $slug)->firstOrFail();
 
-        $chapters = $book->chapters()->get();
+        $chapters = $book->chapters()->get()->sortBy('created_at');
 
         return view('admin.chapters.index', compact('book', 'chapters'));
     }

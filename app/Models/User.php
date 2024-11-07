@@ -12,6 +12,18 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function($user)
+        {
+            if ($user->forceDeleting) {
+                $user->roles()->detach();
+            }
+        });
+    }
+
     /**
      * The attributes that are mass assignable.
      *

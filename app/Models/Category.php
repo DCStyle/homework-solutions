@@ -11,6 +11,18 @@ class Category extends Model
     use HasFactory;
     use Sluggable;
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function($category)
+        {
+            if ($category->forceDeleting) {
+                $category->bookGroups()->delete();
+            }
+        });
+    }
+
     protected $fillable = ['name', 'slug', 'parent_id', 'description'];
 
     public function sluggable(): array
@@ -34,6 +46,6 @@ class Category extends Model
 
     public function bookGroups()
     {
-        return $this->hasMany(BookGroup::class);
+        return $this->hasMany(BookGroup::class)->orderByDesc('created_at');
     }
 }

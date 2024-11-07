@@ -25,13 +25,13 @@ Auth::routes();
 Route::get('/categories/{category_slug}.html', [App\Http\Controllers\CategoriesController::class, 'show'])->name('categories.show');
 
 // Book groups
-Route::get('/book-groups/{group_slug}.html', [App\Http\Controllers\BookGroupsController::class, 'show'])->name('bookGroups.show');
+//Route::get('/book-groups/{group_slug}.html', [App\Http\Controllers\BookGroupsController::class, 'show'])->name('bookGroups.show');
 
 // Books
 Route::get('/books/{group_slug}.html', [App\Http\Controllers\BooksController::class, 'show'])->name('books.show');
 
 // Book chapters
-Route::get('/book-chapters/{chapter_slug}.html', [App\Http\Controllers\BookChaptersController::class, 'show'])->name('bookChapters.show');
+//Route::get('/book-chapters/{chapter_slug}.html', [App\Http\Controllers\BookChaptersController::class, 'show'])->name('bookChapters.show');
 
 // Posts
 Route::get('/posts/{post_slug}.html', [PostsController::class, 'show'])->name('posts.show');

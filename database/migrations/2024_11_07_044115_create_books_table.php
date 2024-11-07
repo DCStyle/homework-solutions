@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('slug')->unique();
-            $table->longText('description')->nullable();
-            $table->foreignId('category_id')->constrained()->onDelete('cascade');
+            $table->string('description')->nullable();
+            $table->foreignId('book_group_id')->constrained('book_groups')->onDelete('cascade');
             $table->timestamps();
         });
     }

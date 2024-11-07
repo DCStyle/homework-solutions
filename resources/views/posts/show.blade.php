@@ -15,9 +15,15 @@
                 <li class="breadcrumb-item"><a title="{{ __('Home') }}" href="{{ route('home') }}">{{ __('Home') }}</a></li>
                 <li class="breadcrumb-item"><a title="{{ $post->chapter->book->group->category->name }}" href="{{ route('categories.show', $post->chapter->book->group->category->slug) }}">{{ $post->chapter->book->group->category->name }}</a></li>
                 <li class="breadcrumb-item"><a title="{{ $post->chapter->book->name }}" href="{{ route('books.show', $post->chapter->book->slug) }}">{{ $post->chapter->book->name }}</a></li>
-                <li class="breadcrumb-item"><a title="{{ $post->chapter->name }}" href="{{ route('bookChapters.show', $post->chapter->slug) }}">{{ $post->chapter->name }}</a></li>
             </ol>
         </nav>
+
+        <div class="mt-4 bg-white p-4 text-md text-green-700 border shadow-md">
+            <h2 class="text-xl">{!! "Hướng dẫn học bài: <b>$post->title</b>.
+                    Đây là sách giáo khoa nằm trong bộ sách <b>'{$post->chapter->book->name}'</b> được biên soạn theo chương trình đổi mới của Bộ giáo dục.
+                    Hi vọng, với cách hướng dẫn cụ thể và giải chi tiết các bé sẽ nắm bài học tốt hơn."
+            !!}</h2>
+        </div>
 
         <div class="mt-4">
             {!! $post->content !!}
