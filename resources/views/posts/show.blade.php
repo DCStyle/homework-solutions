@@ -53,7 +53,7 @@
             </div>
         </div>
 
-        <div class="mx-auto p-6 min-w-0 max-xl:p-4 max-md:p2">
+        <div class="mx-auto p-6 min-w-0 w-full max-xl:p-4 max-md:p2">
             <h1 class="text-2xl font-bold text-orange-400 py-2 border-b-2 border-b-blue-800">
                 <a title="{{ $post->title }}" href="{{ route('posts.show', $post->slug) }}">
                     [{{ $post->chapter->book->name }}]

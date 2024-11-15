@@ -6,7 +6,7 @@
 
 @section('content')
     <div class="flex justify-between">
-        <div class="mx-auto p-6 min-w-0 max-xl:p-4 max-md:p2">
+        <div class="mx-auto p-6 w-full min-w-0 max-xl:p-4 max-md:p2">
             <h1 class="text-2xl font-bold text-orange-400 py-2 border-b-2 border-b-blue-800">
                 {{ $category->name }}
             </h1>
@@ -18,11 +18,18 @@
                 </ol>
             </nav>
 
-            @if(strlen($category->description))
-                <div class="mt-4 bg-white p-4 text-md text-green-700 border shadow-md">
-                    <h2>{{ $category->description }}</h2>
-                </div>
-            @endif
+            <div class="mt-4 bg-white p-4 text-md text-green-700 border shadow-md">
+                <h2 class="text-xl">
+                    {!! ($category->description && strlen(trim($category->description)) > 0)
+                        ? $category->description
+                        : "Soạn bài, giải bài tập tất cả các môn học <b class='text-black'>$category->name</b>.
+                           Cách trình bày dễ hiểu, khoa học.
+                           Các em học sinh, thầy cô giáo muốn xem môn học nào thì click vào môn học đó để xem.
+                           Để tìm các bài soạn, bài giải <b class='text-black'>$category->name</b> trên mạng.
+                           Hãy gõ vào ô tìm kiếm google dòng chữ: Soạn <b>$category->name</b> <b class='underline'><a href='" . url('/') . "'>" . config('app.name', 'Laravel') . "</a></b>."
+                    !!}
+                </h2>
+            </div>
 
             <div class="mt-8">
                 <div class="p-2 border">
