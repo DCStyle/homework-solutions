@@ -82,7 +82,7 @@
                         <div class="category-container bg-white p-4 border-2 border-blue-600 rounded-md">
                             <div class="category-arrow" style="background-image: url('{{ asset('images/shapen.png') }}')"></div>
 
-                            <div class="grid gap-4 md:{{ $category->bookGroups->count() >= 3 ? 'grid-cols-3' : 'grid-cols-2' }}">
+                            <div class="grid gap-4 md:grid-cols-3">
                                 @foreach($category->bookGroups as $group)
                                     <div>
                                         <h3 class="text-xl font-bold text-gray-700 inline-flex items-center py-2 mb-2 border-b-2 border-orange-400">

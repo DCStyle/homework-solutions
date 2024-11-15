@@ -76,17 +76,22 @@ class PostController extends Controller
         // Check if Post exists
         $existingPost = Post::where('title', $postTitle)->where('book_chapter_id', $bookChapter->id)->first();
         if ($existingPost) {
-            return response()->json(['message' => 'Post already exists'], 409); // Conflict response if post exists
+            // Update existing Post
+            $existingPost->update([
+                'content' => $content
+            ]);
+
+            return response()->json(['success' => 'Post updated successfully']);
+        } else {
+            // Create new Post
+            $post = Post::create([
+                'title' => $postTitle,
+                'content' => $content,
+                'user_id' => 1, // Default user ID or adjust as needed
+                'book_chapter_id' => $bookChapter->id,
+            ]);
+
+            return response()->json(['success' => 'Post created successfully']);
         }
-
-        // Create new Post
-        $post = Post::create([
-            'title' => $postTitle,
-            'content' => $content,
-            'user_id' => 1, // Default user ID or adjust as needed
-            'book_chapter_id' => $bookChapter->id,
-        ]);
-
-        return response()->json(['success' => 'Post created successfully']);
     }
 }

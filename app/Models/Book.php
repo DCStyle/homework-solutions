@@ -44,7 +44,7 @@ class Book extends Model
 
     public function chapters()
     {
-        return $this->hasMany(BookChapter::class);
+        return $this->hasMany(BookChapter::class)->orderBy('name');
     }
 
     public function posts()

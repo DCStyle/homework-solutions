@@ -41,6 +41,6 @@ class BookGroup extends Model
 
     public function books()
     {
-        return $this->hasMany(Book::class)->orderByDesc('created_at');
+        return $this->hasMany(Book::class)->orderBy('name');
     }
 }
