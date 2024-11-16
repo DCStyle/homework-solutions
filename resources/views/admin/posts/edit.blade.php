@@ -45,7 +45,14 @@
         tinymce.init({
             selector: '#message',
             plugins: 'lists link image table',
-            toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image table',
+            external_plugins: {'mathjax': "{{ asset('js/tinymce/plugins/mathjax/plugin.min.js') }}"},
+            toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image table mathjax',
+            mathjax: {
+                lib: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js', //required path to mathjax
+                //symbols: {start: '\\(', end: '\\)'}, //optional: mathjax symbols
+                //className: "math-tex", //optional: mathjax element class
+                configUrl: "{{ asset('js/tinymce/plugins/mathjax/config.js') }}" //optional: mathjax config js
+            },
             height: 300,
             license_key: 'gpl'
         });

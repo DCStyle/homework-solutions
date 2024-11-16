@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('pageTitle')
-    {{ $book->name }} |
+    {{ $book->group->category->name . ' - ' . $book->group->name . ' - ' .$book->name }} |
 @endsection
 
 @section('content')
@@ -60,7 +60,7 @@
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a title="{{ __('Home') }}" href="{{ route('home') }}">{{ __('Home') }}</a></li>
                     <li class="breadcrumb-item"><a title="{{ $book->group->category->name }}" href="{{ route('categories.show', $book->group->category->slug) }}">{{ $book->group->category->name }}</a></li>
-                    <li class="breadcrumb-item"><a title="{{ $book->name }}" href="{{ route('books.show', $book->slug) }}">{{ $book->name }}</a></li>
+                    <li class="breadcrumb-item"><a title="{{ $book->name }}" href="{{ route('books.show', $book->slug) }}" class="font-bold text-orange-400">{{ $book->group->name . ' ' . $book->group->category->name . ' - ' . $book->name }}</a></li>
                 </ol>
             </nav>
 

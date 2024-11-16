@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('pageTitle')
-    {{ $post->title }} |
+    {{ $post->chapter->book->name . ' - ' . $post->title }} |
 @endsection
 
 @section('content')
@@ -65,14 +65,14 @@
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a title="{{ __('Home') }}" href="{{ route('home') }}">{{ __('Home') }}</a></li>
                     <li class="breadcrumb-item"><a title="{{ $post->chapter->book->group->category->name }}" href="{{ route('categories.show', $post->chapter->book->group->category->slug) }}">{{ $post->chapter->book->group->category->name }}</a></li>
-                    <li class="breadcrumb-item"><a title="{{ $post->chapter->book->name }}" href="{{ route('books.show', $post->chapter->book->slug) }}">{{ $post->chapter->book->name }}</a></li>
-                    <li class="breadcrumb-item"><a title="{{ $post->title }}" href="{{ route('posts.show', $post->slug) }}" class="text-orange-400">{{ $post->title }}</a></li>
+                    <li class="breadcrumb-item"><a title="{{ $post->chapter->book->name }}" href="{{ route('books.show', $post->chapter->book->slug) }}">{{ $post->chapter->book->group->name . ' ' . $post->chapter->book->group->category->name . ' - ' . $post->chapter->book->name }}</a></li>
+                    <li class="breadcrumb-item"><a title="{{ $post->title }}" href="{{ route('posts.show', $post->slug) }}" class="font-bold text-orange-400">{{ $post->title }}</a></li>
                 </ol>
             </nav>
 
             <div class="mt-4 bg-white p-4 text-md text-green-700 border shadow-md">
-                <h2 class="text-xl">{!! "Hướng dẫn học bài: <b>$post->title</b>.
-                    Đây là sách giáo khoa nằm trong bộ sách <b>'{$post->chapter->book->name}'</b> được biên soạn theo chương trình đổi mới của Bộ giáo dục.
+                <h2 class="text-xl">{!! "Hướng dẫn học bài: <b>$post->title - {$post->chapter->book->group->name} {$post->chapter->book->group->category->name}</b>.
+                    Đây là sách giáo khoa nằm trong bộ sách <b>'{$post->chapter->book->name} {$post->chapter->book->group->category->name}'</b> được biên soạn theo chương trình đổi mới của Bộ giáo dục.
                     Hi vọng, với cách hướng dẫn cụ thể và giải chi tiết các bé sẽ nắm bài học tốt hơn."
             !!}</h2>
             </div>
@@ -112,4 +112,6 @@
 
         @include('layouts.sidebar-right')
     </div>
+
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 @endsection
