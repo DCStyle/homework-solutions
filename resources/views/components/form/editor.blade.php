@@ -4,20 +4,20 @@
 </textarea>
 
 <!-- Include TinyMCE from the public folder -->
-<script src="{{ asset('js/image-upload.js') }}"></script>
-<script src="{{ asset('js/tinymce/tinymce.min.js') }}"></script>
+<script src="{{ secure_asset('js/image-upload.js') }}"></script>
+<script src="{{ secure_asset('js/tinymce/tinymce.min.js') }}"></script>
 <script>
     tinymce.init({
         selector: '#{{ $name }}',
         plugins: 'lists link image table',
         smart_paste: true,
         external_plugins: {
-            'mathjax': "{{ asset('js/tinymce/plugins/mathjax/plugin.min.js') }}"
+            'mathjax': "{{ secure_asset('js/tinymce/plugins/mathjax/plugin.min.js') }}"
         },
         toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image table mathjax',
         mathjax: {
             lib: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js',
-            configUrl: "{{ asset('js/tinymce/plugins/mathjax/config.js') }}"
+            configUrl: "{{ secure_asset('js/tinymce/plugins/mathjax/config.js') }}"
         },
         height: 900,
         license_key: 'gpl',
