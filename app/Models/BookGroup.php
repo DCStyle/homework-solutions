@@ -25,6 +25,12 @@ class BookGroup extends Model
 
     protected $fillable = ['name', 'slug', 'description', 'category_id'];
 
+    public function getDescriptionSnippet($length = 100)
+    {
+        $description = html_entity_decode(strip_tags($this->description));
+        return strlen($description) > $length ? substr($description, 0, $length) . '...' : $description;
+    }
+
     public function sluggable(): array
     {
         return [

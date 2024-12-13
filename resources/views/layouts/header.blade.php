@@ -21,7 +21,7 @@
 
             <!-- Right Side Of Navbar -->
             <div class="flex items-center">
-                <div class="hidden items-center xl:flex">
+                <div class="hidden items-center space-x-4 xl:flex">
                     @guest
                         @if (Route::has('login'))
                             <a href="{{ route('login') }}" class="flex items-center gap-x-1 text-decoration-none">
@@ -67,6 +67,15 @@
                             </div>
                         </div>
                     @endguest
+
+                    <div class="max-w-sm">
+                        <button type="button"
+                                class="flex items-center gap-x-1 text-decoration-none"
+                                data-bs-toggle="modal"
+                                data-bs-target="#search-modal">
+                            <span class="iconify text-2xl" data-icon="mdi-magnify"></span>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="flex items-center xl:hidden">

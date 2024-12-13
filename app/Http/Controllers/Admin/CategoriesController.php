@@ -13,7 +13,7 @@ class CategoriesController extends Controller
 {
     public function index()
     {
-        $categories = Category::whereNull('parent_id')->with('children')->get();
+        $categories = Category::whereNull('parent_id')->get();
 
         return view('admin.categories.index', compact('categories'));
     }
@@ -21,82 +21,59 @@ class CategoriesController extends Controller
     // Display category creation view
     public function create()
     {
-        $categories = Category::whereNull('parent_id')->with('children')->get();
-        return view('admin.categories.create', compact('categories'));
+        $categories = Category::whereNull('parent_id')->get();
+        return view('admin.categories.form', compact('categories'));
     }
 
     // Store the new category in the database
     public function store(Request $request)
     {
         // Validate the request
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'parent_id' => 'nullable|exists:categories,id', // Ensure parent exists if provided
         ]);
 
         // Create the new category
-        Category::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'parent_id' => $request->parent_id,
-        ]);
+        Category::create($validated);
 
         // Redirect back to the form or another page
-        return redirect()->route('admin.categories.index')->with('success', 'Category created successfully.');
+        return redirect()->route('admin.categories.index')->with('success', 'Thêm danh mục thành công.');
     }
 
     // Display the form for editing a category
-    public function edit($slug)
+    public function edit($id)
     {
         // Find the category by slug
-        $category = Category::where('slug', $slug)->firstOrFail();
+        $category = Category::whereId($id)->firstOrFail();
 
-        $categories = Category::whereNull('parent_id')->with('children')->get(); // For parent category selection
+        $categories = Category::whereNull('parent_id')->get();
 
-        return view('admin.categories.edit', compact('category', 'categories'));
+        return view('admin.categories.form', compact('category', 'categories'));
     }
 
     // Handle the update of the category
-    public function update(Request $request, $slug)
+    public function update(Request $request, $id)
     {
-        $category = Category::where('slug', $slug)->firstOrFail();
+        $category = Category::whereId($id)->firstOrFail();
 
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'required|string',
+            'slug' => 'required|string|max:255|unique:categories,slug,' . $category->id,
             'description' => 'nullable|string',
-            'parent_id' => 'nullable|exists:categories,id',
         ]);
 
-        $category->update([
-            'name' => $request->name,
-            'slug' => $request->slug,
-            'description' => $request->description,
-            'parent_id' => $request->parent_id,
-        ]);
+        $category->update($validated);
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully.');
-    }
-
-    // Display category delete view
-    public function delete($slug)
-    {
-        $category = Category::where('slug', $slug)->firstOrFail();
-
-        return view('admin_layouts.delete', [
-            'confirmLink' => route('admin.categories.destroy', $category->slug),
-            'name' => $category->name,
-            'backLink' => route('admin.categories.index'),
-        ]);
+        return redirect()->route('admin.categories.index')->with('success', 'Cập nhật danh mục thành công.');
     }
 
     // Handle category destroy
-    public function destroy($slug)
+    public function destroy($id)
     {
-        $category = Category::where('slug', $slug)->firstOrFail();
+        $category = Category::whereId($id)->firstOrFail();
         $category->delete();
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category deleted successfully.');
+        return redirect()->route('admin.categories.index')->with('success', 'Xóa danh mục thành công.');
     }
 }

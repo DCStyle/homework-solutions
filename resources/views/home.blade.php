@@ -56,19 +56,19 @@
 
             <div class="md:rounded-lg md:p-4 md:bg-gray-200">
                 @foreach ($categories as $category)
-                    <div class="flex items-center gap-2 bg-white p-2 mb-2 shadow-md border-b-2 border-orange-400 md:gap-4 md:p-4">
+                    <div class="flex items-center gap-2 bg-white p-2 mb-2 shadow-md border-b-2 border-orange-400 md:gap-4 md:p-4 collapsed"
+                         data-bs-toggle="collapse" href="#category-collapse-{{ $category->id }}" role="button" aria-expanded="false" aria-controls="collapseExample"
+                    >
                         <span class="iconify text-2xl" data-icon="mdi-school"></span>
 
                         <p class="block text-xl font-medium text-gray-800 md:text-2xl md:font-bold">
                             {{ $category->name }}
                         </p>
 
-                        <a class="ml-auto px-2 py-1 rounded-full bg-blue-500 text-white font-medium text-sm js-category-toggle-button w-[160px] text-center collapsed hover:bg-blue-600 md:px-4 md:py-2 md:text-md"
-                           data-bs-toggle="collapse" href="#category-collapse-{{ $category->id }}" role="button" aria-expanded="false" aria-controls="collapseExample"
+                        <a class="ml-auto px-2 py-1 rounded-full bg-blue-500 text-white font-medium text-sm js-category-toggle-button w-[160px] text-center hover:bg-blue-600 md:px-4 md:py-2 md:text-md"
                         >
                             <span class="inactive inline-flex items-center">
-                                {{ __('View more') }}
-
+                                Xem thêm
                                 <span class="iconify text-2xl" data-icon="mdi-chevron-right"></span>
                             </span>
 
@@ -171,4 +171,8 @@
             </div>
         </div>
     </div>
+
+    @isset($articles)
+        @include('articles.latest', ['articles' => $articles, 'hasMore' => true])
+    @endisset
 @endsection

@@ -1,12 +1,11 @@
 @extends('layouts.app')
 
-@section('pageTitle')
-    {{ $post->chapter->book->name . ' - ' . $post->title }} |
-@endsection
+@seo(['title' => $post->chapter->book->name . ' - ' . $post->title])
+@seo(['description' => $post->getContentSnippet()])
 
 @section('content')
     <div class="flex justify-between">
-        <div class="sidebar-left-content w-[320px] h-full  flex-shrink-0 flex-grow-0 max-xl:w-[280px] max-md:hidden">
+        <div class="sidebar-left-content w-[320px] h-auto flex-shrink-0 flex-grow-0 max-xl:w-[280px] max-md:hidden">
             <div class="sticky top-10 bg-white border shadow-md">
                 <div class="p-4 text-md border-b border-b-gray-300">
                     <h2 class="text-xl text-orange-400 font-bold">
@@ -90,7 +89,7 @@
                     <div class="grid gap-4 md:grid-cols-2">
                         @foreach($post->chapter->book->group->category->bookGroups as $group)
                             <div>
-                                <h3 class="text-xl font-medium text-blue-800">{{ $group->name }}</h3>
+                                <h3 class="text-xl font-medium text-orange-400">{{ $group->name }}</h3>
 
                                 <div class="py-4 flex flex-col gap-2 border-dashed border-blue-600">
                                     @foreach($group->books as $book)
@@ -113,5 +112,20 @@
         @include('layouts.sidebar-right')
     </div>
 
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script
+        type="text/javascript"
+        id="MathJax-script"
+        async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
 @endsection

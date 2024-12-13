@@ -8,86 +8,67 @@ use App\Models\Category;
 use App\Models\Book;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class BookGroupsController extends Controller
 {
     public function index()
     {
-        $groups = BookGroup::all()->sortBy('category_id');
+        $groups = BookGroup::orderBy('category_id')->paginate(20);
 
         return view('admin.bookGroups.index', compact('groups'));
     }
 
     public function create()
     {
-        $categories = Category::whereNull('parent_id')->with('children')->get();
+        $categories = Category::whereNull('parent_id')->get();
 
-        return view('admin.bookGroups.create', compact('categories'));
+        return view('admin.bookGroups.form', compact('categories'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
         ]);
 
-        BookGroup::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'category_id' => $request->category_id,
-        ]);
+        BookGroup::create($validated);
 
-        return redirect()->route('admin.bookGroups.index')->with('success', 'Book group created successfully.');
+        return redirect()->route('admin.bookGroups.index')->with('success', 'Môn học đã được thêm thành công.');
     }
 
-    public function edit($slug)
+    public function edit($id)
     {
-        $group = BookGroup::where('slug', $slug)->firstOrFail();
+        $group = BookGroup::whereId($id)->firstOrFail();
 
-        $categories = Category::whereNull('parent_id')->with('children')->get();
+        $categories = Category::whereNull('parent_id')->get();
 
-        return view('admin.bookGroups.edit', compact('group', 'categories'));
+        return view('admin.bookGroups.form', compact('group', 'categories'));
     }
 
-    public function update(Request $request, $slug)
+    public function update(Request $request, $id)
     {
-        $group = BookGroup::where('slug', $slug)->firstOrFail();
+        $group = BookGroup::whereId($id)->firstOrFail();
 
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'slug' => 'required|string',
+            'slug' => 'required|string|max:255|unique:book_groups,slug,' . $group->id,
             'category_id' => 'required|exists:categories,id',
         ]);
 
-        $group->update([
-            'name' => $request->name,
-            'description' => $request->description,
-            'slug' => $request->slug,
-            'category_id' => $request->category_id,
-        ]);
+        $group->update($validated);
 
-        return redirect()->route('admin.bookGroups.index')->with('success', 'Book group updated successfully.');
+        return redirect()->route('admin.bookGroups.index')->with('success', 'Môn học đã được cập nhật thành công.');
     }
 
-    public function delete($slug)
+    public function destroy($id)
     {
-        $group = BookGroup::where('slug', $slug)->firstOrFail();
-
-        return view('admin_layouts.delete', [
-            'confirmLink' => route('admin.bookGroups.destroy', $group->slug),
-            'name' => $group->name,
-            'backLink' => route('admin.bookGroups.index'),
-        ]);
-    }
-
-    public function destroy($slug)
-    {
-        $group = BookGroup::where('slug', $slug)->firstOrFail();
+        $group = BookGroup::whereId($id)->firstOrFail();
         $group->delete();
 
-        return redirect()->route('admin.bookGroups.index')->with('success', 'Book group deleted successfully.');
+        return redirect()->route('admin.bookGroups.index')->with('success', 'Môn học đã được xóa thành công.');
     }
 }

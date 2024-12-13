@@ -3,97 +3,97 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Article;
 use App\Models\BookChapter;
 use App\Models\BookGroup;
 use App\Models\Category;
 use App\Models\Book;
+use App\Models\Image;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class BookChaptersController extends Controller
 {
-    public function edit($slug)
+    public function edit($id)
     {
-        $chapter = BookChapter::where('slug', $slug)->firstOrFail();
+        $chapter = BookChapter::whereId($id)->firstOrFail();
         $book = $chapter->book;
 
         $books = Book::all()->sortBy('category_id');
 
-        return view('admin.chapters.edit', compact('chapter', 'book', 'books'));
+        return view('admin.chapters.form', compact('chapter', 'book', 'books'));
     }
 
-    public function update(Request $request, $slug)
+    public function update(Request $request, $id)
     {
-        $chapter = BookChapter::where('slug', $slug)->firstOrFail();
+        $chapter = BookChapter::whereId($id)->firstOrFail();
 
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string',
         ]);
 
-        $chapter->update([
-            'name' => $request->name,
-            'slug' => $request->slug
-        ]);
+        $chapter->update($validated);
 
-        return redirect()->route('admin.books.chapters', $chapter->book->slug)->with('success', 'Book chapter updated successfully.');
+        return redirect()->route('admin.books.chapters', $chapter->book->id)->with('success', 'Cập nhật chương sách thành công.');
     }
 
-    public function delete($slug)
+    public function destroy($id)
     {
-        $chapter = BookChapter::where('slug', $slug)->firstOrFail();
-
-        return view('admin_layouts.delete', [
-            'confirmLink' => route('admin.bookChapters.destroy', $chapter->slug),
-            'name' => $chapter->name,
-            'backLink' => route('admin.books.chapters', $chapter->book->slug),
-        ]);
-    }
-
-    public function destroy($slug)
-    {
-        $chapter = BookChapter::where('slug', $slug)->firstOrFail();
+        $chapter = BookChapter::whereId($id)->firstOrFail();
 
         $book = $chapter->book;
 
         $chapter->delete();
 
-        return redirect()->route('admin.books.chapters', $book->slug)->with('success', 'Book chapter deleted successfully.');
+        return redirect()->route('admin.books.chapters', $book->id)->with('success', 'Xóa chương sách thành công.');
     }
 
-    public function posts($slug)
+    public function posts($id)
     {
-        $chapter = BookChapter::where('slug', $slug)->firstOrFail();
+        $chapter = BookChapter::whereId($id)->firstOrFail();
 
-        $posts = Post::where('book_chapter_id', $chapter->id)->orderBy('created_at')->get();
+        $posts = Post::where('book_chapter_id', $chapter->id)->orderBy('created_at')->paginate(50);
 
         return view('admin.posts.index', compact('chapter', 'posts'));
     }
 
-    public function createPost($slug)
+    public function createPost($id)
     {
-        $chapter = BookChapter::where('slug', $slug)->firstOrFail();
+        $chapter = BookChapter::whereId($id)->firstOrFail();
 
-        return view('admin.posts.create', compact('chapter'));
+        return view('admin.posts.form', compact('chapter'));
     }
 
-    public function storePost(Request $request, $slug)
+    public function storePost(Request $request, $id)
     {
-        $chapter = BookChapter::where('slug', $slug)->firstOrFail();
+        $chapter = BookChapter::whereId($id)->firstOrFail();
 
         $request->validate([
             'title' => 'required|string|max:255',
             'message' => 'required|string',
         ]);
 
-        Post::create([
+        $post = Post::create([
             'title' => $request->title,
             'content' => $request->message, // HTML content from TinyMCE
             'book_chapter_id' => $chapter->id,
             'user_id' => Auth::id(),
         ]);
 
-        return redirect()->route('admin.bookChapters.posts', $slug)->with('success', 'Post created successfully.');
+        // Attach uploaded images
+        if ($request->has('uploaded_image_ids')) {
+            $imageIds = json_decode($request->uploaded_image_ids, true);
+            if (is_array($imageIds)) {
+                Image::whereIn('id', $imageIds)
+                    ->update([
+                        'imageable_id' => $post->id,
+                        'imageable_type' => Post::class
+                    ]);
+            }
+        }
+
+        return redirect()->route('admin.bookChapters.posts', $id)->with('success', 'Tạo bài viết thành công.');
     }
 }

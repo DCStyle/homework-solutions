@@ -13,6 +13,21 @@ class Post extends Model
 
     protected $fillable = ['title', 'content', 'user_id', 'slug', 'book_chapter_id'];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($post) {
+            $post->images()->delete();
+        });
+    }
+
+    public function getContentSnippet($length = 100)
+    {
+        $content = html_entity_decode(strip_tags($this->content));
+        return strlen($content) > $length ? substr($content, 0, $length) . '...' : $content;
+    }
+
     public function sluggable(): array
     {
         return [
@@ -35,5 +50,10 @@ class Post extends Model
     public function chapter()
     {
         return $this->belongsTo(BookChapter::class, 'book_chapter_id');
+    }
+
+    public function images()
+    {
+        return $this->morphMany(Image::class, 'imageable');
     }
 }

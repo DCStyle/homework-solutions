@@ -4,15 +4,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <x-seo::meta />
+
     @include('layouts.externalStylesheets')
 
     @vite('resources/css/app.css')
+    @vite('resource/css/loigiaihay.css')
 
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>
-        @yield('pageTitle') {{ config('app.name', 'Laravel') }}
+        {{ config('app.name', 'Laravel') }}
     </title>
 
     <!-- Fonts -->
@@ -37,6 +40,8 @@
         <!-- Include the Footer -->
         @include('layouts.footer')
     </div>
+
+    <x-modal-search :is-admin="false" />
 
     <!-- Include external scripts -->
     @include('layouts.externalScripts')

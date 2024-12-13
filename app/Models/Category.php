@@ -25,6 +25,12 @@ class Category extends Model
 
     protected $fillable = ['name', 'slug', 'parent_id', 'description'];
 
+    public function getDescriptionSnippet($length = 100)
+    {
+        $description = html_entity_decode(strip_tags($this->description));
+        return strlen($description) > $length ? substr($description, 0, $length) . '...' : $description;
+    }
+
     public function sluggable(): array
     {
         return [
@@ -46,6 +52,6 @@ class Category extends Model
 
     public function bookGroups()
     {
-        return $this->hasMany(BookGroup::class)->orderByDesc('created_at');
+        return $this->hasMany(BookGroup::class)->orderBy('created_at');
     }
 }

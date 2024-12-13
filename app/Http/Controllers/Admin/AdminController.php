@@ -9,11 +9,20 @@ class AdminController extends Controller
 {
     public function index()
     {
-        $categoryCount = \App\Models\Category::count();
-        $postCount = \App\Models\Post::count();
         $userCount = \App\Models\User::count();
+        $categoryCount = \App\Models\Category::count();
+        $groupCount = \App\Models\BookGroup::count();
         $bookCount = \App\Models\Book::count();
+        $chapterCount = \App\Models\BookChapter::count();
+        $postCount = \App\Models\Post::count();
 
-        return view('admin.dashboard', compact('categoryCount', 'postCount', 'userCount', 'bookCount'));
+        return view('admin.dashboard', compact(
+            'categoryCount',
+            'groupCount',
+            'chapterCount',
+            'postCount',
+            'userCount',
+            'bookCount'
+        ));
     }
 }

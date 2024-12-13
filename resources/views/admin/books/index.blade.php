@@ -6,59 +6,78 @@
             @include('layouts.message-success', ['message' => session('success')])
         @endif
 
-        <h2 class="text-3xl font-bold mb-6">Books</h2>
+        <h1 class="text-3xl font-bold mb-4">Tất cả sách</h1>
 
-        @if(count($books) > 0)
-            <div class="w-full overflow-x-auto">
-                <div class="min-w-[1170px]">
-                    <!-- table header start -->
-                    <div class="grid grid-cols-12 rounded-t-[10px] bg-primary px-5 py-4 lg:px-7.5 2xl:px-11">
-                        <div class="col-span-3">
-                            <h5 class="font-medium text-white">{{ __('Name') }}</h5>
-                        </div>
-                        <div class="col-span-4">
-                            <h5 class="font-medium text-white">{{ __('Description') }}</h5>
-                        </div>
-                        <div class="col-span-2">
-                            <h5 class="font-medium text-white">{{ __('Created at') }}</h5>
-                        </div>
-                        <div class="col-span-2">
-                            <h5 class="font-medium text-white">{{ __('Updated at') }}</h5>
-                        </div>
-                        <div class="col-span-1">
-                            <h5 class="text-right font-medium text-white">{{ __('Edit') }}</h5>
-                        </div>
-                    </div>
-                    <!-- table header end -->
-
-                    <!-- table body start -->
-                    <div class="bg-white rounded-b-[10px]">
-                        <?php $currentGroup = null ?>
-
-                        @foreach($books as $book)
-                            @if($currentGroup == null || $book->group->id !== $currentGroup->id)
-                                <?php $currentGroup = $book->group ?>
-
-                                <div class="grid grid-cols-12 border-t border-[#EEEEEE] px-5 py-4 lg:px-7.5 2xl:px-11">
-                                    <div class="col-span-12">
-                                        <b class="text-primary">
-                                            [{{ $book->group->category->name  }}]
-                                            {{ $currentGroup->name }}
-                                        </b>
-                                    </div>
-                                </div>
-                            @endif
-
-                            @include('admin.books.book-row', ['book' => $book])
-                        @endforeach
-                    </div>
-                    <!-- table body end -->
-                </div>
+        <div class="mb-6 flex justify-end">
+            <div class="max-w-xl w-full">
+                <x-search-bar
+                    model="Book"
+                    route-name="admin.books"
+                    :search-fields="['name', 'description']"
+                    placeholder="Nhập tên sách..."
+                    :is-admin="true"
+                />
             </div>
-        @else
-            @include('layouts.message-info', ['message' => "Books are empty!"])
-        @endif
+        </div>
+
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>Tên</th>
+                <th>Mô tả</th>
+                <th class="text-center">Chương</th>
+                <th class="text-center">Hành động</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if(count($books))
+                <?php $currentGroup = null ?>
+
+                @foreach($books as $book)
+                    @if($currentGroup == null || $book->group->id !== $currentGroup->id)
+                        <?php $currentGroup = $book->group ?>
+
+                        <tr>
+                            <td colspan="4">
+                                <b class="text-primary">
+                                    [{{ $book->group->category->name  }}]
+                                    {{ $currentGroup->name }}
+                                </b>
+                            </td>
+                        </tr>
+                    @endif
+
+                    <tr>
+                        <td>{{ $book->name }}</td>
+                        <td>@include('layouts.string-snippet', ['string' => $book->description, 'snippet' => 100])</td>
+                        <td class="text-center">
+                            {{ $book->chapters->count() }}
+                        </td>
+                        <td class="text-center">
+                            <a href="{{ route('admin.books.chapters', $book->id) }}" class="btn btn-info btn-sm">
+                                Xem chương
+                            </a>
+
+                            <a href="{{ route('admin.books.edit', $book->id) }}" class="btn btn-warning btn-sm">Sửa</a>
+
+                            <form action="{{ route('admin.books.destroy', $book->id) }}" method="POST" class="d-inline">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xoá?')">Xoá</button>
+                            </form>
+                        </td>
+                    </tr>
+                @endforeach
+            @else
+                <tr>
+                    <td colspan="4">Hiện chưa có cuốn sách nào</td>
+                </tr>
+            @endif
+            </tbody>
+        </table>
     </div>
+
+    {{ $books->links() }}
 
     @include('layouts.floating-button-right', ['link' => route('admin.books.create')])
 @endsection

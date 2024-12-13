@@ -3,62 +3,71 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Article;
 use App\Models\Category;
+use App\Models\Image;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class PostsController extends Controller
 {
-    public function edit($slug)
+    public function edit($id)
     {
-        $post = Post::where('slug', $slug)->firstOrFail();
+        $post = Post::whereId($id)->firstOrFail();
 
         $chapter = $post->chapter;
 
-        return view('admin.posts.edit', compact('post', 'chapter'));
+        return view('admin.posts.form', compact('post', 'chapter'));
     }
 
-    public function update(Request $request, $slug)
+    public function update(Request $request, $id)
     {
-        $post = Post::where('slug', $slug)->firstOrFail();
+        $post = Post::whereId($id)->firstOrFail();
 
-        $request->validate([
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
             'message' => 'required|string',
-            'slug' => 'required|string',
+            'slug' => 'required|string|max:255|unique:posts,slug,' . $post->id,
         ]);
 
-        $post->update([
-            'title' => $request->title,
-            'message' => $request->message,
-            'slug' => $request->slug,
-        ]);
+        $post->update($validated);
 
-        return redirect()->route('admin.bookChapters.posts', $post->chapter->slug)->with('success', 'Post updated successfully.');
-    }
+        // Update image associations
+        if ($request->has('uploaded_image_ids')) {
+            $imageIds = json_decode($request->uploaded_image_ids, true);
+            if (is_array($imageIds)) {
+                // Attach new images
+                Image::whereIn('id', $imageIds)
+                    ->update([
+                        'imageable_id' => $post->id,
+                        'imageable_type' => Post::class
+                    ]);
 
-    // Display post delete view
-    public function delete($slug)
-    {
-        $post = Post::where('slug', $slug)->firstOrFail();
+                // Delete removed images
+                $post->images()
+                    ->whereNotIn('id', $imageIds)
+                    ->get()
+                    ->each(function($image) {
+                        Storage::disk('public')->delete($image->path);
+                        $image->delete();
+                    });
+            }
+        }
 
-        return view('admin_layouts.delete', [
-            'confirmLink' => route('admin.posts.destroy', $post->slug),
-            'name' => $post->title,
-            'backLink' => route('admin.bookChapters.posts', $post->chapter->slug),
-        ]);
+        return redirect()->route('admin.bookChapters.posts', $post->chapter->id)->with('success', 'Cập nhật bài viết thành công.');
     }
 
     // Handle post destroy
-    public function destroy($slug)
+    public function destroy($id)
     {
-        $post = Post::where('slug', $slug)->firstOrFail();
+        $post = Post::whereId($id)->firstOrFail();
 
         $chapter = $post->chapter;
 
         $post->delete();
 
-        return redirect()->route('admin.bookChapters.posts', $chapter->slug)->with('success', 'Post deleted successfully.');
+        return redirect()->route('admin.bookChapters.posts', $chapter->$id)->with('success', 'Xóa bài viết thành công.');
     }
 }

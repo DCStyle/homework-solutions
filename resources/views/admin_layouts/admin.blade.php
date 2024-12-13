@@ -7,6 +7,7 @@
     @include('layouts.externalStylesheets')
 
     @vite('resources/css/app.css')
+    @vite('resources/css/admin.css')
 
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">

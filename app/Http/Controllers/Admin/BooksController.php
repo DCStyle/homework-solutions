@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\SearchController;
 use App\Models\BookChapter;
 use App\Models\BookGroup;
 use App\Models\Category;
@@ -14,7 +15,7 @@ class BooksController extends Controller
 {
     public function index()
     {
-        $books = Book::all()->sortBy('book_group_id');
+        $books = Book::orderBy('book_group_id')->paginate(50);
 
         return view('admin.books.index', compact('books'));
     }
@@ -23,94 +24,74 @@ class BooksController extends Controller
     {
         $groups = BookGroup::all()->sortBy('category_id');
 
-        return view('admin.books.create', compact('groups'));
+        return view('admin.books.form', compact('groups'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'group_id' => 'required|exists:book_groups,id',
         ]);
 
-        Book::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'book_group_id' => $request->group_id,
-        ]);
+        Book::create($validated);
 
-        return redirect()->route('admin.books.index')->with('success', 'Book created successfully.');
+        return redirect()->route('admin.books.index')->with('success', 'Thêm sách thành công.');
     }
 
-    public function edit($slug)
+    public function edit($id)
     {
-        $book = Book::where('slug', $slug)->firstOrFail();
+        $book = Book::whereId($id)->firstOrFail();
 
         $groups = BookGroup::all()->sortBy('category_id');
 
-        return view('admin.books.edit', compact('book', 'groups'));
+        return view('admin.books.form', compact('book', 'groups'));
     }
 
-    public function update(Request $request, $slug)
+    public function update(Request $request, $id)
     {
-        $book = Book::where('slug', $slug)->firstOrFail();
+        $book = Book::whereId($id)->firstOrFail();
 
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'slug' => 'required|string',
+            'slug' => 'required|string|max:255|unique:books,slug,' . $book->id,
             'group_id' => 'required|exists:book_groups,id',
         ]);
 
-        $book->update([
-            'name' => $request->name,
-            'description' => $request->description,
-            'slug' => $request->slug,
-            'book_group_id' => $request->group_id,
-        ]);
+        $book->update($validated);
 
-        return redirect()->route('admin.books.index')->with('success', 'Book updated successfully.');
+        return redirect()->route('admin.books.index')->with('success', 'Cập nhật sách thành công.');
     }
 
-    public function delete($slug)
+    public function destroy($id)
     {
-        $book = Book::where('slug', $slug)->firstOrFail();
-
-        return view('admin_layouts.delete', [
-            'confirmLink' => route('admin.books.destroy', $book->slug),
-            'name' => $book->name,
-            'backLink' => route('admin.books.index'),
-        ]);
-    }
-
-    public function destroy($slug)
-    {
-        $book = Book::where('slug', $slug)->firstOrFail();
+        $book = Book::whereId($id)->firstOrFail();
         $book->delete();
 
-        return redirect()->route('admin.books.index')->with('success', 'Book deleted successfully.');
+        return redirect()->route('admin.books.index')->with('success', 'Xóa sách thành công.');
     }
 
-    public function chapters($slug)
+    public function chapters($id)
     {
-        $book = Book::where('slug', $slug)->firstOrFail();
+        $book = Book::whereId($id)->firstOrFail();
 
         $chapters = $book->chapters()->get()->sortBy('created_at');
 
         return view('admin.chapters.index', compact('book', 'chapters'));
     }
 
-    public function createChapter($slug)
+    public function createChapter($id)
     {
-        $book = Book::where('slug', $slug)->firstOrFail();
+        $book = Book::whereId($id)->firstOrFail();
 
-        return view('admin.chapters.create', compact('book'));
+        return view('admin.chapters.form', compact('book'));
     }
 
-    public function storeChapter(Request $request, $slug)
+    public function storeChapter(Request $request, $id)
     {
-        $book = Book::where('slug', $slug)->firstOrFail();
+        $book = Book::whereId($id)->firstOrFail();
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -121,6 +102,6 @@ class BooksController extends Controller
             'book_id' => $book->id
         ]);
 
-        return redirect()->route('admin.books.chapters', $slug)->with('success', 'Book chapter created successfully.');
+        return redirect()->route('admin.books.chapters', $id)->with('success', 'Thêm chương sách thành công.');
     }
 }
