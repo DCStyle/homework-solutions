@@ -29,8 +29,8 @@ class ReplaceContentUrls extends Command
     {
         $this->info('Starting URL replacement...');
 
-        $searchStrings = [''];
-        $stringToReplace = '';
+        $searchStrings = ['https://img./'];
+        $stringToReplace = 'https://img.loigiaihay.com/';
 
         try {
             foreach ($this->models as $model => $fields) {

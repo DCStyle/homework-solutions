@@ -112,6 +112,35 @@
         @include('layouts.sidebar-right')
     </div>
 
+    <!-- Temporary fix for not-working images -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get all images on the page
+            const images = document.getElementsByTagName('img');
+
+            // Function to try replacing image extension
+            function tryUpperCaseExtension(img) {
+                if (img.src.toLowerCase().endsWith('.jpg')) {
+                    // Replace with uppercase extension
+                    img.src = img.src.replace(/\.jpg$/i, '.JPG');
+                }
+            }
+
+            // Check each image
+            Array.from(images).forEach(img => {
+                // Add error event listener to handle load failures
+                img.addEventListener('error', function() {
+                    tryUpperCaseExtension(this);
+                });
+
+                // Also check currently broken images
+                if (!img.complete || img.naturalHeight === 0) {
+                    tryUpperCaseExtension(img);
+                }
+            });
+        });
+    </script>
+
     <script>
         MathJax = {
             tex: {
@@ -122,6 +151,7 @@
             }
         };
     </script>
+
     <script
         type="text/javascript"
         id="MathJax-script"
