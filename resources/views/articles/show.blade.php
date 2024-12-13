@@ -37,7 +37,7 @@
             </div>
 
             <div class="mt-4">
-                <div class="flex items center justify-between space-x-4">
+                <div class="flex flex-wrap whitespace-nowrap items center space-x-1">
                     @foreach($article->tags as $tag)
                         <span class="bg-gray-100 text-gray-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded">
                             {{ $tag->name }}
