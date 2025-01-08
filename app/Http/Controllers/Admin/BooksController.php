@@ -15,7 +15,12 @@ class BooksController extends Controller
 {
     public function index()
     {
-        $books = Book::orderBy('book_group_id')->paginate(50);
+        $books = Book::join('book_groups', 'books.book_group_id', '=', 'book_groups.id')
+            ->join('categories', 'book_groups.category_id', '=', 'categories.id')
+            ->orderBy('categories.id')
+            ->orderBy('book_groups.id')
+            ->select('books.*')
+            ->paginate(200);
 
         return view('admin.books.index', compact('books'));
     }

@@ -5,6 +5,7 @@ namespace App\Models;
 use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Book extends Model
 {
@@ -50,7 +51,21 @@ class Book extends Model
 
     public function chapters()
     {
-        return $this->hasMany(BookChapter::class)->orderBy('name');
+        return $this->hasMany(BookChapter::class)
+            ->orderByRaw("
+            CASE
+                WHEN name REGEXP '^Tuần (\\d+)' THEN
+                    CAST(REGEXP_REPLACE(name, '^Tuần (\\d+).*$', '\\1') AS UNSIGNED)
+                WHEN name REGEXP 'Tiết (\\d+)' THEN
+                    CAST(REGEXP_REPLACE(name, 'Tiết (\\d+).*$', '\\1') AS UNSIGNED)
+                WHEN name REGEXP '^Bài (\\d+)' THEN
+                    CAST(REGEXP_REPLACE(name, '^Bài (\\d+).*$', '\\1') AS UNSIGNED)
+                WHEN name REGEXP '.*trang (\\d+)' THEN
+                    CAST(REGEXP_REPLACE(REGEXP_REPLACE(name, '.*trang (\\d+).*', '\\1'), '[^0-9]', '') AS UNSIGNED)
+                ELSE NULL
+            END,
+            name
+        ");
     }
 
     public function posts()

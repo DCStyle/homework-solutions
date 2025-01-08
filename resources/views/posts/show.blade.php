@@ -112,31 +112,20 @@
         @include('layouts.sidebar-right')
     </div>
 
-    <!-- Temporary fix for not-working images -->
+    <!-- Temporary fix for broken images -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Get all images on the page
-            const images = document.getElementsByTagName('img');
-
-            // Function to try replacing image extension
-            function tryUpperCaseExtension(img) {
-                if (img.src.toLowerCase().endsWith('.jpg')) {
-                    // Replace with uppercase extension
-                    img.src = img.src.replace(/\.jpg$/i, '.JPG');
+            function handleImageError(img) {
+                if (img.src.match(/\.(jpg|png)$/i)) {
+                    const extension = img.src.match(/\.(jpg|png)$/i)[0];
+                    const newSrc = img.src.replace(/\.(jpg|png)$/i, extension.toUpperCase()) + '?t=' + Date.now();
+                    img.src = newSrc;
                 }
             }
 
-            // Check each image
-            Array.from(images).forEach(img => {
-                // Add error event listener to handle load failures
-                img.addEventListener('error', function() {
-                    tryUpperCaseExtension(this);
-                });
-
-                // Also check currently broken images
-                if (!img.complete || img.naturalHeight === 0) {
-                    tryUpperCaseExtension(img);
-                }
+            document.querySelectorAll('img').forEach(img => {
+                img.removeEventListener('error', handleImageError);
+                img.addEventListener('error', handleImageError, { once: true });
             });
         });
     </script>
