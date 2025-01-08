@@ -116,7 +116,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             function handleImageError(img) {
-                if (img.src.match(/\.(jpg|png)$/i)) {
+                // Check if img.src exists and matches jpg or png
+                if (img && img.src && img.src.match(/\.(jpg|png)$/i)) {
                     const extension = img.src.match(/\.(jpg|png)$/i)[0];
                     const newSrc = img.src.replace(/\.(jpg|png)$/i, extension.toUpperCase()) + '?t=' + Date.now();
                     img.src = newSrc;
@@ -124,8 +125,12 @@
             }
 
             document.querySelectorAll('img').forEach(img => {
+                // Remove existing error listeners to prevent multiple attachments
                 img.removeEventListener('error', handleImageError);
-                img.addEventListener('error', handleImageError, { once: true });
+                // Add new error listener
+                img.addEventListener('error', function() {
+                    handleImageError(this);
+                }, { once: true });
             });
         });
     </script>
