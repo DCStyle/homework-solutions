@@ -128,12 +128,12 @@
             }
 
             document.querySelectorAll('img').forEach(img => {
-                img.removeEventListener('error', handleImageFallback);
-                img.addEventListener('error', function() {
-                    handleImageFallback(this);
-                }, { once: true });
-
+                // Only add error listener and check for fallback if image hasn't loaded
                 if (!img.complete || img.naturalHeight === 0) {
+                    img.addEventListener('error', function() {
+                        handleImageFallback(this);
+                    }, { once: true });
+
                     handleImageFallback(img);
                 }
             });
