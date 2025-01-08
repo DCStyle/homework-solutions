@@ -116,24 +116,28 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             function handleImageFallback(img) {
-                if (img.src.match(/\.(jpg|png)$/i)) {
-                    const extension = img.src.match(/\.(jpg|png)$/i)[0];
-                    if (!img.src.endsWith(extension.toUpperCase())) {
-                        const newSrc = img.src.replace(/\.(jpg|png)$/i, extension.toUpperCase()) + '?t=' + Date.now();
-                        if (newSrc !== img.src) {
-                            img.src = newSrc;
+                return new Promise((resolve) => {
+                    const tempImg = new Image();
+                    tempImg.onload = () => resolve(false);
+                    tempImg.onerror = () => {
+                        if (img.src.match(/\.(jpg|png)$/i)) {
+                            const extension = img.src.match(/\.(jpg|png)$/i)[0];
+                            if (!img.src.endsWith(extension.toUpperCase())) {
+                                const newSrc = img.src.replace(/\.(jpg|png)$/i, extension.toUpperCase()) + '?t=' + Date.now();
+                                if (newSrc !== img.src) {
+                                    img.src = newSrc;
+                                }
+                            }
                         }
-                    }
-                }
+                        resolve(true);
+                    };
+                    tempImg.src = img.src;
+                });
             }
 
             document.querySelectorAll('img').forEach(img => {
-                // Only add error listener and check for fallback if image hasn't loaded
+                // Only check images that might be unloaded
                 if (!img.complete || img.naturalHeight === 0) {
-                    img.addEventListener('error', function() {
-                        handleImageFallback(this);
-                    }, { once: true });
-
                     handleImageFallback(img);
                 }
             });
