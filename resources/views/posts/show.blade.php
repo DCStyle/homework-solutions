@@ -115,22 +115,27 @@
     <!-- Temporary fix for broken images -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            function handleImageError(img) {
-                // Check if img.src exists and matches jpg or png
-                if (img && img.src && img.src.match(/\.(jpg|png)$/i)) {
+            function handleImageFallback(img) {
+                if (img.src.match(/\.(jpg|png)$/i)) {
                     const extension = img.src.match(/\.(jpg|png)$/i)[0];
-                    const newSrc = img.src.replace(/\.(jpg|png)$/i, extension.toUpperCase()) + '?t=' + Date.now();
-                    img.src = newSrc;
+                    if (!img.src.endsWith(extension.toUpperCase())) {
+                        const newSrc = img.src.replace(/\.(jpg|png)$/i, extension.toUpperCase()) + '?t=' + Date.now();
+                        if (newSrc !== img.src) {
+                            img.src = newSrc;
+                        }
+                    }
                 }
             }
 
             document.querySelectorAll('img').forEach(img => {
-                // Remove existing error listeners to prevent multiple attachments
-                img.removeEventListener('error', handleImageError);
-                // Add new error listener
+                img.removeEventListener('error', handleImageFallback);
                 img.addEventListener('error', function() {
-                    handleImageError(this);
+                    handleImageFallback(this);
                 }, { once: true });
+
+                if (!img.complete || img.naturalHeight === 0) {
+                    handleImageFallback(img);
+                }
             });
         });
     </script>
