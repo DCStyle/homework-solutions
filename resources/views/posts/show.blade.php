@@ -132,6 +132,14 @@
                         resolve(true);
                     };
                     tempImg.src = img.src;
+
+                    // If image still fails to load, replace with a placeholder
+                    setTimeout(() => {
+                        if (!tempImg.complete || tempImg.naturalHeight === 0) {
+                            img.src = 'https://placehold.co/600x400?text=Image+Not+Found';
+                            resolve(true);
+                        }
+                    }, 5000);
                 });
             }
 

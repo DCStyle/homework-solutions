@@ -37,7 +37,7 @@ class BooksController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'group_id' => 'required|exists:book_groups,id',
+            'book_group_id' => 'required|exists:book_groups,id',
         ]);
 
         Book::create($validated);
@@ -62,7 +62,7 @@ class BooksController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'slug' => 'required|string|max:255|unique:books,slug,' . $book->id,
-            'group_id' => 'required|exists:book_groups,id',
+            'book_group_id' => 'required|exists:book_groups,id',
         ]);
 
         $book->update($validated);

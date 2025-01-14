@@ -45,8 +45,8 @@
 
                 <!-- Book Group Dropdown -->
                 <div>
-                    <label for="group_id" class="mb-3 block text-sm font-medium text-[#1c2434]">Môn học</label>
-                    <select name="group_id" id="group_id" data-plugin-select2
+                    <label for="book_group_id" class="mb-3 block text-sm font-medium text-[#1c2434]">Môn học</label>
+                    <select name="book_group_id" id="group_id" data-plugin-select2
                             class="relative z-20 w-full appearance-none rounded border border-stroke bg-transparent py-3 pl-5 pr-12 outline-none transition focus:border-primary active:border-primary"
                     >
                         <?php $currentCategory = null ?>
