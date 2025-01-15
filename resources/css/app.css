@@ -1756,3 +1756,18 @@ ul.list_style li a {
 .list-posts li a:hover .n-arrow-hover2 img {
     -webkit-transform: translate(0,3px)
 }
+
+.solution-suggesstion, .solution-detail {
+    border-bottom: 1px solid #cccccc;
+    background: #FFF7EF;
+    padding: 10px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.mark-title-essay {
+    color: #DF7100;
+    font-weight: bold;
+    font-size: 18px;
+    margin: 5px 0;
+}

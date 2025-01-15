@@ -12,35 +12,6 @@ use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
-    public function testApi()
-    {
-        // Retrieve some basic data to confirm API is working
-
-        // Fetch a few categories
-        $categories = Category::select('id', 'name', 'slug')->take(5)->get();
-
-        // Fetch a few book groups
-        $bookGroups = BookGroup::select('id', 'name', 'slug', 'category_id')->take(5)->get();
-
-        // Fetch a few books
-        $books = Book::select('id', 'title', 'slug', 'book_group_id')->take(5)->get();
-
-        // Fetch a few book chapters
-        $bookChapters = BookChapter::select('id', 'title', 'slug', 'book_id')->take(5)->get();
-
-        // Fetch a few posts
-        $posts = Post::select('id', 'title', 'slug', 'book_chapter_id')->take(5)->get();
-
-        // Return data as JSON response
-        return response()->json([
-            'categories' => $categories,
-            'book_groups' => $bookGroups,
-            'books' => $books,
-            'book_chapters' => $bookChapters,
-            'posts' => $posts,
-        ]);
-    }
-
     public function importPostFromJSON(Request $request)
     {
         // Validate the incoming JSON structure for a single post object
@@ -81,7 +52,7 @@ class PostController extends Controller
                 'content' => $content
             ]);
 
-            return response()->json(['success' => 'Post updated successfully']);
+            return response()->json(['success' => 'Post updated successfully. URL: ' . route('posts.show', $existingPost->slug)]);
         } else {
             // Create new Post
             $post = Post::create([
@@ -91,7 +62,7 @@ class PostController extends Controller
                 'book_chapter_id' => $bookChapter->id,
             ]);
 
-            return response()->json(['success' => 'Post created successfully']);
+            return response()->json(['success' => 'Post created successfully. URL: ' . route('posts.show', $post->slug)]);
         }
     }
 }

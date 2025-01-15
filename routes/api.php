@@ -19,6 +19,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('/posts/test', [PostController::class, 'testApi']);
-
 Route::post('/posts/import', [PostController::class, 'importPostFromJSON']);
