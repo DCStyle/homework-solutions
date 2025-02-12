@@ -35,7 +35,7 @@
 
                             <a href="{{ route('admin.bookChapters.edit', $chapter->id) }}" class="btn btn-warning btn-sm">Sửa</a>
 
-                            <form action="{{ route('admin.bookChapters.destroy', $chapter->slug) }}" method="POST" class="d-inline">
+                            <form action="{{ route('admin.bookChapters.destroy', $chapter->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xoá?')">Xoá</button>
