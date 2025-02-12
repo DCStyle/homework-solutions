@@ -191,51 +191,41 @@ class ContentMirrorService
 
     private function sendRequest(string $url, array $params, string $method): \Illuminate\Http\Client\Response
     {
-        // Log original request details
-        \Log::info('Original request', [
-            'url' => $url,
-            'method' => $method,
-            'params' => $params
-        ]);
+        $proxyUrl = 'https://ketqua5s.com/?url=' . base64_encode(rtrim($url, '/'));
 
         try {
-            // Prepare proxy request
-            $proxyUrl = 'https://ketqua5s.com';
-            $encodedUrl = base64_encode(rtrim($url, '/'));
-            $fullProxyUrl = $proxyUrl . '?url=' . $encodedUrl;
-
-            // Log proxy request details
-            \Log::info('Proxy request', [
-                'proxy_url' => $proxyUrl,
-                'encoded_url' => $encodedUrl,
-                'full_proxy_url' => $fullProxyUrl
-            ]);
-
-            $proxyRequest = Http::timeout(300)
+            return Http::timeout(30)
                 ->withOptions([
-                    'verify' => false,  // Skip SSL verification if needed
-                    'connect_timeout' => 300,
+                    'verify' => false,  // Disable SSL verification if needed
+                    'connect_timeout' => 30,
+                    'timeout' => 30,
                     'http_errors' => false
-                ]);
-
-            $response = $proxyRequest->get($fullProxyUrl);
-
-            // Log response details
-            \Log::info('Proxy response', [
-                'status' => $response->status(),
-                'body_preview' => substr($response->body(), 0, 500)
-            ]);
-
-            return $response;
+                ])
+                ->withHeaders([
+                    'User-Agent' => $this->getRandomUserAgent(),
+                    'Accept' => '*/*',
+                    'Accept-Language' => 'en-US,en;q=0.9,vi;q=0.8',
+                    'Cache-Control' => 'no-cache'
+                ])
+                ->get($proxyUrl);
         } catch (\Exception $e) {
-            \Log::error('Proxy request failed', [
+            Log::error('Proxy request failed', [
                 'url' => $url,
-                'proxy_url' => $proxyUrl ?? null,
+                'proxy_url' => 'https://ketqua5s.com',
                 'error' => $e->getMessage(),
                 'error_code' => $e->getCode(),
                 'trace' => $e->getTraceAsString()
             ]);
-            throw $e;
+
+            // Retry once with different settings
+            return Http::timeout(60)
+                ->withoutVerifying()  // Disable SSL verification
+                ->withOptions([
+                    'connect_timeout' => 60,
+                    'timeout' => 60,
+                    'http_errors' => false
+                ])
+                ->get($proxyUrl);
         }
     }
 
