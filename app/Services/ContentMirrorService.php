@@ -170,44 +170,11 @@ class ContentMirrorService
 
     private function sendRequest(string $url, array $params, string $method): \Illuminate\Http\Client\Response
     {
-        $client = Http::timeout(30)
-            ->withHeaders([
-                'User-Agent' => $this->getRandomUserAgent(),
-                'Accept' => '*/*',
-                'Accept-Language' => 'en-US,en;q=0.9,vi;q=0.8',
-                'Cache-Control' => 'no-cache',
-                'Pragma' => 'no-cache',
-                'Referer' => $url,
-            ])
-            ->withOptions([
-                'verify' => false  // Skip SSL verification if needed
-            ]);
+        $proxyUrl = 'https://ketqua5s.com';
+        $encodedUrl = base64_encode(rtrim($url, '/'));
 
-        // For GET requests, append parameters to URL
-        if ($method === 'GET') {
-            // Remove any existing query string from the URL
-            $baseUrl = strtok($url, '?');
-
-            // Get existing query parameters from URL
-            $existingParams = [];
-            $urlParts = parse_url($url);
-            if (isset($urlParts['query'])) {
-                parse_str($urlParts['query'], $existingParams);
-            }
-
-            // Merge existing URL parameters with passed parameters
-            $allParams = array_merge($existingParams, $params);
-
-            return $client->get($baseUrl, $allParams);
-        }
-
-        // For POST requests, send parameters in the body
-        return $client->post(rtrim($url, '/'), [
-            'form_params' => $params,
-            'headers' => [
-                'Content-Type' => 'application/x-www-form-urlencoded; charset=UTF-8',
-            ]
-        ]);
+        $proxyRequest = Http::timeout(300);
+        return $proxyRequest->get($proxyUrl . '?url=' . $encodedUrl);
     }
 
     private function extractContent(string $html, string $selector): string
