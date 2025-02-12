@@ -191,62 +191,42 @@ class ContentMirrorService
 
     private function sendRequest(string $url, array $params, string $method): \Illuminate\Http\Client\Response
     {
-        $proxyUrl = 'https://ketqua5s.com/?url=' . base64_encode(rtrim($url, '/'));
+        // Ensure URL has scheme
+        if (!preg_match('~^(?:f|ht)tps?://~i', $url)) {
+            $url = 'https://' . $url;
+        }
+
+        // Base64 encode the full URL
+        $encodedUrl = base64_encode($url);
+        $proxyUrl = 'https://ketqua5s.com/?url=' . $encodedUrl;
+
+        Log::info('Making proxy request', [
+            'original_url' => $url,
+            'encoded_url' => $encodedUrl,
+            'proxy_url' => $proxyUrl
+        ]);
 
         try {
             return Http::timeout(30)
                 ->withOptions([
                     'verify' => false,
                     'connect_timeout' => 30,
-                    'timeout' => 30,
-                    'http_errors' => false,
-                    CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
-                    CURLOPT_DNS_USE_GLOBAL_CACHE => false,
-                    CURLOPT_FORBID_REUSE => true,
-                    CURLOPT_FRESH_CONNECT => true
+                    'timeout' => 30
                 ])
                 ->withHeaders([
                     'User-Agent' => $this->getRandomUserAgent(),
                     'Accept' => '*/*',
                     'Accept-Language' => 'en-US,en;q=0.9,vi;q=0.8',
-                    'Cache-Control' => 'no-cache',
-                    'Connection' => 'keep-alive'
+                    'Cache-Control' => 'no-cache'
                 ])
-                ->beforeSending(function ($request) {
-                    Log::info('Sending request to proxy', [
-                        'url' => $request->url(),
-                        'headers' => $request->headers()
-                    ]);
-                })
                 ->get($proxyUrl);
         } catch (\Exception $e) {
             Log::error('Proxy request failed', [
                 'url' => $url,
-                'proxy_url' => 'https://ketqua5s.com',
-                'error' => $e->getMessage(),
-                'error_code' => 0,
-                'trace' => $e->getTraceAsString()
+                'proxy_url' => $proxyUrl,
+                'error' => $e->getMessage()
             ]);
-
-            // Try alternative approach
-            try {
-                return Http::timeout(60)
-                    ->withoutVerifying()
-                    ->withOptions([
-                        CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
-                        CURLOPT_DNS_USE_GLOBAL_CACHE => false,
-                        CURLOPT_FORBID_REUSE => true,
-                        CURLOPT_FRESH_CONNECT => true
-                    ])
-                    ->get($proxyUrl);
-            } catch (\Exception $retryException) {
-                Log::error('Retry request failed', [
-                    'url' => $url,
-                    'proxy_url' => 'https://ketqua5s.com',
-                    'error' => $retryException->getMessage()
-                ]);
-                throw $retryException;
-            }
+            throw $e;
         }
     }
 
