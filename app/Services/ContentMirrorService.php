@@ -200,7 +200,7 @@ class ContentMirrorService
 
         try {
             // Prepare proxy request
-            $proxyUrl = 'https://ketqua5s.com';
+            $proxyUrl = 'https://ketqua5s.com'; // Use HTTPS
             $encodedUrl = base64_encode(rtrim($url, '/'));
             $fullProxyUrl = $proxyUrl . '?url=' . $encodedUrl;
 
@@ -213,18 +213,35 @@ class ContentMirrorService
 
             $proxyRequest = Http::timeout(300)
                 ->withOptions([
-                    'verify' => false,  // Skip SSL verification if needed
-                    'connect_timeout' => 300,
-                    'http_errors' => false
+                    'verify' => false,
+                    'connect_timeout' => 30,
+                    'http_errors' => false,
+                    'curl' => [
+                        CURLOPT_FAILONERROR => false,
+                        CURLOPT_SSL_VERIFYPEER => false,
+                        CURLOPT_SSL_VERIFYHOST => false,
+                        CURLOPT_FOLLOWLOCATION => true, // Follow redirects
+                        CURLOPT_MAXREDIRS => 5 // Maximum number of redirects to follow
+                    ]
+                ])
+                ->withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Language' => 'en-US,en;q=0.9,vi;q=0.8'
                 ]);
 
             $response = $proxyRequest->get($fullProxyUrl);
 
-            // Log response details
+            // Log response status
             \Log::info('Proxy response', [
                 'status' => $response->status(),
+                'headers' => $response->headers(),
                 'body_preview' => substr($response->body(), 0, 500)
             ]);
+
+            if ($response->status() === 301 || $response->status() === 302) {
+                \Log::info('Following redirect to: ' . $response->header('Location'));
+            }
 
             return $response;
         } catch (\Exception $e) {
