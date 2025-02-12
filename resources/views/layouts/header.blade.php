@@ -16,6 +16,10 @@
                             </a>
                         @endif
                     @endforeach
+
+                    <a href="/congcu.html" class="text-lg border-b-2 border-transparent hover:border-white">
+                        Công cụ
+                    </a>
                 </div>
             </div>
 
