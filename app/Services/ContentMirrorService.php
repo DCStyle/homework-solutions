@@ -191,27 +191,14 @@ class ContentMirrorService
 
     private function sendRequest(string $url, array $params, string $method): \Illuminate\Http\Client\Response
     {
-        // Log original request details
-        \Log::info('Original request', [
+        \Log::info('Sending request', [
             'url' => $url,
             'method' => $method,
             'params' => $params
         ]);
 
         try {
-            // Prepare proxy request
-            $proxyUrl = 'https://ketqua5s.com'; // Use HTTPS
-            $encodedUrl = base64_encode(rtrim($url, '/'));
-            $fullProxyUrl = $proxyUrl . '?url=' . $encodedUrl;
-
-            // Log proxy request details
-            \Log::info('Proxy request', [
-                'proxy_url' => $proxyUrl,
-                'encoded_url' => $encodedUrl,
-                'full_proxy_url' => $fullProxyUrl
-            ]);
-
-            $proxyRequest = Http::timeout(300)
+            $response = Http::timeout(30)
                 ->withOptions([
                     'verify' => false,
                     'connect_timeout' => 30,
@@ -220,34 +207,34 @@ class ContentMirrorService
                         CURLOPT_FAILONERROR => false,
                         CURLOPT_SSL_VERIFYPEER => false,
                         CURLOPT_SSL_VERIFYHOST => false,
-                        CURLOPT_FOLLOWLOCATION => true, // Follow redirects
-                        CURLOPT_MAXREDIRS => 5 // Maximum number of redirects to follow
+                        CURLOPT_FOLLOWLOCATION => true,
+                        CURLOPT_MAXREDIRS => 5
                     ]
                 ])
                 ->withHeaders([
-                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'User-Agent' => $this->getRandomUserAgent(),
                     'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                     'Accept-Language' => 'en-US,en;q=0.9,vi;q=0.8'
                 ]);
 
-            $response = $proxyRequest->get($fullProxyUrl);
+            // Handle different HTTP methods
+            if ($method === 'POST') {
+                $response = $response->post(rtrim($url, '/'), $params);
+            } else {
+                $response = $response->get(rtrim($url, '/'), $params);
+            }
 
-            // Log response status
-            \Log::info('Proxy response', [
+            \Log::info('Response received', [
                 'status' => $response->status(),
                 'headers' => $response->headers(),
                 'body_preview' => substr($response->body(), 0, 500)
             ]);
 
-            if ($response->status() === 301 || $response->status() === 302) {
-                \Log::info('Following redirect to: ' . $response->header('Location'));
-            }
-
             return $response;
+
         } catch (\Exception $e) {
-            \Log::error('Proxy request failed', [
+            \Log::error('Request failed', [
                 'url' => $url,
-                'proxy_url' => $proxyUrl ?? null,
                 'error' => $e->getMessage(),
                 'error_code' => $e->getCode(),
                 'trace' => $e->getTraceAsString()
