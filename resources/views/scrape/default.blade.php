@@ -128,6 +128,45 @@
                 });
 
             }
+
+            $('.item-more-wiki').on('click', function (){
+                if ($(this).hasClass('wiki-control-show')) {
+                    $(this).closest('.wiki-wrap-articles').find('.itemHide').hide();
+                    $(this).removeClass('wiki-control-show').html('Xem thêm <i class="fa-solid fa-angles-down"></i>');
+                } else {
+                    $(this).closest('.wiki-wrap-articles').find('.itemHide').show();
+                    $(this).addClass('wiki-control-show').html('Thu gọn <i class="fa-solid fa-angles-up"></i>');
+                }
+
+            });
+
+            $('.wiki-seemore').on('click', function (){
+                $('.itemHide').removeClass('itemHide');
+                $(this).hide();
+            });
+
+            $('.tocItem').on('click', function(e) {
+                e.preventDefault();
+                var hrefToc = $(this).attr('href')
+                hrefToc = hrefToc.replace(/#/g, "")
+                var my_element = document.getElementById(hrefToc);
+                my_element.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                    inline: "nearest"
+                });
+            });
+
+            $('#toc-control').on('click', function (e){
+                e.preventDefault();
+                if ($('.toc-container').height() < 50) {
+                    $('.toc-container').css({'height':'auto', 'overflow': 'hidden'});
+                    $('#toc-control').html('<i class="fa-sharp fa-solid fa-chevron-up"></i>');
+                } else {
+                    $('.toc-container').css({'height':'50px', 'overflow': 'hidden'});
+                    $('#toc-control').html('<i class="fa-sharp fa-solid fa-chevron-down"></i>');
+                }
+            });
         });
     </script>
 @endpush

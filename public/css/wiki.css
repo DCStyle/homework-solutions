@@ -229,16 +229,84 @@
     color: #2E2F2F;
 }
 
-.detail_new .wiki-header-search {
-    margin: 15px 0;
+.toc-container {
+    background-color: #f4f4f4; padding: 10px; margin-bottom: 20px; width: 700px; max-width: 100%; box-sizing: border-box; border:1px solid #aaa;
+}
+.toc-container > p {
+    font-size: 18px; font-weight: bold;
+}
+.toc-container > p > span {
+    margin-left: 6px;
+}
+.toc-container #toc-control {
+    float: right;
+}
+.toc-container .tocItem {
+    font-size: 16px; font-weight: bold; color: rgb(38,38,38);
+}
+.toc-container .toc-lvl2-container {
+    padding-left: 15px;
+}
+.toc-container .toc-lvl2-container .tocItem {
+    font-size: 14px; font-weight: 500; color: rgb(38,38,38);
 }
 
-.detail_new .wiki-header-search form {
+.wiki-label-wrap {
+    background: #F2F9FF; padding: 10px; margin: 10px 0;
+}
+.wiki-label {
+    display: inline-block;padding: 10px; background: #FFFFFF; margin-right: 10px;
+}
+.star-event-label {
+    color: #DF7100; font-size: 18px; margin-bottom: 10px; font-weight: bold;margin-top: 7px;
+}
+.wiki-wrap-articles {
+    display: flex; flex-wrap: wrap; border: 1px solid #F3F3F3;border-right: none;justify-content: space-between;
+}
+.wiki-article {
+    color: #313131;text-align: center;width: 33.3%; padding: 6px; box-sizing: border-box;
+}
+
+.paging-wiki-wrap {
+    display: flex; justify-content: center;
+}
+
+.paging-wiki {
+    margin: 20px 0;
+}
+.paging-wiki li {
+    display: inline-block;
+}
+
+.paging-wiki li a {
+    display: inline-block;
+    padding: 4px 8px;
+    margin-right: 10px;
+    color: #000000;
+}
+
+.paging-wiki li a.active {
+    background-color: #FFAF5E;
+    color: white;
+}
+
+.itemHide {
+    display: none;
+}
+
+.detail_new .wiki-header-search,
+.box_content.nopad .wiki-header-search {
+    margin: 15px auto;
+}
+
+.detail_new .wiki-header-search form,
+.box_content.nopad .wiki-header-search form {
     display: flex;
     justify-content: center;
 }
 
-.detail_new #wikicat {
+.detail_new #wikicat,
+.box_content.nopad #wikicat {
     background: #F2F9FF;
     border: 1px solid #C6E5FF;
     border-radius: 5px;
@@ -247,13 +315,15 @@
     padding: 6px;
     position: static;
 }
-.detail_new #wikicat option {
+.detail_new #wikicat option,
+.box_content.nopad #wikicat option {
     padding: 15px 10px;
     display: block;
     height: 40px;
     text-align: center;
 }
-.detail_new #wikisearch {
+.detail_new #wikisearch,
+.box_content.nopad #wikisearch {
     height: 44px;
     box-sizing: border-box;
     font-size: 16px;
@@ -262,7 +332,8 @@
     padding: 20px;
     border-radius: 0;
 }
-.detail_new #wiki-submit {
+.detail_new #wiki-submit,
+.box_content.nopad #wiki-submit {
     height: 40px;
     padding: 5px 20px;
     color: white;
