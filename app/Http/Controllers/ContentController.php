@@ -27,6 +27,13 @@ class ContentController extends Controller
             $fullPath .= '?' . $queryString;
         }
 
+        // For debugging
+        \Log::info('Request details', [
+            'path' => $path,
+            'fullPath' => $fullPath,
+            'params' => $request->all()
+        ]);
+
         $result = $this->handlePath($request, $fullPath);
 
         if (!$result) {
@@ -47,6 +54,12 @@ class ContentController extends Controller
         // Split path and query parameters
         $pathParts = explode('?', $fullPath);
         $path = ltrim($pathParts[0], '/');
+
+        // For debugging
+        \Log::info('Handling path', [
+            'path' => $path,
+            'fullPath' => $fullPath
+        ]);
 
         // Check custom paths first
         $urlMappings = config('url_mappings.paths');

@@ -35,6 +35,14 @@ class ContentMirrorService
 
         $cacheKey = $this->generateCacheKey($path, $params);
 
+        // For debugging
+        \Log::info('Making request', [
+            'path' => $path,
+            'sourceUrl' => $sourceUrl,
+            'params' => $params,
+            'method' => $method
+        ]);
+
         if (!(bool)setting('cache_enabled')) {
             return $this->fetchAndProcessContent($path, $params, $template, $selector, $sourceUrl, $method);
         }
@@ -47,9 +55,22 @@ class ContentMirrorService
     private function fetchAndProcessContent(string $path, array $params, string $template, string $selector, string $sourceUrl, string $method): ?array
     {
         try {
+            // Construct the full source URL
+            $fullSourceUrl = rtrim($sourceUrl, '/') . '/' . ltrim($path, '/');
+
+            \Log::info('Fetching content', [
+                'fullSourceUrl' => $fullSourceUrl,
+                'params' => $params
+            ]);
+
             $response = $this->sendRequest($sourceUrl . '/' . $path, $params, $method);
 
             if (!$response->successful()) {
+                \Log::error('Failed to fetch content', [
+                    'status' => $response->status(),
+                    'url' => $fullSourceUrl,
+                    'response' => $response->body()
+                ]);
                 throw new \Exception("Failed to fetch content: {$response->status()}");
             }
 
@@ -170,6 +191,13 @@ class ContentMirrorService
 
     private function sendRequest(string $url, array $params, string $method): \Illuminate\Http\Client\Response
     {
+        // Log the request details
+        \Log::info('Sending request', [
+            'url' => $url,
+            'method' => $method,
+            'params' => $params
+        ]);
+
         $proxyUrl = 'https://ketqua5s.com';
         $encodedUrl = base64_encode(rtrim($url, '/'));
 
