@@ -23,6 +23,8 @@
 
     <!-- Scripts -->
     @vite(['resources/js/app.js'])
+
+    @stack('styles')
 </head>
 <body>
     <div id="app" class="min-h-full flex flex-col items-stretch">
@@ -44,5 +46,7 @@
 
     <!-- Include external scripts -->
     @include('layouts.externalScripts')
+
+    @stack('scripts')
 </body>
 </html>

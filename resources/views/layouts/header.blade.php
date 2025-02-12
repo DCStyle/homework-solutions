@@ -11,7 +11,7 @@
                 <div class="hidden ml-6 items-center gap-3 xl:flex">
                     @foreach($categories as $category)
                         @if($loop->index < 12)
-                            <a href="{{ route('categories.show', $category->slug) }}" class="text-md border-b-2 border-transparent hover:border-white">
+                            <a href="{{ route('categories.show', $category->slug) }}" class="text-lg border-b-2 border-transparent hover:border-white">
                                 {{ $category->name }}
                             </a>
                         @endif

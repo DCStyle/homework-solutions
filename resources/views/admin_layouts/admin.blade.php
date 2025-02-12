@@ -19,6 +19,9 @@
 
     <!-- Scripts -->
     @vite(['resources/js/app.js'])
+
+    <!-- Styles -->
+    @stack('styles')
 </head>
 <body class="bg-gray-100">
     <div id="app">
@@ -43,5 +46,7 @@
 
     <!-- Include external scripts -->
     @include('layouts.externalScripts');
+
+    @stack('scripts')
 </body>
 </html>

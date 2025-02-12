@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Article;
+use App\Models\ArticleCategory;
 use App\Models\ArticleTag;
 use Illuminate\Http\Request;
 
@@ -36,7 +37,9 @@ class ArticlesController extends Controller
     {
         $article = Article::where('slug', $slug)->firstOrFail();
 
-        return view('articles.show', compact('article'));
+        $articleCategories = ArticleCategory::get();
+
+        return view('articles.show', compact('article', 'articleCategories'));
     }
 
     public function searchTags(Request $request)

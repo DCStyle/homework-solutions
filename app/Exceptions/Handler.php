@@ -26,5 +26,18 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+
+        $this->renderable(function (TooManyRequestsException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $e->getMessage(),
+                    'retry_after' => $e->getHeaders()['Retry-After'] ?? 60
+                ], 429, $e->getHeaders());
+            }
+
+            return response()->view('errors.429', [
+                'exception' => $e
+            ], 429, $e->getHeaders());
+        });
     }
 }

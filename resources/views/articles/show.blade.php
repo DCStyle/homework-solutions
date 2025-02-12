@@ -7,6 +7,22 @@
     <div class="flex justify-between">
         <div class="sidebar-left-content w-[320px] h-auto flex-shrink-0 flex-grow-0 max-xl:w-[280px] max-md:hidden">
             <div class="sticky top-10 bg-white border shadow-md">
+                <div class="p-4 text-md border-b border-b-gray-300 mb-4">
+                    <h2 class="text-xl font-bold">Chuyên mục</h2>
+                    <ul class="list-none mt-4 border-t border-gray-400">
+                        @foreach ($articleCategories as $item)
+                            <li class="py-2 mb-2 flex items-center space-x-4 border-b border-gray-400">
+                                <span class="iconify text-2xl text-orange-400" data-icon="mdi-menu-right"></span>
+
+                                <a title="{{ $item->name }}" href="{{ route('article-categories.show', $item->slug) }}"
+                                   class="text-gray-800 hover:text-orange-400">
+                                    {{ $item->name }}
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+
                 <div class="p-4 text-md border-b border-b-gray-300">
                     <h2 class="text-xl font-bold">Giải bài tập tất cả các lớp học</h2>
                     <ul class="list-none mt-4 border-t border-gray-400">
@@ -32,7 +48,7 @@
                 </a>
             </h1>
 
-            <div class="mt-4">
+            <div class="mt-4 text-lg">
                 {!! $article->content !!}
             </div>
 

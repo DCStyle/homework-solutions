@@ -76,7 +76,7 @@
             !!}</h2>
             </div>
 
-            <div class="mt-4">
+            <div class="mt-4 text-lg">
                 {!! $post->content !!}
             </div>
 
@@ -106,6 +106,10 @@
                         @endforeach
                     </div>
                 </div>
+            </div>
+
+            <div class="mt-8">
+                <x-footer-latest-posts :title="'Lời giải và bài tập ' . $category->name . ' đang được quan tâm'" :posts="$footerLatestPosts" />
             </div>
         </div>
 

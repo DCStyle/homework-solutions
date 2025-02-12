@@ -9,35 +9,6 @@ $(document).ready(function() {
         $(this).relativeTime();
     });
 
-    $('#tags').select2({
-        tags: true,
-        tokenSeparators: [','],
-        ajax: {
-            url: '/articles/tags/search',
-            dataType: 'json',
-            delay: 250,
-            data: function(params) {
-                return {
-                    q: params.term
-                };
-            },
-            processResults: function(data) {
-                return {
-                    results: data.map(function(item) {
-                        return {
-                            id: item.id,
-                            text: item.name
-                        };
-                    })
-                };
-            },
-            cache: true
-        },
-        placeholder: 'Select or type to create new tags',
-        minimumInputLength: 1,
-        allowClear: true
-    });
-
     // Search bar
     let searchTimeout;
 

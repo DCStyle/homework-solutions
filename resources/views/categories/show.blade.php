@@ -80,6 +80,10 @@
                     </div>
                 </div>
             </div>
+
+            <div class="mt-8">
+                <x-footer-latest-posts :title="'Lời giải và bài tập ' . $category->name . ' đang được quan tâm'" :posts="$footerLatestPosts" />
+            </div>
         </div>
 
         @include('layouts.sidebar-right')

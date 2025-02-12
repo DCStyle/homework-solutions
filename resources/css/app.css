@@ -851,7 +851,6 @@ ul.paging li a.active span,ul.paging li a:hover span {
     color: #197ccd;
     padding: 2px 0 2px 12px;
     display: block;
-    max-height: 19px;
     overflow: hidden
 }
 
@@ -1132,7 +1131,6 @@ ul.list_style li a {
 }
 
 .n-form-sub {
-    width: 745px;
     height: auto;
     overflow: hidden
 }
@@ -1770,4 +1768,18 @@ ul.list_style li a {
     font-weight: bold;
     font-size: 18px;
     margin: 5px 0;
+}
+
+.select2-container {
+    width: 100% !important;
+}
+.select2-container--default .select2-selection--multiple {
+    border-color: #e5e7eb;
+    border-radius: 0.375rem;
+    min-height: 42px;
+    padding: 0.25rem;
+}
+.select2-container--default.select2-container--focus .select2-selection--multiple {
+    border-color: #6366f1;
+    outline: none;
 }

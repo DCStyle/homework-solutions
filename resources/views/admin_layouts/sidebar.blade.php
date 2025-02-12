@@ -15,6 +15,8 @@
                 <h3 class="mb-4 text-sm font-medium text-[#8a99af] px-6">Menu</h3>
                 <ul class="mb-6 flex flex-col gap-1.5">
                     @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Trang chính", 'itemIcon' => 'mdi-view-dashboard', 'itemLink' => route('admin.dashboard')])
+
+                    @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Cài đặt", 'itemIcon' => 'mdi-cog', 'itemLink' => route('admin.settings.index')])
                 </ul>
             </div>
 
@@ -46,9 +48,13 @@
             <div class="mt-4">
                 <h3 class="mb-4 text-sm font-medium text-[#8a99af] px-6">Tin tức</h3>
                 <ul class="mb-6 flex flex-col gap-1.5">
-                    @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Danh mục tin tức", 'itemIcon' => 'mdi-format-list-bulleted', 'itemLink' => route('admin.articleCategories.index')])
+                    @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Tất cả chuyên mục", 'itemIcon' => 'mdi-format-list-bulleted', 'itemLink' => route('admin.articleCategories.index')])
 
-                    @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Danh sách bài viết", 'itemIcon' => 'mdi-newspaper-variant-multiple', 'itemLink' => route('admin.articles.index')])
+                    @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Tất cả bài viết", 'itemIcon' => 'mdi-newspaper-variant-multiple', 'itemLink' => route('admin.articles.index')])
+
+                    @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Thêm bài viết", 'itemIcon' => 'mdi-newspaper-plus', 'itemLink' => route('admin.articles.create')])
+
+                    @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Tags", 'itemIcon' => 'mdi-tag-multiple', 'itemLink' => route('admin.article-tags.index')])
                 </ul>
             </div>
 

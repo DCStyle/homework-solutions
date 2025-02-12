@@ -1,9 +1,6 @@
 <?php
 
-namespace App\Helpers;
-
 use Carbon\Carbon;
-use DateTime;
 use Illuminate\Support\HtmlString;
 
 if (!function_exists('format_time')) {
@@ -37,5 +34,23 @@ if (!function_exists('format_time')) {
             $iso8601,
             $displayDate
         ));
+    }
+}
+
+if (!function_exists('setting')) {
+    function setting($key, $default = null)
+    {
+        if (is_array($key)) {
+            foreach ($key as $k => $v) {
+                \App\Models\Setting::updateOrCreate(
+                    ['key' => $k],
+                    ['value' => $v]
+                );
+            }
+            return true;
+        }
+
+        $setting = \App\Models\Setting::where('key', $key)->first();
+        return $setting ? $setting->value : $default;
     }
 }

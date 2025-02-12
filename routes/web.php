@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\CategoriesController;
+use App\Http\Controllers\ContentController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\MultiSearchController;
 use App\Http\Controllers\SearchController;
@@ -24,43 +25,15 @@ Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('ho
 
 Auth::routes();
 
-// Categories
-Route::get('/categories/{category_slug}.html', [App\Http\Controllers\CategoriesController::class, 'show'])->name('categories.show');
-
-// Book groups
-Route::get('/book-groups/{group_slug}.html', [App\Http\Controllers\BookGroupsController::class, 'show'])->name('bookGroups.show');
-
-// Books
-Route::get('/books/{group_slug}.html', [App\Http\Controllers\BooksController::class, 'show'])->name('books.show');
-
-// Book chapters
-//Route::get('/book-chapters/{chapter_slug}.html', [App\Http\Controllers\BookChaptersController::class, 'show'])->name('bookChapters.show');
-
-// Posts
-Route::get('/posts/{post_slug}.html', [PostsController::class, 'show'])->name('posts.show');
-
-// Articles
-Route::prefix('articles')->group(function() {
-    Route::get('/latest', [App\Http\Controllers\ArticlesController::class, 'latest'])->name('articles.latest');
-    Route::get('/{article_slug}.html', [App\Http\Controllers\ArticlesController::class, 'show'])->name('articles.show');
-
-    Route::get('/tags/search', [\App\Http\Controllers\ArticlesController::class, 'searchTags'])->name('admin.articles.searchTags');
-});
-
-// Images
-Route::prefix('images')->group(function() {
-    Route::post('/upload', [ImageController::class, 'upload'])->name('images.upload');
-    Route::post('/attach', [ImageController::class, 'attach'])->name('images.attach');
-    Route::delete('/{image}', [ImageController::class, 'destroy'])->name('images.destroy');
-});
-
-// Search
-Route::get('/search', [SearchController::class, 'search'])->name('search');
-Route::get('/multi-search', [MultiSearchController::class, 'search'])->name('multi-search');
-
 // Admin
 Route::prefix('admin')->middleware(['admin'])->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
+
+    // Settings
+    Route::prefix('settings')->group(function() {
+        Route::get('/', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('admin.settings.index');
+        Route::put('/', [App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('admin.settings.update');
+    });
 
     // Categories management
     Route::prefix('categories')->group(function() {
@@ -142,8 +115,11 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
         Route::put('/{id}', [\App\Http\Controllers\Admin\ArticlesController::class, 'update'])->name('admin.articles.update');
 
         Route::delete('/{id}', [\App\Http\Controllers\Admin\ArticlesController::class, 'destroy'])->name('admin.articles.destroy');
+    });
 
-        Route::resource('/tags', \App\Http\Controllers\Admin\ArticlesController::class)->except(['show']);
+    Route::name('admin.')->group(function() {
+        Route::resource('article-tags', \App\Http\Controllers\Admin\ArticleTagsController::class);
+        Route::get('article-tags-search', [\App\Http\Controllers\Admin\ArticleTagsController::class, 'search'])->name('article-tags.search');
     });
 
     Route::prefix('article-categories')->group(function() {
@@ -155,3 +131,47 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
         Route::delete('/{id}', [\App\Http\Controllers\Admin\ArticleCategoriesController::class, 'destroy'])->name('admin.articleCategories.destroy');
     });
 });
+
+
+// Categories
+Route::get('/categories/{category_slug}.html', [App\Http\Controllers\CategoriesController::class, 'show'])->name('categories.show');
+
+// Book groups
+Route::get('/book-groups/{group_slug}.html', [App\Http\Controllers\BookGroupsController::class, 'show'])->name('bookGroups.show');
+
+// Books
+Route::get('/books/{group_slug}.html', [App\Http\Controllers\BooksController::class, 'show'])->name('books.show');
+
+// Book chapters
+//Route::get('/book-chapters/{chapter_slug}.html', [App\Http\Controllers\BookChaptersController::class, 'show'])->name('bookChapters.show');
+
+// Posts
+Route::get('/posts/{post_slug}.html', [PostsController::class, 'show'])->name('posts.show');
+
+// Articles
+Route::prefix('articles')->group(function() {
+    Route::get('/latest', [App\Http\Controllers\ArticlesController::class, 'latest'])->name('articles.latest');
+    Route::get('/{article_slug}.html', [App\Http\Controllers\ArticlesController::class, 'show'])->name('articles.show');
+
+    Route::get('/tags/search', [\App\Http\Controllers\ArticlesController::class, 'searchTags'])->name('admin.articles.searchTags');
+});
+
+// Article categories
+Route::get('/article-categories/{category_slug}.html', [App\Http\Controllers\ArticleCategoriesController::class, 'show'])->name('article-categories.show');
+
+// Images
+Route::prefix('images')->group(function() {
+    Route::post('/upload', [ImageController::class, 'upload'])->name('images.upload');
+    Route::post('/attach', [ImageController::class, 'attach'])->name('images.attach');
+    Route::delete('/{image}', [ImageController::class, 'destroy'])->name('images.destroy');
+});
+
+// Search
+Route::get('/search', [SearchController::class, 'search'])->name('search');
+Route::get('/multi-search', [MultiSearchController::class, 'search'])->name('multi-search');
+
+Route::get('/{path?}', [ContentController::class, 'show'])
+    ->where('path', '^(?!api|admin|proxy).*$') // Exclude certain paths
+    ->middleware(['web'])
+    ->defaults('path', '')
+    ->name('content.show');
