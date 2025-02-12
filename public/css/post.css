@@ -620,3 +620,9 @@ button:focus {
 #countdown {
     margin-bottom: 30px;
 }
+
+#box-content h2 {
+    font-size: 22px;
+    font-weight: bold;
+    line-height: 1.7;
+}

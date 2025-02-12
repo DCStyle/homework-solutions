@@ -299,16 +299,10 @@ class ContentMirrorService
         });
     }
 
-    private function processContent($content): string
+    private function fixUrls($content): string
     {
         $ourDomain = rtrim(env('APP_URL'), '/');
         $ourBaseDomain = parse_url($ourDomain, PHP_URL_HOST);
-
-        $crawler = new Crawler($content);
-
-        $this->removeUnwantedContent($crawler);
-
-        $content = $crawler->html();
 
         // Fix URL formats and protocols
         $content = str_ireplace(strtolower($this->sourceDomain), $ourBaseDomain, $content);
@@ -334,6 +328,21 @@ class ContentMirrorService
 
         // Add missing https protocol
         $content = str_ireplace('href="' . $ourBaseDomain, 'href="https://' . $ourBaseDomain, $content);
+
+        // Fix image URLs
+        $content = str_replace('src="img.localhost/', 'src="https://img.loigiaihay.com/', $content);
+
+        return $content;
+    }
+
+    private function processContent($content): string
+    {
+        $crawler = new Crawler($content);
+
+        $this->removeUnwantedContent($crawler);
+
+        $content = $crawler->html();
+        $content = $this->fixUrls($content);
 
         return $content;
     }
