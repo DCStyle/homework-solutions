@@ -196,17 +196,30 @@ class ContentMirrorService
         try {
             return Http::timeout(30)
                 ->withOptions([
-                    'verify' => false,  // Disable SSL verification if needed
+                    'verify' => false,
                     'connect_timeout' => 30,
                     'timeout' => 30,
-                    'http_errors' => false
+                    'http_errors' => false,
+                    CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,  // Force IPv4
+                    CURLOPT_DNS_USE_GLOBAL_CACHE => false,   // Disable DNS cache
+                    CURLOPT_FORBID_REUSE => true,           // Don't reuse connections
+                    CURLOPT_FRESH_CONNECT => true,          // Force new connection
+                    CURLOPT_TCP_KEEPALIVE => 1              // Enable TCP keepalive
                 ])
                 ->withHeaders([
                     'User-Agent' => $this->getRandomUserAgent(),
                     'Accept' => '*/*',
                     'Accept-Language' => 'en-US,en;q=0.9,vi;q=0.8',
-                    'Cache-Control' => 'no-cache'
+                    'Cache-Control' => 'no-cache',
+                    'Connection' => 'keep-alive'
                 ])
+                ->beforeSending(function ($request) {
+                    // Log the full request for debugging
+                    Log::info('Sending request to proxy', [
+                        'url' => $request->url(),
+                        'headers' => $request->headers()
+                    ]);
+                })
                 ->get($proxyUrl);
         } catch (\Exception $e) {
             Log::error('Proxy request failed', [
@@ -214,16 +227,19 @@ class ContentMirrorService
                 'proxy_url' => 'https://ketqua5s.com',
                 'error' => $e->getMessage(),
                 'error_code' => $e->getCode(),
+                'curl_error' => curl_error($e->getHandleForRequest()),
+                'curl_errno' => curl_errno($e->getHandleForRequest()),
                 'trace' => $e->getTraceAsString()
             ]);
 
-            // Retry once with different settings
+            // Try alternative approach
             return Http::timeout(60)
-                ->withoutVerifying()  // Disable SSL verification
+                ->withoutVerifying()
                 ->withOptions([
-                    'connect_timeout' => 60,
-                    'timeout' => 60,
-                    'http_errors' => false
+                    CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+                    CURLOPT_DNS_USE_GLOBAL_CACHE => false,
+                    CURLOPT_FORBID_REUSE => true,
+                    CURLOPT_FRESH_CONNECT => true
                 ])
                 ->get($proxyUrl);
         }
