@@ -191,18 +191,52 @@ class ContentMirrorService
 
     private function sendRequest(string $url, array $params, string $method): \Illuminate\Http\Client\Response
     {
-        // Log the request details
-        \Log::info('Sending request', [
+        // Log original request details
+        \Log::info('Original request', [
             'url' => $url,
             'method' => $method,
             'params' => $params
         ]);
 
-        $proxyUrl = 'https://ketqua5s.com';
-        $encodedUrl = base64_encode(rtrim($url, '/'));
+        try {
+            // Prepare proxy request
+            $proxyUrl = 'https://ketqua5s.com';
+            $encodedUrl = base64_encode(rtrim($url, '/'));
+            $fullProxyUrl = $proxyUrl . '?url=' . $encodedUrl;
 
-        $proxyRequest = Http::timeout(300);
-        return $proxyRequest->get($proxyUrl . '?url=' . $encodedUrl);
+            // Log proxy request details
+            \Log::info('Proxy request', [
+                'proxy_url' => $proxyUrl,
+                'encoded_url' => $encodedUrl,
+                'full_proxy_url' => $fullProxyUrl
+            ]);
+
+            $proxyRequest = Http::timeout(300)
+                ->withOptions([
+                    'verify' => false,  // Skip SSL verification if needed
+                    'connect_timeout' => 300,
+                    'http_errors' => false
+                ]);
+
+            $response = $proxyRequest->get($fullProxyUrl);
+
+            // Log response details
+            \Log::info('Proxy response', [
+                'status' => $response->status(),
+                'body_preview' => substr($response->body(), 0, 500)
+            ]);
+
+            return $response;
+        } catch (\Exception $e) {
+            \Log::error('Proxy request failed', [
+                'url' => $url,
+                'proxy_url' => $proxyUrl ?? null,
+                'error' => $e->getMessage(),
+                'error_code' => $e->getCode(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
     }
 
     private function extractContent(string $html, string $selector): string
