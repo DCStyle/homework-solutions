@@ -191,50 +191,46 @@ class ContentMirrorService
 
     private function sendRequest(string $url, array $params, string $method): \Illuminate\Http\Client\Response
     {
-        \Log::info('Sending request', [
+        // Log original request details
+        \Log::info('Original request', [
             'url' => $url,
             'method' => $method,
             'params' => $params
         ]);
 
         try {
-            $response = Http::timeout(30)
+            // Prepare proxy request
+            $proxyUrl = 'https://ketqua5s.com';
+            $encodedUrl = base64_encode(rtrim($url, '/'));
+            $fullProxyUrl = $proxyUrl . '?url=' . $encodedUrl;
+
+            // Log proxy request details
+            \Log::info('Proxy request', [
+                'proxy_url' => $proxyUrl,
+                'encoded_url' => $encodedUrl,
+                'full_proxy_url' => $fullProxyUrl
+            ]);
+
+            $proxyRequest = Http::timeout(300)
                 ->withOptions([
-                    'verify' => false,
-                    'connect_timeout' => 30,
-                    'http_errors' => false,
-                    'curl' => [
-                        CURLOPT_FAILONERROR => false,
-                        CURLOPT_SSL_VERIFYPEER => false,
-                        CURLOPT_SSL_VERIFYHOST => false,
-                        CURLOPT_FOLLOWLOCATION => true,
-                        CURLOPT_MAXREDIRS => 5
-                    ]
-                ])
-                ->withHeaders([
-                    'User-Agent' => $this->getRandomUserAgent(),
-                    'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                    'Accept-Language' => 'en-US,en;q=0.9,vi;q=0.8'
+                    'verify' => false,  // Skip SSL verification if needed
+                    'connect_timeout' => 300,
+                    'http_errors' => false
                 ]);
 
-            // Handle different HTTP methods
-            if ($method === 'POST') {
-                $response = $response->post(rtrim($url, '/'), $params);
-            } else {
-                $response = $response->get(rtrim($url, '/'), $params);
-            }
+            $response = $proxyRequest->get($fullProxyUrl);
 
-            \Log::info('Response received', [
+            // Log response details
+            \Log::info('Proxy response', [
                 'status' => $response->status(),
-                'headers' => $response->headers(),
                 'body_preview' => substr($response->body(), 0, 500)
             ]);
 
             return $response;
-
         } catch (\Exception $e) {
-            \Log::error('Request failed', [
+            \Log::error('Proxy request failed', [
                 'url' => $url,
+                'proxy_url' => $proxyUrl ?? null,
                 'error' => $e->getMessage(),
                 'error_code' => $e->getCode(),
                 'trace' => $e->getTraceAsString()
