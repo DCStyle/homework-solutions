@@ -21,8 +21,8 @@ class CategoriesController extends Controller
             ->join('categories', 'book_groups.category_id', '=', 'categories.id')
             ->where('categories.slug', $slug)
             ->orderBy('posts.created_at', 'desc')
-            ->get()
-            ->take(10);
+            ->take(10)
+            ->get();
 
         return view('categories.show', compact('category', 'footerLatestPosts'));
     }
