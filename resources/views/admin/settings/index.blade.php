@@ -17,6 +17,22 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Left Column -->
                     <div class="space-y-4">
+                        <!-- Site URL -->
+                        <div>
+                            <label for="site_name" class="mb-3 block text-sm font-medium text-[#1c2434]">
+                                URL trang web
+                            </label>
+                            <input type="url"
+                                   name="site_url"
+                                   id="site_url"
+                                   value="{{ old('site_url', setting('site_url')) }}"
+                                   class="relative w-full rounded border border-stroke bg-transparent py-3 pl-5 pr-12 outline-none transition focus:border-primary active:border-primary"
+                                   required>
+                            @error('site_url')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <!-- Site Name -->
                         <div>
                             <label for="site_name" class="mb-3 block text-sm font-medium text-[#1c2434]">

@@ -55,7 +55,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'https://homework-solutions.dcstyle.info'),
+    'url' => env('APP_URL', 'https://homework-solutions-2.dcstyle.info'),
 
     'asset_url' => env('ASSET_URL'),
 

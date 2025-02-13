@@ -12,7 +12,7 @@
                             <a href="{{ route('categories.show', $category->slug) }}" class="bg-white flex flex-col items-center justify-center py-4 px-2 rounded-3xl"
                                style="box-shadow: 0 2px 8px rgba(255, 131, 89, 0.08), 0 20px 32px rgba(255, 131, 89, 0.24)">
 
-                                <img src="{{ asset('images/lop' . $loop->index + 1 . '.png') }}" alt="{{ config('app.name', 'Laravel') }}" class="w-full h-auto mb-4" />
+                                <img src="{{ asset('images/lop' . $loop->index + 1 . '.png') }}" alt="{{ setting('site_name', 'Homework Solutions') }}" class="w-full h-auto mb-4" />
 
                                 <span class="text-sm text-uppercase font-medium bg-gradient-to-r from-cyan-500 to-blue-500 text-white p-2 rounded-xl">
                                 {{ __('Study now') }}

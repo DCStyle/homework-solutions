@@ -16,6 +16,7 @@ class SettingsController extends Controller
     {
         // Validate settings
         $validated = $request->validate([
+            'site_url' => 'required|url|max:255',
             'site_name' => 'required|string|max:255',
             'site_description' => 'nullable|string',
             'site_logo' => 'nullable|image|mimes:jpg,jpeg,png,svg|max:2048',

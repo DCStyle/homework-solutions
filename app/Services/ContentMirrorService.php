@@ -148,7 +148,7 @@ class ContentMirrorService
         if ($canonical->count() > 0) {
             // Replace source domain with our domain
             $canonical->each(function (Crawler $node) {
-                $node->getNode(0)->setAttribute('href', str_replace($this->sourceDomain, env('APP_URL'), $node->attr('href')));
+                $node->getNode(0)->setAttribute('href', str_replace($this->sourceDomain, setting('site_url'), $node->attr('href')));
             });
         }
 
@@ -301,7 +301,7 @@ class ContentMirrorService
 
     private function fixUrls($content): string
     {
-        $ourDomain = rtrim(env('APP_URL'), '/');
+        $ourDomain = rtrim(setting('site_url'), '/');
         $ourBaseDomain = parse_url($ourDomain, PHP_URL_HOST);
 
         // Fix URL formats and protocols

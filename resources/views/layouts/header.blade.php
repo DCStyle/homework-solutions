@@ -4,7 +4,7 @@
             <div class="flex">
                 <div class="shrink-0 flex items-center">
                     <a href="{{ url('/') }}" class="text-lg font-semibold text-decoration-none">
-                        {{ config('app.name', 'Laravel') }}
+                        {{ setting('site_name', 'Homework Solutions') }}
                     </a>
                 </div>
 

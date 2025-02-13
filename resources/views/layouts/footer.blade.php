@@ -12,7 +12,7 @@
 
             <!-- Middle Section: Copyright and Badges -->
             <div class="text-gray-600 flex items-center space-x-2">
-                <span>Copyright © 2024 {{ config('app.name') }}</span>
+                <span>Copyright © 2024 {{ setting('site_name', 'Homework Solutions') }}</span>
                 <img src="https://www.dmca.com/img/dmca_protected_sml_120l.png" alt="DMCA Protected" class="h-6">
             </div>
         </div>

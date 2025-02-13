@@ -3,14 +3,14 @@
         @guest
             <a href="{{ route('login') }}">
                 <img src="{{ asset('images/avatar-default.jpg')  }}"
-                     alt="{{ config('app.name') }}"
+                     alt="{{ setting('site_name', 'Homework Solutions') }}"
                      class="w-full rounded-xl"
                 />
             </a>
         @else
             <a href="{{ route('home') }}">
                 <img src="{{ asset('images/avatar-default.jpg')  }}"
-                     alt="{{ config('app.name') }}"
+                     alt="{{ setting('site_name', 'Homework Solutions') }}"
                      class="w-full rounded-xl"
                 />
             </a>

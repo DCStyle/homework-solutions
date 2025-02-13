@@ -6,20 +6,20 @@
             <div class="flex justify-between mb-4 md:mb-8 lg:mb-12">
                 <div class="hidden flex-1 w-full mr-4 md:block">
                     <img src="{{ asset('images/education-0.svg')  }}"
-                         alt="{{ config('app.name') }}"
+                         alt="{{ setting('site_name', 'Homework Solutions') }}"
                          class="w-full rounded-xl"
                     />
                 </div>
 
                 <div class="w-full flex-shrink-0 flex-grow-0 md:w-[35%]">
                     <p class="font-bold mb-4 max-md:text-center">
-                        Vì sao <span class="text-primary">{{ config('app.name') }}</span> được hàng triệu học sinh cả nước tin tưởng?
+                        Vì sao <span class="text-primary">{{ setting('site_name', 'Homework Solutions') }}</span> được hàng triệu học sinh cả nước tin tưởng?
                     </p>
 
                     <ul class="list-none grid grid-cols-2 gap-2 md:block">
                         @for($i = 1;$i <= 4;$i++)
                             <li class="flex items-center gap-x-2 mb-2 max-md:p-4 max-md:rounded-xl max-md:drop-shadow-2xl max-md:bg-white">
-                                <img src="{{ asset('images/lgh-trust-icon' . $i . '.png')  }}" alt="{{ config('app.name') }}" class="w-8 h-auto" />
+                                <img src="{{ asset('images/lgh-trust-icon' . $i . '.png')  }}" alt="{{ setting('site_name', 'Homework Solutions') }}" class="w-8 h-auto" />
                                 <p class="font-bold text-sm">
                                     @switch($i)
                                         @case(1)
@@ -114,7 +114,7 @@
 
     <div class="relative md:p-4">
         <img src="{{ asset('images/bg-section-steps.png') }}"
-             alt="{{ config('app.name') }}"
+             alt="{{ setting('site_name', 'Homework Solutions') }}"
              class="absolute top-0 left-0 bottom-0 right-0"
         />
 
@@ -122,7 +122,7 @@
             <div class="w-full flex flex-wrap items-center justify-between">
                 <div class="w-full mb-4 md:w-1/2 md:mb-0">
                     <img src="{{ asset('images/step-thumb.png')  }}"
-                         alt="{{ config('app.name') }}"
+                         alt="{{ setting('site_name', 'Homework Solutions') }}"
                          class="w-full"
                     />
                 </div>
@@ -154,8 +154,8 @@
                                                 <p class="font-bold">Có thể là: Chrome, Cốc cốc...</p>
                                                 @break
                                             @case(2)
-                                                <p>Gõ tên bài cần giải + {{ config('app.name') }}</p>
-                                                <p class="font-bold">VD: Giải toán 7 bài: cộng phân số {{ config('app.name') }}</p>
+                                                <p>Gõ tên bài cần giải + {{ setting('site_name', 'Homework Solutions') }}</p>
+                                                <p class="font-bold">VD: Giải toán 7 bài: cộng phân số {{ setting('site_name', 'Homework Solutions') }}</p>
                                                 @break
                                             @case(3)
                                                 <p>Các kết quả tìm kiếm hiện ra</p>
