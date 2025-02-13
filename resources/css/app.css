@@ -1788,3 +1788,7 @@ ul.list_style li a {
     border-color: #6366f1;
     outline: none;
 }
+
+ins {
+    display: none;
+}
