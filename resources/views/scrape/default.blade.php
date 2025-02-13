@@ -1,5 +1,8 @@
 @extends('layouts.app')
 
+@seo(['title' => $metadata['title']])
+@seo(['description' => $metadata['description']])
+
 @section('content')
     <div class="flex justify-between">
         <div class="sidebar-left-content w-[320px] h-auto flex-shrink-0 flex-grow-0 max-xl:w-[280px] max-md:hidden">

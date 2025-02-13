@@ -4,47 +4,23 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    @if(isset($metadata))
-        <title>{{ $metadata['title'] }}</title>
-
-        @if($metadata['description'])
-            <meta name="description" content="{{ $metadata['description'] }}">
-        @endif
-
-        @if($metadata['keywords'])
-            <meta name="keywords" content="{{ $metadata['keywords'] }}">
-        @endif
-
-        @if($metadata['canonical'])
-            <link rel="canonical" href="{{ $metadata['canonical'] }}">
-        @endif
-
-        @foreach($metadata['og_tags'] ?? [] as $property => $content)
-            <meta property="{{ $property }}" content="{{ $content }}">
-        @endforeach
-
-        @foreach($metadata['twitter_tags'] ?? [] as $name => $content)
-            <meta name="{{ $name }}" content="{{ $content }}">
-        @endforeach
-    @else
-        <title>@yield('title', setting('site_name'))</title>
-
-        <meta charset="utf-8">
-        <meta name="description" content="@yield('description', setting('site_description'))">
-        <meta name="keywords" content="@yield('keywords', setting('site_keywords'))">
-        <meta name="theme-color" content="#ffffff">
-
-        <meta property="og:title" content="@yield('title', setting('site_name'))">
-        <meta property="og:description" content="@yield('description', setting('site_description'))">
-
-        <meta property="og:url" content="{{ url()->current() }}">
-        <meta property="og:type" content="website">
-        <meta property="og:site_name" content="{{ setting('site_name') }}">
-        <meta property="og:locale" content="vi_VN">
-        <meta property="og:locale:alternate" content="en_US">
-    @endif
-
     <x-seo::meta />
+
+    <title>@yield('title', setting('site_name'))</title>
+
+    <meta charset="utf-8">
+    <meta name="description" content="@yield('description', setting('site_description'))">
+    <meta name="keywords" content="@yield('keywords', setting('site_keywords'))">
+    <meta name="theme-color" content="#ffffff">
+
+    <meta property="og:title" content="@yield('title', setting('site_name'))">
+    <meta property="og:description" content="@yield('description', setting('site_description'))">
+
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ setting('site_name') }}">
+    <meta property="og:locale" content="vi_VN">
+    <meta property="og:locale:alternate" content="en_US">
 
     <meta property="og:image" content="@yield('image', setting('site_og_image') ? asset(Storage::url(setting('site_og_image'))) : 'https://placehold.co/126')">
     <meta name="twitter:card" content="summary_large_image">

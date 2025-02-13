@@ -4,7 +4,11 @@
             <div class="flex">
                 <div class="shrink-0 flex items-center">
                     <a href="{{ url('/') }}" class="text-lg font-semibold text-decoration-none">
-                        {{ setting('site_name', 'Homework Solutions') }}
+                        @if(setting('site_logo'))
+                            <img src="{{ asset(Storage::url(setting('site_logo'))) }}" alt="{{ setting('site_name') }}" class="h-8" />
+                        @else
+                            {{ setting('site_name', 'Homework Solutions') }}
+                        @endif
                     </a>
                 </div>
 

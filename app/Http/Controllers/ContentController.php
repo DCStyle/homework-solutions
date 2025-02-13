@@ -99,15 +99,6 @@ class ContentController extends Controller
     private function createResponse(array $result, $path = ''): View
     {
         $metadata = $result['metadata'] ?? null;
-        if ($path == '') {
-            $metadata = [
-                'title' => setting('site_name'),
-                'description' => setting('site_description'),
-                'keywords' => setting('site_keywords'),
-                'canonical' => url()->current()
-            ];
-        }
-
         $viewData = $result['data'] ?? [];
 
         return view($result['template'], [
