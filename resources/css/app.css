@@ -1790,5 +1790,5 @@ ul.list_style li a {
 }
 
 ins {
-    display: none;
+    display: none !important;
 }
