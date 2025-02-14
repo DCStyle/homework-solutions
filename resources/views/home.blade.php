@@ -5,41 +5,17 @@
         <div class="container mx-auto">
             <div class="flex justify-between mb-4 md:mb-8 lg:mb-12">
                 <div class="hidden flex-1 w-full mr-4 md:block">
-                    <img src="{{ asset('images/education-0.svg')  }}"
+                    <img src="{{ setting('home_hero_banner') ? Storage::url(setting('home_hero_banner')) : asset('images/education-0.svg') }}"
                          alt="{{ setting('site_name', 'Homework Solutions') }}"
                          class="w-full rounded-xl"
                     />
                 </div>
 
-                <div class="w-full flex-shrink-0 flex-grow-0 md:w-[35%]">
-                    <p class="font-bold mb-4 max-md:text-center">
-                        Vì sao <span class="text-primary">{{ setting('site_name', 'Homework Solutions') }}</span> được hàng triệu học sinh cả nước tin tưởng?
-                    </p>
-
-                    <ul class="list-none grid grid-cols-2 gap-2 md:block">
-                        @for($i = 1;$i <= 4;$i++)
-                            <li class="flex items-center gap-x-2 mb-2 max-md:p-4 max-md:rounded-xl max-md:drop-shadow-2xl max-md:bg-white">
-                                <img src="{{ asset('images/lgh-trust-icon' . $i . '.png')  }}" alt="{{ setting('site_name', 'Homework Solutions') }}" class="w-8 h-auto" />
-                                <p class="font-bold text-sm">
-                                    @switch($i)
-                                        @case(1)
-                                            Đầy đủ lời giải SGK - SBT - VBT từ lớp 1 - lớp 12
-                                            @break
-                                        @case(2)
-                                            Kho bài tập trắc nghiệm bám sát theo dạng bài
-                                            @break
-                                        @case(3)
-                                            Hệ thống đề thi phong phú, chất lượng
-                                            @break
-                                        @case(4)
-                                            Lý thuyết dạng sơ đồ tư duy dễ hiểu
-                                            @break
-                                    @endswitch
-                                </p>
-                            </li>
-                        @endfor
-                    </ul>
-                </div>
+                @if(setting('home_hero_description') !== null)
+                    <div class="w-full flex-shrink-0 flex-grow-0 md:w-[35%]">
+                        {!! setting('home_hero_description') !!}
+                    </div>
+                @endif
             </div>
 
             <h3 class="text-center text-2xl font-medium text-gray-700 mb-4">
@@ -121,7 +97,7 @@
         <div class="container mx-auto py-12 relative z-2">
             <div class="w-full flex flex-wrap items-center justify-between">
                 <div class="w-full mb-4 md:w-1/2 md:mb-0">
-                    <img src="{{ asset('images/step-thumb.png')  }}"
+                    <img src="{{ setting('home_instruction_banner') ? Storage::url(setting('home_instruction_banner')) : asset('images/step-thumb.png') }}"
                          alt="{{ setting('site_name', 'Homework Solutions') }}"
                          class="w-full"
                     />
@@ -136,36 +112,32 @@
                     </div>
 
                     <div class="flex flex-col gap-y-4 pl-8 border-l-2 border-orange-400 relative">
-                        @for($i = 1;$i <= 3;$i++)
+                        @php $steps = json_decode(setting('home_instruction_steps'), true) ?? []; @endphp
+
+                        @foreach($steps as $index => $step)
                             <div class="flex items-center gap-x-2 relative">
                                 <span class="iconify text-3xl text-orange-400 absolute -left-12"
                                       data-icon="mdi-play-circle-outline">
                                 </span>
 
                                 <div class="w-[92px] h-[33px] inline-flex items-center justify-center font-bold text-uppercase text-2xl text-white bg-no-repeat" style="background-image: url('{{ asset('images/step-bg.png') }}'); background-position: 0 0;">
-                                    Bước {{ $i }}
+                                    {!! $step['title'] !!}
                                 </div>
 
                                 <div class="bg-[#2c9ae233] bg-opacity-40 p-2 rounded-2xl text-gray-700 flex-1">
                                     <div class="border !border-dashed border-white p-2 rounded-xl">
-                                        @switch($i)
-                                            @case(1)
-                                                <p>Mở trình duyệt web có sẵn lên</p>
-                                                <p class="font-bold">Có thể là: Chrome, Cốc cốc...</p>
-                                                @break
-                                            @case(2)
-                                                <p>Gõ tên bài cần giải + {{ setting('site_name', 'Homework Solutions') }}</p>
-                                                <p class="font-bold">VD: Giải toán 7 bài: cộng phân số {{ setting('site_name', 'Homework Solutions') }}</p>
-                                                @break
-                                            @case(3)
-                                                <p>Các kết quả tìm kiếm hiện ra</p>
-                                                <p class="font-bold">Chọn ngay những kết quả đầu tiên</p>
-                                                @break
-                                        @endswitch
+                                        {!! $step['description'] !!}
                                     </div>
                                 </div>
                             </div>
-                        @endfor
+                        @endforeach
+
+                        {{-- Fallback if no steps are configured --}}
+                        @if(empty($steps))
+                            <div class="text-gray-500 italic">
+                                Chưa có bước hướng dẫn nào được cấu hình.
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

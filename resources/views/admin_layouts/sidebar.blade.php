@@ -14,9 +14,11 @@
             <div>
                 <h3 class="mb-4 text-sm font-medium text-[#8a99af] px-6">Menu</h3>
                 <ul class="mb-6 flex flex-col gap-1.5">
-                    @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Trang chính", 'itemIcon' => 'mdi-view-dashboard', 'itemLink' => route('admin.dashboard')])
+                    @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Tổng quan", 'itemIcon' => 'mdi-view-dashboard', 'itemLink' => route('admin.dashboard')])
 
-                    @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Cài đặt", 'itemIcon' => 'mdi-cog', 'itemLink' => route('admin.settings.index')])
+                    @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Cài đặt chung", 'itemIcon' => 'mdi-cog', 'itemLink' => route('admin.settings.index')])
+
+                    @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Cài đặt trang chủ", 'itemIcon' => 'mdi-cog', 'itemLink' => route('admin.settings.home')])
                 </ul>
             </div>
 

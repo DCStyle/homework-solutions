@@ -33,6 +33,8 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
     Route::prefix('settings')->group(function() {
         Route::get('/', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('admin.settings.index');
         Route::put('/', [App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('admin.settings.update');
+        Route::get('/home', [App\Http\Controllers\Admin\SettingsController::class, 'home'])->name('admin.settings.home');
+        Route::put('/home', [App\Http\Controllers\Admin\SettingsController::class, 'updateHome'])->name('admin.settings.updateHome');
     });
 
     // Categories management

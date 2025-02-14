@@ -49,4 +49,49 @@ class SettingsController extends Controller
 
         return back()->with('success', 'Cập nhật cài đặt thành công');
     }
+
+    public function home()
+    {
+        return view('admin.settings.home');
+    }
+
+    public function updateHome(Request $request)
+    {
+        // First, get the actual instruction steps (excluding the empty last one)
+        $instructionSteps = collect($request->instruction_steps)
+            ->filter(function ($step) {
+                return !empty($step['title']) || !empty($step['description']);
+            })->values()->all();
+
+        // Replace the steps in the request with the filtered ones
+        $request->merge(['instruction_steps' => $instructionSteps]);
+
+        $validated = $request->validate([
+            'home_hero_description' => 'required|string',
+            'home_hero_banner' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'home_instruction_banner' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'instruction_steps' => 'required|array|min:1',
+            'instruction_steps.*' => 'required|array', // Validate each step is an array
+            'instruction_steps.*.title' => 'required|string|max:255',
+            'instruction_steps.*.description' => 'required|string',
+        ]);
+
+        if ($request->hasFile('home_hero_banner')) {
+            $validated['home_hero_banner'] = $request->file('home_hero_banner')->store('settings', 'public');
+        }
+
+        if ($request->hasFile('home_instruction_banner')) {
+            $validated['home_instruction_banner'] = $request->file('home_instruction_banner')->store('settings', 'public');
+        }
+
+        // Convert instruction steps to JSON before saving
+        $validated['home_instruction_steps'] = json_encode(array_values($validated['instruction_steps']));
+        unset($validated['instruction_steps']);
+
+        foreach ($validated as $key => $value) {
+            setting([$key => $value]);
+        }
+
+        return back()->with('success', 'Cập nhật cài đặt trang chủ thành công');
+    }
 }
