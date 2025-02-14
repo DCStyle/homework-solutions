@@ -30,52 +30,6 @@
             <!-- Right Side Of Navbar -->
             <div class="flex items-center">
                 <div class="hidden items-center space-x-4 xl:flex">
-                    @guest
-                        @if (Route::has('login'))
-                            <a href="{{ route('login') }}" class="flex items-center gap-x-1 text-decoration-none">
-                                <span class="iconify" data-icon="mdi-login"></span>
-                                {{ __('Login') }}
-                            </a>
-                        @endif
-                        @if (Route::has('register'))
-                            <a href="{{ route('register') }}" class="ml-4 flex items-center gap-x-1 text-decoration-none">
-                                <span class="iconify" data-icon="mdi-account-plus"></span>
-                                {{ __('Register') }}
-                            </a>
-                        @endif
-                    @else
-                        <div class="relative dropdown">
-                            <a id="navbarDropdown"
-                               class="flex items-center gap-x-1 text-decoration-none focus:outline-none"
-                               data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-                               role="button" href="#"
-                            >
-                                <span class="iconify" data-icon="mdi-account"></span>
-                                {{ Auth::user()->name }}
-
-                                <span class="iconify" data-icon="mdi-menu-down"></span>
-                            </a>
-
-                            <div class="bg-white dropdown-menu dropdown-menu-end z-10" aria-labelledby="navbarDropdown">
-                                @if(Auth::user()->isAdmin())
-                                    <a class="dropdown-item text-decoration-none" href="{{ route('admin.dashboard') }}">
-                                        {{ __('Admin Dashboard') }}
-                                    </a>
-                                @endif
-
-                                <a class="dropdown-item text-decoration-none" href="{{ route('logout') }}"
-                                   onclick="event.preventDefault();
-                                                     document.getElementById('logout-form').submit();">
-                                    {{ __('Logout') }}
-                                </a>
-
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                    @csrf
-                                </form>
-                            </div>
-                        </div>
-                    @endguest
-
                     <div class="max-w-sm">
                         <button type="button"
                                 class="flex items-center gap-x-1 text-decoration-none"
