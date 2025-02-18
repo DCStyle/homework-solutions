@@ -5,13 +5,21 @@ namespace App\Models;
 use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Post extends Model
 {
     use HasFactory;
     use Sluggable;
 
-    protected $fillable = ['title', 'content', 'user_id', 'slug', 'book_chapter_id'];
+    protected $fillable = [
+        'title',
+        'content',
+        'user_id',
+        'slug',
+        'book_chapter_id',
+        'source_url'
+    ];
 
     protected static function boot()
     {
@@ -19,6 +27,8 @@ class Post extends Model
 
         static::deleting(function ($post) {
             $post->images()->delete();
+
+            $post->attachments()->delete();
         });
     }
 
@@ -55,5 +65,10 @@ class Post extends Model
     public function images()
     {
         return $this->morphMany(Image::class, 'imageable');
+    }
+
+    public function attachments()
+    {
+        return $this->hasMany(PostAttachment::class);
     }
 }

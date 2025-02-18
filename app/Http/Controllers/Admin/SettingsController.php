@@ -28,13 +28,13 @@ class SettingsController extends Controller
 
         // Save files and update settings
         if ($request->hasFile('site_logo')) {
-            $validated['site_logo'] = $request->file('site_logo')->store('settings', 'public');
+            $validated['site_logo'] = $request->file('site_logo')->store('settings', 's3');
         }
         if ($request->hasFile('site_favicon')) {
-            $validated['site_favicon'] = $request->file('site_favicon')->store('settings', 'public');
+            $validated['site_favicon'] = $request->file('site_favicon')->store('settings', 's3');
         }
         if ($request->hasFile('site_og_image')) {
-            $validated['site_og_image'] = $request->file('site_og_image')->store('settings', 'public');
+            $validated['site_og_image'] = $request->file('site_og_image')->store('settings', 's3');
         }
         if ($request->cache_enabled == 'on') {
             setting(['cache_enabled' => 1]);
@@ -77,11 +77,11 @@ class SettingsController extends Controller
         ]);
 
         if ($request->hasFile('home_hero_banner')) {
-            $validated['home_hero_banner'] = $request->file('home_hero_banner')->store('settings', 'public');
+            $validated['home_hero_banner'] = $request->file('home_hero_banner')->store('settings', 's3');
         }
 
         if ($request->hasFile('home_instruction_banner')) {
-            $validated['home_instruction_banner'] = $request->file('home_instruction_banner')->store('settings', 'public');
+            $validated['home_instruction_banner'] = $request->file('home_instruction_banner')->store('settings', 's3');
         }
 
         // Convert instruction steps to JSON before saving

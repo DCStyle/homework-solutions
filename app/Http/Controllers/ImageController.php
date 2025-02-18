@@ -32,7 +32,7 @@ class ImageController extends Controller
 
             return response()->json([
                 'success' => true,
-                'url' => asset('storage/' . $path),
+                'url' => Storage::disk('s3')->url($path),
                 'image_id' => $image->id
             ]);
 
@@ -80,7 +80,7 @@ class ImageController extends Controller
             return response()->json([
                 'success' => true,
                 'image' => $image,
-                'url' => asset('storage/' . $path)
+                'url' => Storage::disk('s3')->url($path)
             ]);
 
         } catch (\Exception $e) {
@@ -94,9 +94,9 @@ class ImageController extends Controller
     public function destroy(Image $image)
     {
         try {
-            // Delete the file
-            if (Storage::disk('public')->exists($image->path)) {
-                Storage::disk('public')->delete($image->path);
+            // Delete the file from S3
+            if (Storage::disk('s3')->exists($image->path)) {
+                Storage::disk('s3')->delete($image->path);
             }
 
             // Delete the record
@@ -122,8 +122,11 @@ class ImageController extends Controller
         // Generate a unique filename
         $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
 
-        // Store the file
-        $path = $file->storeAs($folder, $filename, 'public');
+        // Store the file in S3
+        $path = $file->storeAs($folder, $filename, 's3');
+
+        // Make the file publicly accessible
+        Storage::disk('s3')->setVisibility($path, 'public');
 
         return $path;
     }

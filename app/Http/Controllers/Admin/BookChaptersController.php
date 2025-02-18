@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Models\Book;
 use App\Models\Image;
 use App\Models\Post;
+use App\Models\PostAttachment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -73,16 +74,17 @@ class BookChaptersController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'message' => 'required|string',
+            'uploaded_attachment_ids' => 'nullable|json'
         ]);
 
         $post = Post::create([
             'title' => $request->title,
-            'content' => $request->message, // HTML content from TinyMCE
+            'content' => $request->message,
             'book_chapter_id' => $chapter->id,
             'user_id' => Auth::id(),
         ]);
 
-        // Attach uploaded images
+        // Handle image attachments
         if ($request->has('uploaded_image_ids')) {
             $imageIds = json_decode($request->uploaded_image_ids, true);
             if (is_array($imageIds)) {
@@ -94,6 +96,17 @@ class BookChaptersController extends Controller
             }
         }
 
-        return redirect()->route('admin.bookChapters.posts', $id)->with('success', 'Tạo bài viết thành công.');
+        // Handle pre-uploaded attachments
+        if ($request->has('uploaded_attachment_ids')) {
+            $attachmentIds = json_decode($request->uploaded_attachment_ids, true);
+            if (is_array($attachmentIds)) {
+                PostAttachment::whereIn('id', $attachmentIds)
+                    ->whereNull('post_id')
+                    ->update(['post_id' => $post->id]);
+            }
+        }
+
+        return redirect()->route('admin.bookChapters.posts', $id)
+            ->with('success', 'Tạo bài viết thành công.');
     }
 }

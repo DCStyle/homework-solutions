@@ -150,6 +150,10 @@ Route::get('/books/{group_slug}.html', [App\Http\Controllers\BooksController::cl
 // Posts
 Route::get('/posts/{post_slug}.html', [PostsController::class, 'show'])->name('posts.show');
 
+// Attachments
+Route::get('/attachments/{attachment}/download', [App\Http\Controllers\AttachmentsController::class, 'download'])->name('attachments.download');
+Route::get('/attachments/{attachment}/preview', [App\Http\Controllers\AttachmentsController::class, 'preview'])->name('attachments.preview');
+
 // Articles
 Route::prefix('articles')->group(function() {
     Route::get('/latest', [App\Http\Controllers\ArticlesController::class, 'latest'])->name('articles.latest');

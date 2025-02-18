@@ -8,6 +8,7 @@ use App\Models\BookChapter;
 use App\Models\BookGroup;
 use App\Models\Category;
 use App\Models\Post;
+use App\Models\PostAttachment;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
@@ -22,6 +23,8 @@ class PostController extends Controller
             'chapter_title' => 'required|string',
             'post_title' => 'required|string',
             'content' => 'required|string',
+            'source_url' => 'nullable|url',
+            'attachment_ids' => 'nullable|array',
         ]);
 
         // Map JSON fields to variables
@@ -36,23 +39,51 @@ class PostController extends Controller
         $category = Category::firstOrCreate(['name' => $categoryName]);
 
         // Process Book Group
-        $bookGroup = BookGroup::firstOrCreate(['name' => $bookGroupName, 'category_id' => $category->id],);
+        $bookGroup = BookGroup::firstOrCreate(
+            ['name' => $bookGroupName, 'category_id' => $category->id]
+        );
 
         // Process Book
-        $book = Book::firstOrCreate(['name' => $bookTitle, 'book_group_id' => $bookGroup->id]);
+        $book = Book::firstOrCreate(
+            ['name' => $bookTitle, 'book_group_id' => $bookGroup->id]
+        );
 
         // Process Book Chapter
-        $bookChapter = BookChapter::firstOrCreate(['name' => $chapterTitle, 'book_id' => $book->id]);
+        $bookChapter = BookChapter::firstOrCreate(
+            ['name' => $chapterTitle, 'book_id' => $book->id]
+        );
 
         // Check if Post exists
-        $existingPost = Post::where('title', $postTitle)->where('book_chapter_id', $bookChapter->id)->first();
+        $existingPost = Post::where('title', $postTitle)
+            ->where('book_chapter_id', $bookChapter->id)
+            ->first();
+
         if ($existingPost) {
             // Update existing Post
             $existingPost->update([
-                'content' => $content
+                'content' => $content,
+                'source_url' => $validatedData['source_url'] ?? null
             ]);
 
-            return response()->json(['success' => 'Post updated successfully. URL: ' . route('posts.show', $existingPost->slug)]);
+            // Update attachment associations if any
+            if (isset($validatedData['attachment_ids'])) {
+                // Update post_id for the attachments
+                PostAttachment::whereIn('id', $validatedData['attachment_ids'])
+                    ->update(['post_id' => $existingPost->id]);
+
+                // Delete removed attachments
+                $existingPost->attachments()
+                    ->whereNotIn('id', $validatedData['attachment_ids'])
+                    ->get()
+                    ->each(function ($attachment) {
+                        $attachment->delete();
+                    });
+            }
+
+            return response()->json([
+                'success' => 'Post updated successfully. URL: ' .
+                    route('posts.show', $existingPost->slug)
+            ]);
         } else {
             // Create new Post
             $post = Post::create([
@@ -60,9 +91,19 @@ class PostController extends Controller
                 'content' => $content,
                 'user_id' => 1, // Default user ID or adjust as needed
                 'book_chapter_id' => $bookChapter->id,
+                'source_url' => $validatedData['source_url'] ?? null
             ]);
 
-            return response()->json(['success' => 'Post created successfully. URL: ' . route('posts.show', $post->slug)]);
+            // Associate existing attachments if any
+            if (isset($validatedData['attachment_ids'])) {
+                PostAttachment::whereIn('id', $validatedData['attachment_ids'])
+                    ->update(['post_id' => $post->id]);
+            }
+
+            return response()->json([
+                'success' => 'Post created successfully. URL: ' .
+                    route('posts.show', $post->slug)
+            ]);
         }
     }
 }

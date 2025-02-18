@@ -15,6 +15,8 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
 
         $schedule->command('content:replace-urls')->daily();
+
+        $schedule->command('attachments:clean-orphaned')->daily();
     }
 
     /**

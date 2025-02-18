@@ -1,4 +1,3 @@
-@php use function App\Helpers\format_time; @endphp
 @extends('admin_layouts.admin')
 
 @section('content')

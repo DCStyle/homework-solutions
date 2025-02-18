@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AttachmentController;
 use App\Http\Controllers\Api\PostController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -15,8 +16,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+Route::post('posts/import', [PostController::class, 'importPostFromJSON']);
 
-Route::post('/posts/import', [PostController::class, 'importPostFromJSON']);
+Route::post('attachments/upload', [AttachmentController::class, 'upload']);
+Route::delete('attachments/{attachment}', [AttachmentController::class, 'destroy']);

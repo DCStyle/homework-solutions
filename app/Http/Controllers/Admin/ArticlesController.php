@@ -95,7 +95,7 @@ class ArticlesController extends Controller
 
         // Delete associated images from storage
         foreach ($article->images as $image) {
-            Storage::disk('public')->delete($image->path);
+            Storage::disk('s3')->delete($image->path);
         }
 
         $article->delete();
@@ -159,7 +159,7 @@ class ArticlesController extends Controller
                 ->whereNotIn('id', $imageIds)
                 ->get()
                 ->each(function($image) {
-                    Storage::disk('public')->delete($image->path);
+                    Storage::disk('s3')->delete($image->path);
                     $image->delete();
                 });
         }
