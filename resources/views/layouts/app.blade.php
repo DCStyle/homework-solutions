@@ -50,6 +50,16 @@
     <!-- Scripts -->
     @vite(['resources/js/app.js'])
 
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QYXLDJP7G6"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-QYXLDJP7G6');
+    </script>
+
     @stack('styles')
 </head>
 <body>
@@ -58,7 +68,7 @@
         @include('layouts.header')
 
         <!-- Main Content -->
-        <main class="py-4">
+        <main class="py-4 w-full overflow-x-hidden">
             @yield('content')
         </main>
 

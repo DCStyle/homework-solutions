@@ -132,23 +132,18 @@
             </div>
 
             <!-- Right Side -->
-            <div class="flex items-center">
+            <div class="flex items-center gap-4">
                 <!-- Search -->
-                <div class="hidden xl:flex items-center">
-                    <span class="iconify text-2xl cursor-pointer"
-                          data-icon="mdi-magnify"
-                          data-bs-toggle="modal"
-                          data-bs-target="#search-modal"
-                    ></span>
-                </div>
+                <span class="iconify text-2xl cursor-pointer"
+                      data-icon="mdi-magnify"
+                      data-bs-toggle="modal"
+                      data-bs-target="#search-modal"
+                ></span>
 
-                <!-- Mobile menu button -->
-                <div class="flex items-center xl:hidden ml-4">
-                    <span class="iconify text-2xl text-white cursor-pointer"
-                          data-icon="mdi-view-grid"
-                          data-bs-toggle="modal"
-                          data-bs-target="#mobile-menu-modal"></span>
-                </div>
+                <span class="iconify text-2xl text-white cursor-pointer xl:hidden"
+                      data-icon="mdi-view-grid"
+                      data-bs-toggle="modal"
+                      data-bs-target="#mobile-menu-modal"></span>
             </div>
         </div>
     </div>

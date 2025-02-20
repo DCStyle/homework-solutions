@@ -60,12 +60,49 @@
                 </a>
             </h1>
 
-            <nav aria-label="breadcrumb" class="my-4">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a title="{{ __('Home') }}" href="{{ route('home') }}">{{ __('Home') }}</a></li>
-                    <li class="breadcrumb-item"><a title="{{ $post->chapter->book->group->category->name }}" href="{{ route('categories.show', $post->chapter->book->group->category->slug) }}">{{ $post->chapter->book->group->category->name }}</a></li>
-                    <li class="breadcrumb-item"><a title="{{ $post->chapter->book->name }}" href="{{ route('books.show', $post->chapter->book->slug) }}">{{ $post->chapter->book->group->name . ' ' . $post->chapter->book->group->category->name . ' - ' . $post->chapter->book->name }}</a></li>
-                    <li class="breadcrumb-item"><a title="{{ $post->title }}" href="{{ route('posts.show', $post->slug) }}" class="font-bold text-orange-400">{{ $post->title }}</a></li>
+            <nav aria-label="breadcrumb" class="w-full py-4">
+                <ol class="w-full flex flex-wrap items-center gap-2 text-sm mx-0 px-0">
+                    <li class="flex items-center">
+                        <a
+                            href="{{ route('home') }}"
+                            title="{{ __('Home') }}"
+                            class="text-gray-600 hover:text-blue-500 transition-colors duration-200"
+                        >
+                            {{ __('Home') }}
+                        </a>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mx-2 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </li>
+
+                    <li class="flex items-center">
+                        <a
+                            href="{{ route('categories.show', $post->chapter->book->group->category->slug) }}"
+                            title="{{ $post->chapter->book->group->category->name }}"
+                            class="text-gray-600 hover:text-blue-500 transition-colors duration-200"
+                        >
+                            {{ $post->chapter->book->group->category->name }}
+                        </a>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mx-2 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </li>
+
+                    <li class="flex items-center">
+                        <a
+                            href="{{ route('books.show', $post->chapter->book->slug) }}"
+                            title="{{ $post->chapter->book->name }}"
+                            class="text-gray-600 hover:text-blue-500 transition-colors duration-200"
+                        >
+                            {{ $post->chapter->book->group->name . ' ' . $post->chapter->book->group->category->name . ' - ' . $post->chapter->book->name }}
+                        </a>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mx-2 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </li>
+
+                    <li>
+                        <span
+                            class="text-blue-500 font-medium"
+                            title="{{ $post->title }}"
+                        >
+                            {{ $post->title }}
+                        </span>
+                    </li>
                 </ol>
             </nav>
 
