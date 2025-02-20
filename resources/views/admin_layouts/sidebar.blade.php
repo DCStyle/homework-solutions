@@ -19,6 +19,8 @@
                     @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Cài đặt chung", 'itemIcon' => 'mdi-cog', 'itemLink' => route('admin.settings.index')])
 
                     @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Cài đặt trang chủ", 'itemIcon' => 'mdi-cog', 'itemLink' => route('admin.settings.home')])
+
+                    @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Cài đặt menu header", 'itemIcon' => 'mdi-cog', 'itemLink' => route('admin.menu.index')])
                 </ul>
             </div>
 

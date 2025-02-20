@@ -37,6 +37,21 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
         Route::put('/home', [App\Http\Controllers\Admin\SettingsController::class, 'updateHome'])->name('admin.settings.updateHome');
     });
 
+    // Menu management
+    Route::prefix('menu')->group(function() {
+        Route::get('/', [App\Http\Controllers\Admin\MenuController::class, 'index'])->name('admin.menu.index');
+
+        Route::get('/create', [App\Http\Controllers\Admin\MenuController::class, 'create'])->name('admin.menu.create');
+        Route::post('/', [App\Http\Controllers\Admin\MenuController::class, 'store'])->name('admin.menu.store');
+
+        Route::get('/{menuItem}/edit', [App\Http\Controllers\Admin\MenuController::class, 'edit'])->name('admin.menu.edit');
+        Route::put('/{menuItem}', [App\Http\Controllers\Admin\MenuController::class, 'update'])->name('admin.menu.update');
+
+        Route::delete('/{menuItem}', [App\Http\Controllers\Admin\MenuController::class, 'destroy'])->name('admin.menu.destroy');
+
+        Route::post('/reorder', [App\Http\Controllers\Admin\MenuController::class, 'reorder'])->name('admin.menu.reorder');
+    });
+
     // Categories management
     Route::prefix('categories')->group(function() {
         Route::get('/', [App\Http\Controllers\Admin\CategoriesController::class, 'index'])->name('admin.categories.index');
