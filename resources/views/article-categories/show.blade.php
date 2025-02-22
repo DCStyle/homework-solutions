@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@seo(['title' => $category->name])
+@seo(['title' => $category->name . ' | . setting('site_name', 'Homework Solutions')])
 @seo(['description' => $category->description])
 
 @section('content')

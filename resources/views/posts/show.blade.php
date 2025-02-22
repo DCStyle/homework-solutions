@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@seo(['title' => $post->title . ' | ' . $post->chapter->book->name . ' | ' . $post->chapter->book->group->category->name])
+@seo(['title' => $post->title . ' | ' . $post->chapter->book->name . ' | ' . $post->chapter->book->group->category->name . ' | . setting('site_name', 'Homework Solutions')])
 @seo(['description' => $post->getContentSnippet()])
 
 @section('content')
