@@ -39,7 +39,7 @@
 
             <nav aria-label="breadcrumb" class="my-4">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a title="{{ __('Home') }}" href="{{ route('home') }}">{{ __('Home') }}</a></li>
+                    <li class="breadcrumb-item"><a title="{{ setting('site_name', 'Home') }}" href="{{ route('home') }}">{{ setting('site_name', 'Home') }}</a></li>
                     <li class="breadcrumb-item"><a title="{{ $category->name }}" href="{{ route('categories.show', $category->slug) }}">{{ $category->name }}</a></li>
                 </ol>
             </nav>
@@ -62,7 +62,11 @@
                     <div class="grid gap-4 md:grid-cols-2">
                         @foreach($category->bookGroups as $group)
                             <div>
-                                <h3 class="text-xl font-medium text-orange-400">{{ $group->name }}</h3>
+                                <h3 class="text-xl font-medium text-orange-400">
+                                    <a href="{{ route('bookGroups.show', $group->slug) }}" title="{{ $group->name }}" class="hover:underline hover:text-orange-400">
+                                        {{ $group->name }}
+                                    </a>
+                                </h3>
 
                                 <div class="py-4 flex flex-col gap-2 border-dashed border-blue-600">
                                     @foreach($group->books as $book)

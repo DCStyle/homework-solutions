@@ -26,6 +26,8 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="@yield('image', setting('site_og_image') ? asset(Storage::url(setting('site_og_image'))) : 'https://placehold.co/126')">
 
+    <x-seo::meta />
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ setting('site_favicon') ? asset(Storage::url(setting('site_favicon'))) : 'https://placehold.co/16' }}">
 
@@ -37,10 +39,6 @@
 
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <title>
-        {{ setting('site_name', 'Homework Solutions') }}
-    </title>
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">

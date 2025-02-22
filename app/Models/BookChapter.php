@@ -23,7 +23,12 @@ class BookChapter extends Model
         });
     }
 
-    protected $fillable = ['name', 'slug', 'book_id'];
+    protected $fillable = [
+        'name',
+        'description',
+        'slug',
+        'book_id'
+    ];
 
     public function sluggable(): array
     {
@@ -32,6 +37,12 @@ class BookChapter extends Model
                 'source' => 'name'
             ]
         ];
+    }
+
+    public function getDescriptionSnippet($length = 100)
+    {
+        $description = html_entity_decode(strip_tags($this->description));
+        return strlen($description) > $length ? substr($description, 0, $length) . '...' : $description;
     }
 
     public function book()

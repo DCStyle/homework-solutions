@@ -10,6 +10,12 @@ class AttachmentsController extends Controller
 {
     public function download(PostAttachment $attachment)
     {
+        // Show countdown page instead of direct download
+        return view('attachments.countdown', compact('attachment'));
+    }
+
+    public function processDownload(PostAttachment $attachment)
+    {
         $path = 'post-attachments/' . $attachment->filename;
 
         try {
@@ -51,7 +57,6 @@ class AttachmentsController extends Controller
                 ]
             );
 
-            // Instead of trying to serve the file, we'll redirect to the temporary URL
             return redirect()->away($url);
         } catch (Exception $e) {
             \Log::error('PDF preview failed: ' . $e->getMessage(), [

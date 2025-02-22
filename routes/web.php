@@ -160,13 +160,14 @@ Route::get('/book-groups/{group_slug}.html', [App\Http\Controllers\BookGroupsCon
 Route::get('/books/{group_slug}.html', [App\Http\Controllers\BooksController::class, 'show'])->name('books.show');
 
 // Book chapters
-//Route::get('/book-chapters/{chapter_slug}.html', [App\Http\Controllers\BookChaptersController::class, 'show'])->name('bookChapters.show');
+Route::get('/book-chapters/{chapter_slug}.html', [App\Http\Controllers\BookChaptersController::class, 'show'])->name('bookChapters.show');
 
 // Posts
 Route::get('/posts/{post_slug}.html', [PostsController::class, 'show'])->name('posts.show');
 
 // Attachments
 Route::get('/attachments/{attachment}/download', [App\Http\Controllers\AttachmentsController::class, 'download'])->name('attachments.download');
+Route::get('/attachments/{attachment}/process-download', [App\Http\Controllers\AttachmentsController::class, 'processDownload'])->name('attachments.process-download');
 Route::get('/attachments/{attachment}/preview', [App\Http\Controllers\AttachmentsController::class, 'preview'])->name('attachments.preview');
 
 // Articles

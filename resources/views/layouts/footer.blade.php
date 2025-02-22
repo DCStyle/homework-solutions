@@ -1,5 +1,9 @@
 <footer class="bg-gray-100 py-6">
     <div class="container mx-auto flex justify-between items-center space-y-4 md:space-y-0 flex-wrap">
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7107720085696901"
+                crossorigin="anonymous">
+        </script>
+
         <div class="flex flex-col gap-2">
             <!-- Middle Section: Copyright and Badges -->
             <div class="text-gray-600 flex items-center space-x-2">

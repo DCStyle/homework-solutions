@@ -2,28 +2,28 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BookChapter;
 use App\Models\Post;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Category;
-use Illuminate\Support\Facades\DB;
 
-class CategoriesController extends Controller
+class BookChaptersController extends Controller
 {
-    public function show($slug)
+    public function show()
     {
-        $category = Category::where('slug', $slug)->firstOrFail();
+        $chapter = BookChapter::where('slug', request()->chapter_slug)->firstOrFail();
+        $book = $chapter->book;
+        $group = $book->group;
+        $category = $group->category;
 
         $footerLatestPosts = Post::select('posts.*')
             ->join('book_chapters', 'posts.book_chapter_id', '=', 'book_chapters.id')
             ->join('books', 'book_chapters.book_id', '=', 'books.id')
             ->join('book_groups', 'books.book_group_id', '=', 'book_groups.id')
             ->join('categories', 'book_groups.category_id', '=', 'categories.id')
-            ->where('categories.slug', $slug)
+            ->where('categories.id', $category->id)
             ->orderBy('posts.created_at', 'desc')
-            ->take(40)
+            ->limit(40)
             ->get();
 
-        return view('categories.show', compact('category', 'footerLatestPosts'));
+        return view('book-chapters.show', compact('chapter', 'book', 'group', 'category', 'footerLatestPosts'));
     }
 }

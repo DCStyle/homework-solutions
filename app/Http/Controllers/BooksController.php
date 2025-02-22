@@ -18,7 +18,7 @@ class BooksController extends Controller
             ->join('books', 'book_chapters.book_id', '=', 'books.id')
             ->where('books.book_group_id', $book->group->id)
             ->orderBy('posts.created_at', 'desc')
-            ->limit(10)
+            ->limit(40)
             ->get();
 
         return view('books.show', compact('book', 'category', 'footerLatestPosts'));

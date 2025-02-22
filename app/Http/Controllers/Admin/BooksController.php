@@ -90,8 +90,9 @@ class BooksController extends Controller
     public function createChapter($id)
     {
         $book = Book::whereId($id)->firstOrFail();
+        $books = Book::all()->sortBy('book_group_id');
 
-        return view('admin.chapters.form', compact('book'));
+        return view('admin.chapters.form', compact('book', 'books'));
     }
 
     public function storeChapter(Request $request, $id)
@@ -100,6 +101,7 @@ class BooksController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
         ]);
 
         BookChapter::create([

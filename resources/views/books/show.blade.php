@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@seo(['title' => $book->group->category->name . ' - ' . $book->group->name . ' - ' .$book->name])
+@seo(['title' => $book->name . ' | ' . $book->group->name . ' | ' . $book->group->category->name])
 @seo(['description' => $book->getDescriptionSnippet()])
 
 @section('content')
@@ -32,7 +32,12 @@
                     <ul class="mt-4">
                         @foreach ($book->chapters as $chapter)
                             <li class="mb-4">
-                                <h3 class="font-bold text-green-700">{{ $chapter->name }}</h3>
+                                <h3 class="font-bold text-green-700">
+                                    <a title="{{ $chapter->name }}" href="{{ route('bookChapters.show', $chapter->slug) }}"
+                                       class="text-gray-800 hover:text-orange-400">
+                                        {{ $chapter->name }}
+                                    </a>
+                                </h3>
                                 <ul class="list-disc list-inside mt-2">
                                     @foreach ($chapter->posts as $item)
                                         <li class="mb-2">
@@ -57,7 +62,7 @@
 
             <nav aria-label="breadcrumb" class="my-4">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a title="{{ __('Home') }}" href="{{ route('home') }}">{{ __('Home') }}</a></li>
+                    <li class="breadcrumb-item"><a title="{{ setting('site_name', 'Home') }}" href="{{ route('home') }}">{{ setting('site_name', 'Home') }}</a></li>
                     <li class="breadcrumb-item"><a title="{{ $book->group->category->name }}" href="{{ route('categories.show', $book->group->category->slug) }}">{{ $book->group->category->name }}</a></li>
                     <li class="breadcrumb-item"><a title="{{ $book->name }}" href="{{ route('books.show', $book->slug) }}" class="font-bold text-orange-400">{{ $book->group->name . ' ' . $book->group->category->name . ' - ' . $book->name }}</a></li>
                 </ol>
@@ -82,7 +87,11 @@
                     <div class="grid gap-4 md:grid-cols-2">
                         @foreach($book->chapters as $chapter)
                             <div>
-                                <h3 class="text-xl font-medium text-orange-400">{{ $chapter->name }}</h3>
+                                <h3 class="text-xl font-medium text-orange-400">
+                                    <a href="{{ route('bookChapters.show', $chapter->slug) }}" title="{{ $chapter->name }}" class="hover:underline hover:text-orange-400">
+                                        {{ $chapter->name }}
+                                    </a>
+                                </h3>
 
                                 <div class="py-4 flex flex-col gap-2 border-dashed border-blue-600">
                                     @foreach($chapter->posts as $post)

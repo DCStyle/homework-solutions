@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@seo(['title' => $post->chapter->book->group->category->name . ' - ' . $post->chapter->book->name . ' - ' . $post->title])
+@seo(['title' => $post->title . ' | ' . $post->chapter->book->name . ' | ' . $post->chapter->book->group->category->name])
 @seo(['description' => $post->getContentSnippet()])
 
 @section('content')
@@ -19,7 +19,7 @@
                         @foreach ($post->chapter->posts as $item)
                             <li class="mb-2">
                                 <a title="{{ $item->title }}" href="{{ route('posts.show', $item->slug) }}"
-                                    class="text-gray-800 hover:text-orange-400 {{ $item->id == $post->id ? 'text-orange-400' : '' }}">
+                                   class="text-gray-800 hover:text-orange-400 {{ $item->id == $post->id ? 'text-orange-400' : '' }}">
                                     {{ $item->title }}
                                 </a>
                             </li>
@@ -65,10 +65,10 @@
                     <li class="flex items-center">
                         <a
                             href="{{ route('home') }}"
-                            title="{{ __('Home') }}"
+                            title="{{ setting('site_name', 'Home') }}"
                             class="text-gray-600 hover:text-blue-500 transition-colors duration-200"
                         >
-                            {{ __('Home') }}
+                            {{ setting('site_name', 'Home') }}
                         </a>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mx-2 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </li>
@@ -209,7 +209,16 @@
 
                     <!-- Modal Body -->
                     <div class="flex-1 p-4 bg-gray-100">
-                        <iframe id="pdf-preview-iframe" class="w-full h-full rounded-lg"></iframe>
+                        <object
+                            id="pdf-preview-object"
+                            class="w-full h-full rounded-lg"
+                            type="application/pdf"
+                            data=""
+                        >
+                            <div class="flex items-center justify-center h-full bg-white rounded-lg">
+                                <p class="text-gray-500">Unable to display PDF. Please try downloading instead.</p>
+                            </div>
+                        </object>
                     </div>
                 </div>
             </div>
@@ -293,10 +302,11 @@
         });
     </script>
 
+    <!-- PDF Preview Script -->
     <script>
         function openPdfPreview(url, filename) {
             const modal = document.getElementById('pdf-preview-modal');
-            const iframe = document.getElementById('pdf-preview-iframe');
+            const pdfObject = document.getElementById('pdf-preview-object');
             const title = document.getElementById('pdf-preview-title');
 
             // Add loading state
@@ -307,12 +317,18 @@
             fetch(url)
                 .then(response => {
                     if (response.ok) {
-                        // Get the final URL after redirects
-                        iframe.src = response.url;
-                        title.textContent = filename;
-                    } else {
-                        throw new Error('Failed to load PDF');
+                        return response.url;
                     }
+                    throw new Error('Failed to load PDF');
+                })
+                .then(finalUrl => {
+                    // Create a URL with custom protocol to prevent download
+                    const pdfUrl = finalUrl + '#toolbar=0&navpanes=0&scrollbar=1&statusbar=0&messages=0&download=0&view=FitH';
+                    pdfObject.setAttribute('data', pdfUrl);
+                    title.textContent = filename;
+
+                    // Add event listener to prevent right-click
+                    pdfObject.addEventListener('contextmenu', (e) => e.preventDefault());
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -324,23 +340,38 @@
             document.body.style.overflow = 'hidden';
 
             // Handle click outside modal to close
-            modal.addEventListener('click', function(e) {
+            const closeOnOutsideClick = function(e) {
                 if (e.target === modal) {
                     closePdfPreview();
                 }
-            });
+            };
+            modal.addEventListener('click', closeOnOutsideClick);
 
             // Handle escape key to close modal
-            document.addEventListener('keydown', function(e) {
+            const closeOnEscape = function(e) {
                 if (e.key === 'Escape') {
                     closePdfPreview();
                 }
-            });
+            };
+            document.addEventListener('keydown', closeOnEscape);
+
+            // Store event listeners for cleanup
+            modal._closeHandlers = {
+                click: closeOnOutsideClick,
+                keydown: closeOnEscape
+            };
         }
 
         function closePdfPreview() {
             const modal = document.getElementById('pdf-preview-modal');
-            const iframe = document.getElementById('pdf-preview-iframe');
+            const pdfObject = document.getElementById('pdf-preview-object');
+
+            // Remove event listeners
+            if (modal._closeHandlers) {
+                modal.removeEventListener('click', modal._closeHandlers.click);
+                document.removeEventListener('keydown', modal._closeHandlers.keydown);
+                delete modal._closeHandlers;
+            }
 
             // Hide modal with fade-out effect
             modal.classList.add('animate-fade-out');
@@ -348,7 +379,7 @@
             setTimeout(() => {
                 modal.classList.add('hidden');
                 modal.classList.remove('animate-fade-out');
-                iframe.src = '';
+                pdfObject.setAttribute('data', '');
                 document.body.style.overflow = '';
             }, 200);
         }
@@ -391,6 +422,21 @@
         @keyframes fadeOut {
             from { opacity: 1; }
             to { opacity: 0; }
+        }
+
+        /* Additional styles to prevent PDF selection and download */
+        #pdf-preview-object {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            pointer-events: auto; /* Changed from none to auto to allow scrolling */
+        }
+
+        #pdf-preview-object::selection {
+            background: transparent;
         }
     </style>
 @endpush
