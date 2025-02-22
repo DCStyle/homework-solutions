@@ -74,12 +74,12 @@
 
                 <div class="p-2 border">
                     <div class="grid gap-4 md:grid-cols-2">
-                        @foreach($group->books as $book)
+                        @foreach($chapter->posts as $post)
                             <li class="flex items-center gap-2">
                                 <span class="iconify text-xl" data-icon="mdi-chevron-right"></span>
 
-                                <a href="{{ route('books.show', $book->slug) }}" title="{{ $book->name }}" class="text-md font-medium text-gray-800 hover:underline hover:text-orange-400">
-                                    {{ $book->name }}
+                                <a href="{{ route('posts.show', $post->slug) }}" title="{{ $post->title }}" class="text-md font-medium text-gray-800 hover:underline hover:text-orange-400">
+                                    {{ $post->title }}
                                 </a>
                             </li>
                         @endforeach
