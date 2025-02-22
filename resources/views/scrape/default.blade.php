@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@seo(['title' => $metadata['title'] . ' | . setting('site_name', 'Homework Solutions')])
+@seo(['title' => $metadata['title'] . ' | ' . setting('site_name', 'Homework Solutions')])
 @seo(['description' => $metadata['description']])
 
 @section('content')

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@seo(['title' => 'Tải xuống tài liệu ' . $attachment->original_filename])
+@seo(['title' => 'Tải xuống tài liệu ' . $attachment->original_filename . ' | '  setting('site_name', 'Homework Solutions'])
 
 @section('content')
     <div class="min-h-screen bg-gray-50 py-12">
