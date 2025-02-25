@@ -82,7 +82,7 @@ class Post extends Model
 
         return new SEOData(
             title: $this->title . ' | ' . $this->chapter->book->name . ' | ' . $this->chapter->book->group->category->name . ' | ' . setting('site_name'),
-            description: "Hướng dẫn học bài: $this->title - {$this->chapter->book->group->name} {$this->chapter->book->group->category->name}. Đây là sách giáo khoa nằm trong bộ sách '{$this->chapter->book->name} {$this->chapter->book->group->category->name}' trên $siteName được biên soạn theo chương trình đổi mới của Bộ giáo dục. Hi vọng, với cách hướng dẫn cụ thể và giải chi tiết các bé sẽ nắm bài học tốt hơn.",
+            description: "Hướng dẫn học bài: $this->title - {$this->chapter->book->group->name}. Đây là sách giáo khoa nằm trong bộ sách '{$this->chapter->book->name} {$this->chapter->book->group->category->name}' trên $siteName được biên soạn theo chương trình đổi mới của Bộ giáo dục. Hi vọng, với cách hướng dẫn cụ thể và giải chi tiết các bé sẽ nắm bài học tốt hơn.",
             image: $this->getThumbnail()
         );
     }

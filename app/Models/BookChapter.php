@@ -46,7 +46,7 @@ class BookChapter extends Model
     {
         if (!$this->description) {
             $siteName = setting('site_name');
-            return trim("Soạn bài $this->name - {$this->book->group->name} {$this->book->group->category->name}, giải bài tập tất cả các môn học trên $siteName, cách trình bày dễ hiểu, khoa học.");
+            return trim("Soạn bài $this->name - {$this->book->group->name}, giải bài tập tất cả các môn học trên $siteName, cách trình bày dễ hiểu, khoa học.");
         }
         $description = html_entity_decode(strip_tags($this->description));
         return strlen($description) > $length ? substr($description, 0, $length) . '...' : $description;
