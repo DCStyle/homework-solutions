@@ -32,7 +32,7 @@ class BookGroup extends Model
     {
         if (!$this->description) {
             $siteName = setting('site_name');
-            return trim("Soạn bài $this->name, giải bài tập tất cả các môn học trên $siteName, cách trình bày dễ hiểu, khoa học.");
+            return trim("Soạn bài $this->name, giải bài tập $this->name và tất cả các môn học trên $siteName, cách trình bày dễ hiểu, khoa học.");
         }
 
         $description = html_entity_decode(strip_tags($this->description));
