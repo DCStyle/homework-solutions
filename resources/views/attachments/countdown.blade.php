@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
-@seo(['title' => 'Tải xuống tài liệu ' . $attachment->original_filename . ' | ' .  setting('site_name', 'Homework Solutions')])
+@section('seo')
+    <meta name="robots" content="noindex,nofollow">
+    <title>Tải xuống tài liệu {{ $attachment->original_filename }} | {{ setting('site_name') }}</title>
+@endsection
 
 @section('content')
     <div class="min-h-screen bg-gray-50 py-12">

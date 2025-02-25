@@ -1,7 +1,8 @@
 @extends('layouts.app')
 
-@seo(['title' => $article->title . ' | ' . setting('site_name', 'Homework Solutions')])
-@seo(['description' => $article->getContentSnippet()])
+@section('seo')
+    {!! seo($article->getDynamicSEOData()) !!}
+@endsection
 
 @section('content')
     <div class="flex justify-between">

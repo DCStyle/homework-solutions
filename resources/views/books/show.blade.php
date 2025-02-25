@@ -1,7 +1,8 @@
 @extends('layouts.app')
 
-@seo(['title' => $book->name . ' | ' . $book->group->name . ' | ' . $book->group->category->name . ' | ' . setting('site_name', 'Homework Solutions')])
-@seo(['description' => $book->getDescriptionSnippet()])
+@section('seo')
+    {!! seo($book->getDynamicSEOData()) !!}
+@endsection
 
 @section('content')
     <div class="flex justify-between">

@@ -1,7 +1,8 @@
 @extends('layouts.app')
 
-@seo(['title' => $category->name . ' - Giải bài tập SGK, VBT ' . $category->name . ' soạn bài với đáp án lời giải giúp để học tốt tất cả các môn' . ' | ' . setting('site_name', 'Homework Solutions')])
-@seo(['description' => $category->getDescriptionSnippet()])
+@section('seo')
+    {!! seo($category->getDynamicSEOData()) !!}
+@endsection
 
 @section('content')
     <div class="flex justify-between">

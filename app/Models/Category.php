@@ -5,9 +5,12 @@ namespace App\Models;
 use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use RalphJSmit\Laravel\SEO\Support\HasSEO;
+use RalphJSmit\Laravel\SEO\Support\SEOData;
 
 class Category extends Model
 {
+    use HasSEO;
     use HasFactory;
     use Sluggable;
 
@@ -27,8 +30,21 @@ class Category extends Model
 
     public function getDescriptionSnippet($length = 100)
     {
+        if (!$this->description) {
+            $siteName = setting('site_name');
+            return trim("Soạn bài, giải bài tập tất cả các môn học $this->name trên $siteName, cách trình bày dễ hiểu, khoa học.");
+        }
+
         $description = html_entity_decode(strip_tags($this->description));
         return strlen($description) > $length ? substr($description, 0, $length) . '...' : $description;
+    }
+
+    public function getDynamicSEOData(): SEOData
+    {
+        return new SEOData(
+            title: $this->name . ' - Giải bài tập SGK, VBT ' . $this->name . ' soạn bài với đáp án lời giải giúp để học tốt tất cả các môn' . ' | ' . setting('site_name'),
+            description: $this->getDescriptionSnippet(160),
+        );
     }
 
     public function sluggable(): array

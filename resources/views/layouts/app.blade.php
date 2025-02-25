@@ -1,44 +1,52 @@
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    @hasSection('seo')
+        @yield('seo')
+    @else
+        @if(isset($metadata))
+            <title>{{ $metadata['title'] }}</title>
 
-    <x-seo::meta />
+            @if($metadata['description'])
+                <meta name="description" content="{{ $metadata['description'] }}">
+            @endif
 
-    <title>@yield('title', setting('site_name'))</title>
+            @if($metadata['keywords'])
+                <meta name="keywords" content="{{ $metadata['keywords'] }}">
+            @endif
 
-    <meta charset="utf-8">
-    <meta name="description" content="@yield('description', setting('site_description'))">
-    <meta name="keywords" content="@yield('keywords', setting('site_keywords'))">
-    <meta name="theme-color" content="#ffffff">
+            @if($metadata['canonical'])
+                <link rel="canonical" href="{{ $metadata['canonical'] }}">
+            @endif
 
-    <meta property="og:title" content="@yield('title', setting('site_name'))">
-    <meta property="og:description" content="@yield('description', setting('site_description'))">
+            @foreach($metadata['og_tags'] ?? [] as $property => $content)
+                <meta property="{{ $property }}" content="{{ $content }}">
+            @endforeach
 
-    <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="{{ setting('site_name') }}">
-    <meta property="og:locale" content="vi_VN">
-    <meta property="og:locale:alternate" content="en_US">
+            @foreach($metadata['twitter_tags'] ?? [] as $name => $content)
+                <meta name="{{ $name }}" content="{{ $content }}">
+            @endforeach
+        @else
+            @include('includes.metadata')
+        @endif
+    @endif
+
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <meta property="og:image" content="@yield('image', setting('site_og_image') ? asset(Storage::url(setting('site_og_image'))) : 'https://placehold.co/126')">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="@yield('image', setting('site_og_image') ? asset(Storage::url(setting('site_og_image'))) : 'https://placehold.co/126')">
-
-    <x-seo::meta />
+    <meta name="twitter:creator" content="{{ setting('site_creator') }}">
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ setting('site_favicon') ? asset(Storage::url(setting('site_favicon'))) : 'https://placehold.co/16' }}">
 
+    <meta name="robots" content="noindex,nofollow">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     @include('layouts.externalStylesheets')
 
     @vite('resources/css/app.css')
-
-    <!-- CSRF Token -->
-    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">
