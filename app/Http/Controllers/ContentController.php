@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Services\ContentMirrorService;
 use App\Services\Scrapers\BaseScraper;
 use App\Services\Scrapers\DefaultScraper;
@@ -16,8 +17,22 @@ class ContentController extends Controller
         $this->mirrorService = $mirrorService;
     }
 
-    public function show(Request $request, string $path = ''): View
+    public function show(Request $request, string $path = '')
     {
+        for($i = 1;$i <= 12;$i++)
+        {
+            if ($path == "lop-$i.html") {
+                $category = Category::where('slug', "lop-$i")->first();
+                if ($category)
+                {
+                    return redirect(
+                        route('categories.show', ['category_slug' => $category->slug]),
+                        301
+                    );
+                }
+            }
+        }
+
         // Get the query string
         $queryString = $request->getQueryString();
 

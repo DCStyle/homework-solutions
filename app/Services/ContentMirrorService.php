@@ -299,40 +299,62 @@ class ContentMirrorService
         });
     }
 
-    private function fixUrls($content): string
+    private function fixUrls(string $content): string
     {
-        $ourDomain = rtrim(setting('site_url'), '/');
+        $ourDomain = rtrim(env('APP_URL'), '/');
         $ourBaseDomain = parse_url($ourDomain, PHP_URL_HOST);
+        $sourceBaseDomain = config('url_mappings.source_domain');
 
-        // Fix URL formats and protocols
-        $content = str_ireplace(strtolower($this->sourceDomain), $ourBaseDomain, $content);
+        // Create a crawler with the content
+        $crawler = new Crawler($content);
 
-        $content = preg_replace(
-            [
-                '#(href|src)="https?://https?:?/?/#',  // Fix protocol issues
-                '#(href|src)="https?://' . preg_quote($ourDomain, '#') . '#',
-                '#(href|src)="https?://#',
-                '#(href|src)="/#'
-            ],
-            [
-                '$1="/',
-                '$1="',
-                '$1="',
-                '$1="/'
-            ],
-            $content
-        );
+        // Fix relative image URLs to point to source domain
+        $crawler->filter('img')->each(function (Crawler $node) use ($sourceBaseDomain, $ourBaseDomain) {
+            $src = $node->attr('src');
 
-        // Replace source domain with our domain
-        $content = str_replace($this->sourceDomain, $ourDomain, $content);
+            if ($src) {
+                // Case 1: If URL is relative (doesn't start with http/https or //)
+                if (!preg_match('~^(?:f|ht)tps?://~i', $src) && !str_starts_with($src, '//')) {
+                    // Remove leading slash if present
+                    $src = ltrim($src, '/');
 
-        // Add missing https protocol
-        $content = str_ireplace('href="' . $ourBaseDomain, 'href="https://' . $ourBaseDomain, $content);
+                    // Add source domain to the image URL
+                    $newSrc = 'https://' . $sourceBaseDomain . '/' . $src;
+                    $node->getNode(0)->setAttribute('src', $newSrc);
+                }
+                // Case 2: If URL contains our domain, replace with source domain
+                else if (str_contains($src, $ourBaseDomain)) {
+                    $newSrc = str_replace(
+                        ['https://' . $ourBaseDomain, 'http://' . $ourBaseDomain],
+                        'https://' . $sourceBaseDomain,
+                        $src
+                    );
+                    $node->getNode(0)->setAttribute('src', $newSrc);
+                }
+            }
+        });
 
-        // Fix image URLs
-        $content = str_replace('src="img.localhost/', 'src="https://img.loigiaihay.com/', $content);
+        // Fix links to point to our domain (not changing this part)
+        $crawler->filter('a')->each(function (Crawler $node) use ($ourBaseDomain, $sourceBaseDomain) {
+            $href = $node->attr('href');
 
-        return $content;
+            if ($href) {
+                // Replace source domain with our domain in href attributes
+                if (str_contains($href, $sourceBaseDomain)) {
+                    $newHref = str_replace(
+                        ['https://' . $sourceBaseDomain, 'http://' . $sourceBaseDomain],
+                        'https://' . $ourBaseDomain,
+                        $href
+                    );
+                    $node->getNode(0)->setAttribute('href', $newHref);
+                }
+            }
+        });
+
+        // Replace domain names in text content (excluding image URLs)
+        $html = $crawler->html();
+
+        return $html;
     }
 
     private function processContent($content): string
