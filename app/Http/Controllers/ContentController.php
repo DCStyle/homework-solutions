@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Post;
 use App\Services\ContentMirrorService;
 use App\Services\Scrapers\BaseScraper;
 use App\Services\Scrapers\DefaultScraper;
@@ -31,6 +32,15 @@ class ContentController extends Controller
                     );
                 }
             }
+        }
+
+        // Find post by path
+        $post = Post::where('source_url', 'like', '%' . $path . '%')->first();
+        if ($post) {
+            return redirect(
+                route('posts.show', ['post_slug' => $post->slug]),
+                301
+            );
         }
 
         // Get the query string
