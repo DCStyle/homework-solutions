@@ -169,6 +169,9 @@ class PostsController extends Controller
             }, $content);
         }
 
+        // Find all the images with src start with "https://img.https://thuvienloigiai.com" and replace with our base url
+        $content = preg_replace('/<img[^>]*src=["\']([^"\']*https:\/\/img\.https:\/\/thuvienloigiai\.com[^"\']*)["\'][^>]*>/i', '<img src="$1" />', $content);
+
         return $content;
     }
 
