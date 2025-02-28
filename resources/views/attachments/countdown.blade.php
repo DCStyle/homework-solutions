@@ -143,7 +143,7 @@
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                let countdown = 5;
+                let countdown = 45;
                 const countdownElement = document.getElementById('countdown');
                 const countdownParent = countdownElement.closest('.countdown-timer');
                 const downloadButton = document.getElementById('download-button');
