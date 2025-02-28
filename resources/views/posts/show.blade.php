@@ -116,7 +116,7 @@
 
             <!-- Main content -->
             <div class="mt-4 text-lg">
-                {!! $post->content !!}
+                {!! $content !!}
             </div>
 
             <!-- Attachments Block -->
@@ -271,10 +271,10 @@
                     const tempImg = new Image();
                     tempImg.onload = () => resolve(false);
                     tempImg.onerror = () => {
-                        if (img.src.match(/\.(jpg|png)$/i)) {
-                            const extension = img.src.match(/\.(jpg|png)$/i)[0];
+                        if (img.src.match(/\.(jpg|png|jpeg)$/i)) {
+                            const extension = img.src.match(/\.(jpg|png|jpeg)$/i)[0];
                             if (!img.src.endsWith(extension.toUpperCase())) {
-                                const newSrc = img.src.replace(/\.(jpg|png)$/i, extension.toUpperCase()) + '?t=' + Date.now();
+                                const newSrc = img.src.replace(/\.(jpg|png|jpeg)$/i, extension.toUpperCase()) + '?t=' + Date.now();
                                 if (newSrc !== img.src) {
                                     img.src = newSrc;
                                 }
@@ -283,14 +283,6 @@
                         resolve(true);
                     };
                     tempImg.src = img.src;
-
-                    // If image still fails to load, replace with a placeholder
-                    setTimeout(() => {
-                        if (!tempImg.complete || tempImg.naturalHeight === 0) {
-                            img.src = 'https://placehold.co/600x400?text=Image+Not+Found';
-                            resolve(true);
-                        }
-                    }, 5000);
                 });
             }
 

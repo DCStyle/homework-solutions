@@ -22,7 +22,7 @@ class PostController extends Controller
             'book_title' => 'required|string',
             'chapter_title' => 'required|string',
             'post_title' => 'required|string',
-            'content' => 'required|string',
+            'content' => 'nullable|string',
             'source_url' => 'nullable|url',
             'attachment_ids' => 'nullable|array',
         ]);
@@ -33,7 +33,7 @@ class PostController extends Controller
         $bookTitle = $validatedData['book_title'];
         $chapterTitle = $validatedData['chapter_title'];
         $postTitle = $validatedData['post_title'];
-        $content = $validatedData['content'];
+        $content = $validatedData['content'] ?? null;
 
         // Process Category
         $category = Category::firstOrCreate(['name' => $categoryName]);
@@ -60,8 +60,13 @@ class PostController extends Controller
 
         if ($existingPost) {
             // Update existing Post
+            $existingPostContent = $existingPost->content;
+            if ($content !== null && trim($content) !== '' && strlen($content) > 0) {
+                $existingPostContent = $content;
+            }
+
             $existingPost->update([
-                'content' => $content,
+                'content' => $existingPostContent,
                 'source_url' => $validatedData['source_url'] ?? null
             ]);
 
