@@ -170,7 +170,7 @@ class PostsController extends Controller
         }
 
         // Find "https://img.https://thuvienloigiai.com" and replace with "https://img.thuvienloigiai.com"
-        $content = str_replace('https://img.https://thuvienloigiai.com', 'https://img.thuvienloigiai.com', $content);
+        $content = str_replace('https://img.https://thuvienloigiai.com', 'https://img.loigiaihay.com', $content);
 
         return $content;
     }
