@@ -46,14 +46,14 @@
 
         <div class="mx-auto p-6 min-w-0 w-full max-xl:p-4 max-md:p2">
             <h1 class="text-2xl font-bold text-orange-400 py-2 border-b-2 border-b-blue-800">
-                {{ $group->name . ' ' . $category->name }}
+                {{ $group->name }}
             </h1>
 
             <nav aria-label="breadcrumb" class="my-4">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a title="{{ setting('site_name', 'Home') }}" href="{{ route('home') }}">{{ setting('site_name', 'Home') }}</a></li>
                     <li class="breadcrumb-item"><a title="{{ $category->name }}" href="{{ route('categories.show', $category->slug) }}">{{ $category->name }}</a></li>
-                    <li class="breadcrumb-item"><a title="{{ $group->name }}" href="{{ route('bookGroups.show', $group->slug) }}" class="font-bold text-orange-400">{{ $group->name . ' ' . $category->name }}</a></li>
+                    <li class="breadcrumb-item"><a title="{{ $group->name }}" href="{{ route('bookGroups.show', $group->slug) }}" class="font-bold text-orange-400">{{ $group->name }}</a></li>
                 </ol>
             </nav>
 
@@ -69,7 +69,7 @@
 
             <div class="mt-8">
                 <h2 class="text-center text-3xl font-medium underline mb-4">
-                    {{ $group->name . ' ' . $category->name }}
+                    {{ $group->name }}
                 </h2>
 
                 <div class="p-2 border">
