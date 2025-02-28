@@ -42,7 +42,7 @@ class BookGroup extends Model
     public function getDynamicSEOData(): SEOData
     {
         return new SEOData(
-            title: $this->name . ' ' . $this->name . ' | ' . setting('site_name'),
+            title: $this->name . ' | ' . setting('site_name'),
             description: $this->getDescriptionSnippet(160),
         );
     }
