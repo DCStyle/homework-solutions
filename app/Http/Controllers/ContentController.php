@@ -15,7 +15,7 @@ class ContentController extends Controller
 {
     public function __construct(ContentMirrorService $mirrorService)
     {
-        $this->mirrorService = $mirrorService;
+        // $this->mirrorService = $mirrorService;
     }
 
     public function show(Request $request, string $path = '')
