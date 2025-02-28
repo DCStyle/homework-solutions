@@ -60,7 +60,7 @@
             <div class="mt-4 bg-white p-4 text-md text-green-700 border shadow-md">
                 <h2 class="text-xl">{!! ($group->description && strlen(trim($group->description)) > 0)
                         ? $group->description
-                        : "Dưới đây là toàn bộ bài giải <b class='text-black'>$group->name $category->name</b>.
+                        : "Dưới đây là toàn bộ bài giải <b class='text-black'>$group->name</b>.
                            Cách hướng dẫn, trình bày lời giải chi tiết, dễ hiểu.
                            Học sinh muốn xem bài nào thì click vào tên bài để xem.
                            Chúc các em học tốt và nắm vững kiến thức <b>$group->name</b> trên <b class='underline'><a href='" . url('/') . "'>" . setting('site_name', 'Homework Solutions') . "</a></b>."
