@@ -43,6 +43,9 @@ class ContentController extends Controller
             );
         }
 
+        // Temporary return 404
+        abort(404);
+
         // Get the query string
         $queryString = $request->getQueryString();
 
