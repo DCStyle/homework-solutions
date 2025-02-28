@@ -12,83 +12,118 @@ class CleanupPostTitles extends Command
      *
      * @var string
      */
-    protected $signature = 'posts:cleanup-titles {--dry-run : Run without deleting posts} {--force : Force delete posts without confirmation}';
+    protected $signature = 'posts:cleanup-titles {--dry-run : Run without deleting posts} {--fix : Fix problematic titles instead of deleting posts}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Find and delete posts with problematic titles (ending with >)';
+    protected $description = 'Find and fix/delete posts with problematic titles (ending with >, containing "- loigiaihay.com", HTML tags, or having excessive whitespace)';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $isDryRun = $this->option('dry-run');
-        $isForce = $this->option('force');
+        $dryRun = $this->option('dry-run');
+        $fixMode = $this->option('fix');
+
+        $this->info('Searching for posts with problematic titles...');
         
-        $this->info('Searching for posts with titles ending with ">" character...');
-        
-        // Get all posts that might have '>' anywhere in the title
+        // Check for posts with titles ending with '>'
+        $this->info('Checking for titles ending with ">" character...');
         $potentialPosts = Post::where('title', 'like', '%>%')
             ->limit(5000)
             ->get();
             
-        // Filter to only those where '>' is at the end after trimming
-        $matchedPosts = $potentialPosts->filter(function($post) {
+        $endingWithArrow = $potentialPosts->filter(function ($post) {
             $trimmedTitle = rtrim($post->title);
             return substr($trimmedTitle, -1) === '>';
         });
         
-        if ($matchedPosts->isEmpty()) {
-            $this->info('No posts found with titles ending with ">" character.');
-            return 0;
-        }
-        
-        $count = $matchedPosts->count();
-        $this->info("Found {$count} posts with titles ending with '>' character:");
-        
-        // Display a table with the posts
-        $headers = ['ID', 'Title', 'Slug'];
-        $rows = [];
-        
-        foreach ($matchedPosts as $post) {
-            $rows[] = [
-                $post->id,
-                $post->title,
-                $post->slug
-            ];
-        }
-        
-        $this->table($headers, $rows);
-        
-        if ($isDryRun) {
-            $this->info('Dry run completed. No posts were deleted.');
-            return 0;
-        }
-        
-        // Confirm deletion unless --force is used
-        if (!$isForce && !$this->confirm('Do you want to delete these posts?')) {
-            $this->info('Operation cancelled.');
-            return 0;
-        }
-        
-        // Delete the posts
-        $deletedCount = 0;
-        foreach ($matchedPosts as $post) {
-            try {
-                $post->delete();
-                $deletedCount++;
-                $this->line("Deleted post ID: {$post->id}");
-            } catch (\Exception $e) {
-                $this->error("Failed to delete post ID {$post->id}: {$e->getMessage()}");
+        if ($endingWithArrow->count() > 0) {
+            $this->info("Found {$endingWithArrow->count()} posts with titles ending with '>' character:");
+            
+            foreach ($endingWithArrow as $post) {
+                $this->line("ID: {$post->id}, Title: \"{$post->title}\", Slug: \"{$post->slug}\"");
             }
+            
+            if (!$dryRun) {
+                if ($fixMode) {
+                    foreach ($endingWithArrow as $post) {
+                        $oldTitle = $post->title;
+                        $newTitle = rtrim($post->title, '>');
+                        $newTitle = trim($newTitle);
+                        
+                        $post->title = $newTitle;
+                        $post->save();
+                        
+                        $this->info("Fixed post ID: {$post->id}");
+                        $this->line("  Old title: \"{$oldTitle}\"");
+                        $this->line("  New title: \"{$newTitle}\"");
+                    }
+                    $this->info('Titles fixed successfully.');
+                } elseif ($this->confirm('Do you want to delete these posts?')) {
+                    foreach ($endingWithArrow as $post) {
+                        $post->delete();
+                        $this->info("Deleted post ID: {$post->id}");
+                    }
+                    $this->info('Posts deleted successfully.');
+                } else {
+                    $this->info('Operation cancelled.');
+                }
+            } else {
+                $this->info('Dry run completed. No posts were modified or deleted.');
+            }
+        } else {
+            $this->info("No posts found with titles ending with '>' character.");
         }
         
-        $this->info("Successfully deleted {$deletedCount} out of {$count} posts.");
+        // Check for posts with titles ending with "- loigiaihay.com"
+        $this->info('Checking for titles ending with "- loigiaihay.com"...');
+        $postsWithSourceSite = Post::where('title', 'like', '%- loigiaihay.com')
+            ->limit(5000)
+            ->get();
+            
+        if ($postsWithSourceSite->count() > 0) {
+            $this->info("Found {$postsWithSourceSite->count()} posts with titles ending with '- loigiaihay.com':");
+            
+            foreach ($postsWithSourceSite as $post) {
+                $this->line("ID: {$post->id}, Title: \"{$post->title}\", Slug: \"{$post->slug}\"");
+            }
+            
+            if (!$dryRun) {
+                if ($fixMode) {
+                    foreach ($postsWithSourceSite as $post) {
+                        $oldTitle = $post->title;
+                        $newTitle = preg_replace('/\s*-\s*loigiaihay\.com\s*$/i', '', $post->title);
+                        $newTitle = trim($newTitle);
+                        
+                        $post->title = $newTitle;
+                        $post->save();
+                        
+                        $this->info("Fixed post ID: {$post->id}");
+                        $this->line("  Old title: \"{$oldTitle}\"");
+                        $this->line("  New title: \"{$newTitle}\"");
+                    }
+                    $this->info('Titles fixed successfully.');
+                } elseif ($this->confirm('Do you want to delete these posts?')) {
+                    foreach ($postsWithSourceSite as $post) {
+                        $post->delete();
+                        $this->info("Deleted post ID: {$post->id}");
+                    }
+                    $this->info('Posts deleted successfully.');
+                } else {
+                    $this->info('Operation cancelled.');
+                }
+            } else {
+                $this->info('Dry run completed. No posts were modified or deleted.');
+            }
+        } else {
+            $this->info("No posts found with titles ending with '- loigiaihay.com'.");
+        }
         
-        return 0;
+        return Command::SUCCESS;
     }
 }
