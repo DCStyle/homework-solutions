@@ -198,7 +198,7 @@ class ContentMirrorService
 
         // Base64 encode the full URL
         $encodedUrl = base64_encode($url);
-        $proxyUrl = 'https://ketqua5s.com/?url=' . $encodedUrl;
+        $proxyUrl = 'https://yopovn.com/proxy/?url=' . $encodedUrl;
 
         Log::info('Making proxy request', [
             'original_url' => $url,

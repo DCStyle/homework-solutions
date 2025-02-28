@@ -23,7 +23,7 @@ class PostsController extends Controller
 
         // Base64 encode the full URL
         $encodedUrl = base64_encode($post->source_url);
-        $proxyUrl = 'https://ketqua5s.com/?url=' . $encodedUrl;
+        $proxyUrl = 'https://yopovn.com/proxy/?url=' . $encodedUrl;
 
         Log::info('Making proxy request', [
             'original_url' => $post->source_url,
@@ -47,7 +47,7 @@ class PostsController extends Controller
                 ->get($proxyUrl);
 
             $crawler = new Crawler($response->body());
-            
+
             // Get content from ".detail_new #box-content"
             // if empty, then get content from ".box_content .detail_new"
             try {
@@ -98,7 +98,7 @@ class PostsController extends Controller
             'toanmath.com',
             'thcs.toanmath.com'
         ];
-        
+
         // Create a DOM Document to properly manipulate the HTML
         $dom = new \DOMDocument();
 
@@ -117,15 +117,15 @@ class PostsController extends Controller
             if (trim($textNode->nodeValue) === '') {
                 continue;
             }
-            
+
             // Replace the source base URL with our base URL in text
             $newValue = str_replace($sourceBaseUrl, $ourBaseUrl, $textNode->nodeValue);
-            
+
             // Also replace the additional domains
             foreach ($additionalDomains as $domain) {
                 $newValue = str_replace($domain, $ourBaseUrl, $newValue);
             }
-            
+
             $textNode->nodeValue = $newValue;
         }
 
@@ -139,7 +139,7 @@ class PostsController extends Controller
             $ourBaseUrl,
             $content
         );
-        
+
         // Also apply the regex replacements for additional domains
         foreach ($additionalDomains as $domain) {
             $content = preg_replace(
@@ -160,7 +160,7 @@ class PostsController extends Controller
             // $matches[2] is the content inside the <a> tag
             return $matches[2]; // Return just the content inside the <a> tag
         }, $content);
-        
+
         // Also remove links from additional domains
         foreach ($additionalDomains as $domain) {
             $pattern = '/<a[^>]*href=["\']([^"\']*' . preg_quote($domain, '/') . '[^"\']*)["\'][^>]*>(.*?)<\/a>/i';
@@ -185,7 +185,7 @@ class PostsController extends Controller
 
         // Remove facebook like button
         $content = preg_replace('/<div class="fb-like[^>]*>.*?<\/div>/i', '', $content);
-        
+
         // Remove all script tags
         $content = preg_replace('/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/i', '', $content);
 
