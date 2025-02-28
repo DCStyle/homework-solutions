@@ -192,8 +192,8 @@ Route::prefix('images')->group(function() {
 Route::get('/search', [SearchController::class, 'search'])->name('search');
 Route::get('/multi-search', [MultiSearchController::class, 'search'])->name('multi-search');
 
-Route::get('/{path?}', [ContentController::class, 'show'])
-    ->where('path', '^(?!api|admin|proxy)(?!.*\.(jpg|jpeg|png|gif|bmp|webp|mp4|avi|mov|wmv|flv|mp3|wav|pdf|doc|docx|xls|xlsx|zip|rar)).*$')
-    ->middleware(['web'])
-    ->defaults('path', '')
-    ->name('content.show');
+//Route::get('/{path?}', [ContentController::class, 'show'])
+//    ->where('path', '^(?!api|admin|proxy)(?!.*\.(jpg|jpeg|png|gif|bmp|webp|mp4|avi|mov|wmv|flv|mp3|wav|pdf|doc|docx|xls|xlsx|zip|rar)).*$')
+//    ->middleware(['web'])
+//    ->defaults('path', '')
+//    ->name('content.show');
