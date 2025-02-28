@@ -3,31 +3,58 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\DomCrawler\Crawler;
 
 class PostsController extends Controller
 {
+    // Cache duration in minutes
+    private const CACHE_DURATION = 60;
+    
+    // Additional domains to replace in content
+    private const ADDITIONAL_DOMAINS = [
+        'loigiaihay.com',
+        'toanmath.com',
+        'thcs.toanmath.com'
+    ];
+
+    /**
+     * Get post content from database or external source
+     */
     private function getPostContent(Post $post)
     {
-        if ($post->content == null && $post->source_url == null)
-        {
+        // Return early if no content sources are available
+        if ($post->content == null && $post->source_url == null) {
             return null;
         }
 
-        if ($post->content !== null)
-        {
+        // Return content if already available
+        if ($post->content !== null) {
             return $post->content;
         }
 
+        // Use cache to avoid repeated external requests
+        $cacheKey = 'post_content_' . $post->id;
+        
+        return Cache::remember($cacheKey, self::CACHE_DURATION, function () use ($post) {
+            return $this->fetchExternalContent($post);
+        });
+    }
+
+    /**
+     * Fetch content from external source
+     */
+    private function fetchExternalContent(Post $post)
+    {
         // Base64 encode the full URL
         $encodedUrl = base64_encode($post->source_url);
         $proxyUrl = 'https://yopovn.com/proxy/?url=' . $encodedUrl;
 
         Log::info('Making proxy request', [
+            'post_id' => $post->id,
             'original_url' => $post->source_url,
-            'encoded_url' => $encodedUrl,
             'proxy_url' => $proxyUrl
         ]);
 
@@ -46,58 +73,70 @@ class PostsController extends Controller
                 ])
                 ->get($proxyUrl);
 
-            $crawler = new Crawler($response->body());
-
-            // Get content from ".detail_new #box-content"
-            // if empty, then get content from ".box_content .detail_new"
-            try {
-                $content = $crawler->filter('.detail_new #box-content')->html();
-            } catch (\Exception $e) {
-                $content = $crawler->filter('.box_content .detail_new')->html();
-            }
-
-            // Remove all script tags
-            $content = preg_replace('/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/i', '', $content);
-
-            // Get the base url of source url
+            $content = $this->extractContentFromResponse($response->body());
+            
+            // Source and target domains for replacement
             $sourceBaseUrl = parse_url($post->source_url, PHP_URL_HOST);
-
-            // Get our base url
             $ourBaseUrl = parse_url(config('app.url'), PHP_URL_HOST);
 
-            // Replace links in the content
+            // Process the content
             $content = $this->replaceLinks($content, $sourceBaseUrl, $ourBaseUrl);
-
-            // Remove unwanted elements
             $content = $this->removeUnwantedElements($content);
+            
+            // Apply a final URL fix to ensure all problematic URLs are fixed before saving
+            $content = $this->fixProblematicUrls($content);
 
-            // Save the modified content to the post
+            // Save the processed content
             $post->content = $content;
             $post->save();
 
             return $content;
         } catch (\Exception $e) {
             Log::error('Proxy request failed', [
+                'post_id' => $post->id,
                 'url' => $post->source_url,
                 'proxy_url' => $proxyUrl,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             throw $e;
         }
     }
 
+    /**
+     * Extract content from HTML response
+     */
+    private function extractContentFromResponse($html)
+    {
+        $crawler = new Crawler($html);
+        
+        try {
+            $content = $crawler->filter('.detail_new #box-content')->html();
+        } catch (\Exception $e) {
+            try {
+                $content = $crawler->filter('.box_content .detail_new')->html();
+            } catch (\Exception $e) {
+                Log::warning('Failed to extract content using primary selectors', [
+                    'error' => $e->getMessage()
+                ]);
+                // Return empty content if both selectors fail
+                return '';
+            }
+        }
+
+        // Remove all script tags immediately
+        return preg_replace('/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/i', '', $content);
+    }
+
+    /**
+     * Replace links and domain references in content
+     */
     public function replaceLinks($content, $sourceBaseUrl, $ourBaseUrl)
     {
-        // Replace the source base url with our base url
-        // but only for text, not for images or links
-
-        // Manually replace these URLs also: loigiaihay.com, toanmath.com, thcs.toanmath.com with our base url
-        // Define the additional domains to replace
-        $additionalDomains = [
-            'loigiaihay.com',
-            'toanmath.com',
-            'thcs.toanmath.com'
-        ];
+        // Skip processing if content is empty
+        if (empty($content)) {
+            return $content;
+        }
 
         // Create a DOM Document to properly manipulate the HTML
         $dom = new \DOMDocument();
@@ -122,7 +161,7 @@ class PostsController extends Controller
             $newValue = str_replace($sourceBaseUrl, $ourBaseUrl, $textNode->nodeValue);
 
             // Also replace the additional domains
-            foreach ($additionalDomains as $domain) {
+            foreach (self::ADDITIONAL_DOMAINS as $domain) {
                 $newValue = str_replace($domain, $ourBaseUrl, $newValue);
             }
 
@@ -131,17 +170,33 @@ class PostsController extends Controller
 
         // Get the modified content
         $content = $dom->saveHTML();
+        
+        // Apply regex replacements for domain references outside of attributes
+        $content = $this->applyDomainRegexReplacements($content, $sourceBaseUrl, $ourBaseUrl);
+        
+        // Remove links from source domains
+        $content = $this->removeExternalLinks($content, $sourceBaseUrl);
+        
+        // Fix problematic URLs
+        $content = $this->fixProblematicUrls($content);
 
-        // Additional cleanup: ensure any remaining references to source domain in text are handled
-        // This regex tries to find and replace domain references outside of href and src attributes
+        return $content;
+    }
+
+    /**
+     * Apply regex replacements for domain references
+     */
+    private function applyDomainRegexReplacements($content, $sourceBaseUrl, $ourBaseUrl)
+    {
+        // Replace source domain outside of href/src attributes
         $content = preg_replace(
             '/(?<!href=["|\'])(?<!src=["|\'])(?<!href=)(?<!src=)(' . preg_quote($sourceBaseUrl, '/') . ')/i',
             $ourBaseUrl,
             $content
         );
 
-        // Also apply the regex replacements for additional domains
-        foreach ($additionalDomains as $domain) {
+        // Replace additional domains
+        foreach (self::ADDITIONAL_DOMAINS as $domain) {
             $content = preg_replace(
                 '/(?<!href=["|\'])(?<!src=["|\'])(?<!href=)(?<!src=)(' . preg_quote($domain, '/') . ')/i',
                 $ourBaseUrl,
@@ -149,52 +204,171 @@ class PostsController extends Controller
             );
         }
 
-        // Remove all links from source URL - using regex approach instead of DOM
-        // This pattern matches <a> tags that contain the source domain in their href
-        $pattern = '/<a[^>]*href=["\']([^"\']*' . preg_quote($sourceBaseUrl, '/') . '[^"\']*)["\'][^>]*>(.*?)<\/a>/i';
+        return $content;
+    }
 
-        // Replace the matched <a> tags with just their content (without the surrounding <a></a>)
+    /**
+     * Remove links from external domains
+     */
+    private function removeExternalLinks($content, $sourceBaseUrl)
+    {
+        // Remove links from source domain
+        $pattern = '/<a[^>]*href=["\']([^"\']*' . preg_quote($sourceBaseUrl, '/') . '[^"\']*)["\'][^>]*>(.*?)<\/a>/i';
         $content = preg_replace_callback($pattern, function($matches) {
-            // $matches[0] is the entire match
-            // $matches[1] is the href value
-            // $matches[2] is the content inside the <a> tag
             return $matches[2]; // Return just the content inside the <a> tag
         }, $content);
 
-        // Also remove links from additional domains
-        foreach ($additionalDomains as $domain) {
+        // Remove links from additional domains
+        foreach (self::ADDITIONAL_DOMAINS as $domain) {
             $pattern = '/<a[^>]*href=["\']([^"\']*' . preg_quote($domain, '/') . '[^"\']*)["\'][^>]*>(.*?)<\/a>/i';
             $content = preg_replace_callback($pattern, function($matches) {
                 return $matches[2]; // Return just the content inside the <a> tag
             }, $content);
         }
 
-        // Find "https://img.https://thuvienloigiai.com" and replace with "https://img.thuvienloigiai.com"
-        $content = str_replace('https://img.https://thuvienloigiai.com', 'https://img.loigiaihay.com', $content);
+        return $content;
+    }
 
-        // Find "https://img.thuvienloigiai.com" and replace with "https://img.loigiaihay.com"
-        $content = str_replace('https://img.thuvienloigiai.com', 'https://img.loigiaihay.com', $content);
+    /**
+     * Fix problematic URL patterns
+     */
+    private function fixProblematicUrls($content)
+    {
+        $replacements = [
+            'https://img.https://thuvienloigiai.com' => 'https://img.loigiaihay.com',
+            'https://img.thuvienloigiai.com' => 'https://img.loigiaihay.com',
+            'https://https://thuvienloigiai.com' => 'https://toanmath.com',
+            // Add an explicit replacement for the complex pattern
+            'img.https://thuvienloigiai.com' => 'img.loigiaihay.com',
+        ];
 
-        // Find "https://https://thuvienloigiai.com" and replace with "https://toanmath.com"
-        $content = str_replace('https://https://thuvienloigiai.com', 'https://toanmath.com', $content);
+        foreach ($replacements as $search => $replace) {
+            $content = str_replace($search, $replace, $content);
+        }
+
+        // Fix image sources with double protocols
+        $content = $this->fixImageSources($content);
+
+        // General fix for any double protocol occurrences
+        $content = preg_replace('/https?:\/\/https?:\/\//', 'https://', $content);
+        
+        // Final pass for any remaining broken patterns
+        // Handle the specific pattern found in image tags
+        $content = preg_replace('/(src=["\'])https?:\/\/img\.https?:\/\/thuvienloigiai\.com/i', '$1https://img.loigiaihay.com', $content);
+        $content = preg_replace('/(src=["\'])img\.https?:\/\/thuvienloigiai\.com/i', '$1img.loigiaihay.com', $content);
 
         return $content;
     }
 
+    /**
+     * Fix problematic image src attributes
+     */
+    private function fixImageSources($content)
+    {
+        // Skip if content is empty or doesn't contain problematic URLs
+        if (empty($content) || 
+            (strpos($content, 'thuvienloigiai.com') === false && 
+             strpos($content, 'img.https://') === false)) {
+            return $content;
+        }
+
+        // Create a DOM object
+        $dom = new \DOMDocument();
+        
+        // Suppress errors for malformed HTML
+        $internalErrors = libxml_use_internal_errors(true);
+        $dom->loadHTML(mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        libxml_clear_errors();
+        libxml_use_internal_errors($internalErrors);
+        
+        // Find all img tags
+        $images = $dom->getElementsByTagName('img');
+        $changed = false;
+        
+        foreach ($images as $img) {
+            if ($img->hasAttribute('src')) {
+                $src = $img->getAttribute('src');
+                $originalSrc = $src;
+                
+                // Fix various problematic URL patterns
+                
+                // Case 1: Double protocol at the beginning
+                if (preg_match('/^https?:\/\/https?:\/\//', $src)) {
+                    $src = preg_replace('/^https?:\/\/https?:\/\//', 'https://', $src);
+                }
+                
+                // Case 2: Protocol followed by img. followed by protocol
+                // Pattern like: https://img.https://thuvienloigiai.com/...
+                if (preg_match('/^https?:\/\/img\.https?:\/\//', $src)) {
+                    $src = preg_replace('/^https?:\/\/img\.https?:\/\//', 'https://img.', $src);
+                }
+                
+                // Case 3: img. followed by protocol
+                // Pattern like: img.https://thuvienloigiai.com/...
+                if (preg_match('/^img\.https?:\/\//', $src)) {
+                    $src = preg_replace('/^img\.https?:\/\//', 'img.', $src);
+                }
+                
+                // Special case for thuvienloigiai.com - perform this replacement after fixing protocols
+                if (strpos($src, 'thuvienloigiai.com') !== false) {
+                    $src = str_replace('thuvienloigiai.com', 'loigiaihay.com', $src);
+                }
+                
+                // Ensure URLs are properly formatted
+                if (!empty($src) && !preg_match('/^https?:\/\//', $src) && strpos($src, 'img.') === 0) {
+                    $src = 'https://' . $src;
+                }
+                
+                // Update attribute if changed
+                if ($src !== $originalSrc) {
+                    $img->setAttribute('src', $src);
+                    $changed = true;
+                    
+                    // Log the change for debugging
+                    Log::debug('Fixed image URL', [
+                        'original' => $originalSrc,
+                        'fixed' => $src
+                    ]);
+                }
+            }
+        }
+        
+        // Only re-serialize if we made changes
+        if ($changed) {
+            // Get the HTML content back
+            $content = $dom->saveHTML();
+        }
+        
+        // Additional regex replacement for any URLs not caught by DOM processing
+        $content = preg_replace('/(https?:\/\/img\.https?:\/\/thuvienloigiai\.com)/i', 'https://img.loigiaihay.com', $content);
+        $content = preg_replace('/(img\.https?:\/\/thuvienloigiai\.com)/i', 'img.loigiaihay.com', $content);
+        
+        return $content;
+    }
+
+    /**
+     * Remove unwanted HTML elements
+     */
     public function removeUnwantedElements($content)
     {
-        // Remove facebook comments
-        $content = preg_replace('/<div class="fb-comments[^>]*>.*?<\/div>/i', '', $content);
+        $unwantedPatterns = [
+            '/<div class="fb-comments[^>]*>.*?<\/div>/is',
+            '/<div class="fb-like[^>]*>.*?<\/div>/is',
+            '/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/is',
+            '/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/is', // Also remove iframes
+            '/<ins\b[^<]*(?:(?!<\/ins>)<[^<]*)*<\/ins>/is' // Remove ad inserts
+        ];
 
-        // Remove facebook like button
-        $content = preg_replace('/<div class="fb-like[^>]*>.*?<\/div>/i', '', $content);
-
-        // Remove all script tags
-        $content = preg_replace('/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/i', '', $content);
+        foreach ($unwantedPatterns as $pattern) {
+            $content = preg_replace($pattern, '', $content);
+        }
 
         return $content;
     }
 
+    /**
+     * Display a post
+     */
     public function show($post_slug)
     {
         $post = Post::with(['chapter.book.group.category'])
@@ -202,31 +376,16 @@ class PostsController extends Controller
             ->firstOrFail();
 
         $postContent = $this->getPostContent($post);
-        if (!$postContent)
-        {
+        if (!$postContent) {
             abort(404);
         }
 
-        if ($post->source_url) {
-            // Try replace links in the content
-            $postContent = $this->replaceLinks($postContent, $post->source_url, config('app.url'));
+        // Always apply URL fixes before displaying content
+        // This ensures even cached content with broken URLs gets fixed
+        $postContent = $this->fixProblematicUrls($postContent);
 
-            // Remove unwanted elements
-            $postContent = $this->removeUnwantedElements($postContent);
-
-            // Save the modified content to the post
-            $post->content = $postContent;
-            $post->save();
-        }
-
-        $footerLatestPosts = Post::select('posts.*')
-            ->join('book_chapters', 'posts.book_chapter_id', '=', 'book_chapters.id')
-            ->join('books', 'book_chapters.book_id', '=', 'books.id')
-            ->where('books.book_group_id', $post->chapter->book->group->id)
-            ->where('posts.id', '!=', $post->id)  // Exclude current post
-            ->latest()
-            ->limit(10)
-            ->get();
+        // Get related posts for the footer
+        $footerLatestPosts = $this->getRelatedPosts($post);
 
         return view('posts.show', [
             'post' => $post,
@@ -234,5 +393,48 @@ class PostsController extends Controller
             'category' => $post->chapter->book->group->category,
             'footerLatestPosts' => $footerLatestPosts
         ]);
+    }
+
+    /**
+     * Clear the cache for a post - admin only
+     */
+    public function clearCache($post_id)
+    {
+        $post = Post::findOrFail($post_id);
+        
+        // Clear content cache
+        Cache::forget('post_content_' . $post->id);
+        
+        // Clear related posts cache
+        Cache::forget('related_posts_' . $post->id);
+        
+        // Optionally reprocess content
+        if ($post->source_url && request('reprocess', false)) {
+            // Clear stored content to force reprocessing
+            $post->content = null;
+            $post->save();
+            
+            // Get content again to trigger reprocessing
+            $this->getPostContent($post);
+        }
+        
+        return back()->with('success', 'Post cache cleared successfully');
+    }
+
+    /**
+     * Get related posts for the current post
+     */
+    private function getRelatedPosts(Post $post)
+    {
+        return Cache::remember('related_posts_' . $post->id, self::CACHE_DURATION, function () use ($post) {
+            return Post::select('posts.*')
+                ->join('book_chapters', 'posts.book_chapter_id', '=', 'book_chapters.id')
+                ->join('books', 'book_chapters.book_id', '=', 'books.id')
+                ->where('books.book_group_id', $post->chapter->book->group->id)
+                ->where('posts.id', '!=', $post->id)  // Exclude current post
+                ->latest()
+                ->limit(10)
+                ->get();
+        });
     }
 }

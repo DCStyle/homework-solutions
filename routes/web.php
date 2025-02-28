@@ -7,6 +7,7 @@ use App\Http\Controllers\ImageController;
 use App\Http\Controllers\MultiSearchController;
 use App\Http\Controllers\SearchController;
 use App\Models\Category;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PostsController;
 
@@ -119,6 +120,9 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
         Route::put('/{id}', [App\Http\Controllers\Admin\PostsController::class, 'update'])->name('admin.posts.update');
 
         Route::delete('/{id}', [App\Http\Controllers\Admin\PostsController::class, 'destroy'])->name('admin.posts.destroy');
+        
+        // Add route for clearing post cache
+        Route::post('/{id}/clear-cache', [PostsController::class, 'clearCache'])->name('admin.posts.clearCache');
     });
 
     // Articles management
