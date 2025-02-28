@@ -15,7 +15,7 @@ class ContentController extends Controller
 {
     public function __construct(ContentMirrorService $mirrorService)
     {
-        // $this->mirrorService = $mirrorService;
+        $this->mirrorService = $mirrorService;
     }
 
     public function show(Request $request, string $path = '')
@@ -42,9 +42,6 @@ class ContentController extends Controller
                 301
             );
         }
-
-        // Temporary return 404
-        abort(404);
 
         // Get the query string
         $queryString = $request->getQueryString();
