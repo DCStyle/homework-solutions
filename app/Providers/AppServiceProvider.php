@@ -28,9 +28,11 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        // Fetch only parent categories with their children
-        $categories = Category::whereNull('parent_id')->with('children')->get();
-
-        view()->share('categories', $categories);
+        // Avoid running database queries during migrations
+        if (!$this->app->runningInConsole() || !in_array('migrate', $_SERVER['argv'], true)) {
+            // Fetch only parent categories with their children
+            $categories = Category::whereNull('parent_id')->with('children')->get();
+            view()->share('categories', $categories);
+        }
     }
 }
