@@ -19,6 +19,11 @@ class PostsController extends Controller
         'toanmath.com',
         'thcs.toanmath.com'
     ];
+    
+    // Case-sensitive domain replacements (exact matches to preserve case sensitivity)
+    private const CASE_SENSITIVE_DOMAINS = [
+        'TOANMATH.com'
+    ];
 
     /**
      * Get post content from database or external source
@@ -157,11 +162,18 @@ class PostsController extends Controller
                 continue;
             }
 
+            $newValue = $textNode->nodeValue;
+            
             // Replace the source base URL with our base URL in text
-            $newValue = str_replace($sourceBaseUrl, $ourBaseUrl, $textNode->nodeValue);
+            $newValue = str_replace($sourceBaseUrl, $ourBaseUrl, $newValue);
 
-            // Also replace the additional domains
+            // Replace additional case-insensitive domains
             foreach (self::ADDITIONAL_DOMAINS as $domain) {
+                $newValue = str_ireplace($domain, $ourBaseUrl, $newValue);
+            }
+            
+            // Replace case-sensitive domains (exact match)
+            foreach (self::CASE_SENSITIVE_DOMAINS as $domain) {
                 $newValue = str_replace($domain, $ourBaseUrl, $newValue);
             }
 
@@ -195,7 +207,7 @@ class PostsController extends Controller
             $content
         );
 
-        // Replace additional domains
+        // Replace additional domains (case insensitive)
         foreach (self::ADDITIONAL_DOMAINS as $domain) {
             $content = preg_replace(
                 '/(?<!href=["|\'])(?<!src=["|\'])(?<!href=)(?<!src=)(' . preg_quote($domain, '/') . ')/i',
@@ -203,27 +215,15 @@ class PostsController extends Controller
                 $content
             );
         }
-
-        return $content;
-    }
-
-    /**
-     * Remove links from external domains
-     */
-    private function removeExternalLinks($content, $sourceBaseUrl)
-    {
-        // Remove links from source domain
-        $pattern = '/<a[^>]*href=["\']([^"\']*' . preg_quote($sourceBaseUrl, '/') . '[^"\']*)["\'][^>]*>(.*?)<\/a>/i';
-        $content = preg_replace_callback($pattern, function($matches) {
-            return $matches[2]; // Return just the content inside the <a> tag
-        }, $content);
-
-        // Remove links from additional domains
-        foreach (self::ADDITIONAL_DOMAINS as $domain) {
-            $pattern = '/<a[^>]*href=["\']([^"\']*' . preg_quote($domain, '/') . '[^"\']*)["\'][^>]*>(.*?)<\/a>/i';
-            $content = preg_replace_callback($pattern, function($matches) {
-                return $matches[2]; // Return just the content inside the <a> tag
-            }, $content);
+        
+        // Replace case-sensitive domains (exact match)
+        foreach (self::CASE_SENSITIVE_DOMAINS as $domain) {
+            // Use a more specific pattern for case-sensitive matching
+            $content = preg_replace(
+                '/(?<!href=["|\'])(?<!src=["|\'])(?<!href=)(?<!src=)(' . preg_quote($domain, '/') . ')/',  // No 'i' flag
+                $ourBaseUrl,
+                $content
+            );
         }
 
         return $content;
@@ -240,6 +240,8 @@ class PostsController extends Controller
             'https://https://thuvienloigiai.com' => 'https://toanmath.com',
             // Add an explicit replacement for the complex pattern
             'img.https://thuvienloigiai.com' => 'img.loigiaihay.com',
+            // Add case-sensitive TOANMATH.com replacement
+            'TOANMATH.com' => parse_url(config('app.url'), PHP_URL_HOST),
         ];
 
         foreach ($replacements as $search => $replace) {
@@ -268,7 +270,8 @@ class PostsController extends Controller
         // Skip if content is empty or doesn't contain problematic URLs
         if (empty($content) || 
             (strpos($content, 'thuvienloigiai.com') === false && 
-             strpos($content, 'img.https://') === false)) {
+             strpos($content, 'img.https://') === false &&
+             strpos($content, 'TOANMATH.com') === false)) {
             return $content;
         }
 
@@ -314,6 +317,11 @@ class PostsController extends Controller
                     $src = str_replace('thuvienloigiai.com', 'loigiaihay.com', $src);
                 }
                 
+                // Case-sensitive replacement for TOANMATH.com
+                if (strpos($src, 'TOANMATH.com') !== false) {
+                    $src = str_replace('TOANMATH.com', parse_url(config('app.url'), PHP_URL_HOST), $src);
+                }
+                
                 // Ensure URLs are properly formatted
                 if (!empty($src) && !preg_match('/^https?:\/\//', $src) && strpos($src, 'img.') === 0) {
                     $src = 'https://' . $src;
@@ -342,6 +350,10 @@ class PostsController extends Controller
         // Additional regex replacement for any URLs not caught by DOM processing
         $content = preg_replace('/(https?:\/\/img\.https?:\/\/thuvienloigiai\.com)/i', 'https://img.loigiaihay.com', $content);
         $content = preg_replace('/(img\.https?:\/\/thuvienloigiai\.com)/i', 'img.loigiaihay.com', $content);
+        
+        // Case-sensitive replacement for TOANMATH.com
+        $ourBaseUrl = parse_url(config('app.url'), PHP_URL_HOST);
+        $content = str_replace('TOANMATH.com', $ourBaseUrl, $content);
         
         return $content;
     }
@@ -383,6 +395,12 @@ class PostsController extends Controller
         // Always apply URL fixes before displaying content
         // This ensures even cached content with broken URLs gets fixed
         $postContent = $this->fixProblematicUrls($postContent);
+        
+        // Final catch-all replacement for case-sensitive domains
+        $ourBaseUrl = parse_url(config('app.url'), PHP_URL_HOST);
+        foreach (self::CASE_SENSITIVE_DOMAINS as $domain) {
+            $postContent = str_replace($domain, $ourBaseUrl, $postContent);
+        }
 
         // Get related posts for the footer
         $footerLatestPosts = $this->getRelatedPosts($post);
@@ -436,5 +454,36 @@ class PostsController extends Controller
                 ->limit(10)
                 ->get();
         });
+    }
+
+    /**
+     * Remove links from external domains
+     */
+    private function removeExternalLinks($content, $sourceBaseUrl)
+    {
+        // Remove links from source domain
+        $pattern = '/<a[^>]*href=["\']([^"\']*' . preg_quote($sourceBaseUrl, '/') . '[^"\']*)["\'][^>]*>(.*?)<\/a>/i';
+        $content = preg_replace_callback($pattern, function($matches) {
+            return $matches[2]; // Return just the content inside the <a> tag
+        }, $content);
+
+        // Remove links from additional domains (case insensitive)
+        foreach (self::ADDITIONAL_DOMAINS as $domain) {
+            $pattern = '/<a[^>]*href=["\']([^"\']*' . preg_quote($domain, '/') . '[^"\']*)["\'][^>]*>(.*?)<\/a>/i';
+            $content = preg_replace_callback($pattern, function($matches) {
+                return $matches[2]; // Return just the content inside the <a> tag
+            }, $content);
+        }
+        
+        // Remove links from case-sensitive domains (exact match)
+        foreach (self::CASE_SENSITIVE_DOMAINS as $domain) {
+            // No 'i' flag for case-sensitive matching
+            $pattern = '/<a[^>]*href=["\']([^"\']*' . preg_quote($domain, '/') . '[^"\']*)["\'][^>]*>(.*?)<\/a>/';
+            $content = preg_replace_callback($pattern, function($matches) {
+                return $matches[2]; // Return just the content inside the <a> tag
+            }, $content);
+        }
+
+        return $content;
     }
 }
