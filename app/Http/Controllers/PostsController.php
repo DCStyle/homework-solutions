@@ -175,6 +175,9 @@ class PostsController extends Controller
         // Find "https://img.thuvienloigiai.com" and replace with "https://img.loigiaihay.com"
         $content = str_replace('https://img.thuvienloigiai.com', 'https://img.loigiaihay.com', $content);
 
+        // Find "https://https://thuvienloigiai.com" and replace with "https://toanmath.com"
+        $content = str_replace('https://https://thuvienloigiai.com', 'https://toanmath.com', $content);
+
         return $content;
     }
 
