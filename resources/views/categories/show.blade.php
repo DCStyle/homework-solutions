@@ -41,7 +41,7 @@
             <nav aria-label="breadcrumb" class="my-4">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a title="{{ setting('site_name', 'Home') }}" href="{{ route('home') }}">{{ setting('site_name', 'Home') }}</a></li>
-                    <li class="breadcrumb-item"><a title="{{ $category->name }}" href="{{ route('categories.show', $category->slug) }}">{{ $category->name }}</a></li>
+                    <li class="breadcrumb-item"><a title="{{ $category->name }}" href="{{ route('categories.show', $category->slug) }}" class="font-bold text-orange-400">{{ $category->name }}</a></li>
                 </ol>
             </nav>
 
