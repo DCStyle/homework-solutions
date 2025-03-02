@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 class ImageController extends Controller
 {
     protected $validationRules = [
-        'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+        'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
     ];
 
     public function upload(Request $request)

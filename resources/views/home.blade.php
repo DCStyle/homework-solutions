@@ -5,10 +5,19 @@
         <div class="container mx-auto">
             <div class="flex justify-between mb-4 md:mb-8 lg:mb-12">
                 <div class="hidden flex-1 w-full mr-4 md:block">
-                    <img src="{{ setting('home_hero_banner') ? Storage::url(setting('home_hero_banner')) : asset('images/education-0.svg') }}"
-                         alt="{{ setting('site_name', 'Homework Solutions') }}"
-                         class="w-full rounded-xl"
-                    />
+                    @if(setting('home_hero_banner_url'))
+                        <a href="{{ setting('home_hero_banner_url') }}" title="{{ setting('site_name', 'Homework Solutions') }}">
+                            <img src="{{ setting('home_hero_banner') ? Storage::url(setting('home_hero_banner')) : asset('images/education-0.svg') }}"
+                                alt="{{ setting('site_name', 'Homework Solutions') }}"
+                                class="w-full rounded-xl"
+                            />
+                        </a>
+                    @else
+                        <img src="{{ setting('home_hero_banner') ? Storage::url(setting('home_hero_banner')) : asset('images/education-0.svg') }}"
+                            alt="{{ setting('site_name', 'Homework Solutions') }}"
+                            class="w-full rounded-xl"
+                        />
+                    @endif
                 </div>
 
                 @if(setting('home_hero_description') !== null)

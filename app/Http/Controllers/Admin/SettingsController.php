@@ -69,6 +69,7 @@ class SettingsController extends Controller
         $validated = $request->validate([
             'home_hero_description' => 'required|string',
             'home_hero_banner' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'home_hero_banner_url' => 'nullable|string|max:255',
             'home_instruction_banner' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'instruction_steps' => 'required|array|min:1',
             'instruction_steps.*' => 'required|array', // Validate each step is an array

@@ -78,6 +78,9 @@
 
         @include('modals.mobile-category-modal')
 
+        <!-- Include the Custom Footer Links -->
+        <x-partials.footer-links />
+
         <!-- Include the Footer -->
         @include('layouts.footer')
     </div>

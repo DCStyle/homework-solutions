@@ -38,6 +38,24 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
         Route::put('/home', [App\Http\Controllers\Admin\SettingsController::class, 'updateHome'])->name('admin.settings.updateHome');
     });
 
+    // Footer Management
+    Route::prefix('footer')->group(function() {
+        Route::get('/', [App\Http\Controllers\Admin\FooterController::class, 'index'])->name('admin.footer.index');
+        
+        // Column routes
+        Route::post('/columns', [App\Http\Controllers\Admin\FooterController::class, 'storeColumn'])->name('admin.footer.columns.store');
+        Route::put('/columns/{column}', [App\Http\Controllers\Admin\FooterController::class, 'updateColumn'])->name('admin.footer.columns.update');
+        Route::delete('/columns/{column}', [App\Http\Controllers\Admin\FooterController::class, 'destroyColumn'])->name('admin.footer.columns.destroy');
+        
+        // Link routes
+        Route::post('/columns/{column}/links', [App\Http\Controllers\Admin\FooterController::class, 'storeLink'])->name('admin.footer.links.store');
+        Route::put('/links/{link}', [App\Http\Controllers\Admin\FooterController::class, 'updateLink'])->name('admin.footer.links.update');
+        Route::delete('/links/{link}', [App\Http\Controllers\Admin\FooterController::class, 'destroyLink'])->name('admin.footer.links.destroy');
+        
+        // Positions
+        Route::post('/positions', [App\Http\Controllers\Admin\FooterController::class, 'updatePositions'])->name('admin.footer.positions.update');
+    });
+
     // Menu management
     Route::prefix('menu')->group(function() {
         Route::get('/', [App\Http\Controllers\Admin\MenuController::class, 'index'])->name('admin.menu.index');

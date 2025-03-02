@@ -271,7 +271,9 @@ class PostsController extends Controller
         if (empty($content) || 
             (strpos($content, 'thuvienloigiai.com') === false && 
              strpos($content, 'img.https://') === false &&
-             strpos($content, 'TOANMATH.com') === false)) {
+             strpos($content, 'TOANMATH.com') === false)
+             ) 
+        {
             return $content;
         }
 
@@ -353,6 +355,7 @@ class PostsController extends Controller
         
         // Case-sensitive replacement for TOANMATH.com
         $ourBaseUrl = parse_url(config('app.url'), PHP_URL_HOST);
+        $content = str_replace('https://THCS.TOANMATH.com', $ourBaseUrl, $content);
         $content = str_replace('TOANMATH.com', $ourBaseUrl, $content);
         
         return $content;

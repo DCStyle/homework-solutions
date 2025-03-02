@@ -35,6 +35,23 @@
                         @enderror
                     </div>
 
+                    <!-- Homepage Hero Banner URL -->
+                    <div>
+                        <label for="home_hero_banner_url" class="mb-3 block text-sm font-medium text-[#1c2434]">
+                            URL banner trang chủ
+                            <small class="text-gray-500">(URL khi click vào banner)</small>
+                        </label>
+                        <input type="text"
+                               name="home_hero_banner_url"
+                               id="home_hero_banner_url"
+                               value="{{ old('home_hero_banner_url', setting('home_hero_banner_url')) }}"
+                               placeholder="https://example.com/destination-page"
+                               class="w-full rounded border border-stroke bg-transparent py-3 px-5 outline-none transition focus:border-primary active:border-primary">
+                        @error('home_hero_banner_url')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <!-- Home Hero Description with Code Editor -->
                     <div>
                         <label for="home_hero_description" class="mb-3 block text-sm font-medium text-[#1c2434]">

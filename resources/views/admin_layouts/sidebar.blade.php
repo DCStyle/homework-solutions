@@ -21,6 +21,8 @@
                     @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Cài đặt trang chủ", 'itemIcon' => 'mdi-cog', 'itemLink' => route('admin.settings.home')])
 
                     @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Cài đặt menu header", 'itemIcon' => 'mdi-cog', 'itemLink' => route('admin.menu.index')])
+
+                    @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Cài đặt footer", 'itemIcon' => 'mdi-page-layout-footer', 'itemLink' => route('admin.footer.index')])
                 </ul>
             </div>
 

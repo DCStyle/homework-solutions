@@ -20,5 +20,10 @@ class DatabaseSeeder extends Seeder
         foreach ($categories as $category) {
             Category::create(['name' => $category]);
         }
+        
+        // Call the FooterSeeder
+        $this->call([
+            FooterSeeder::class,
+        ]);
     }
 }

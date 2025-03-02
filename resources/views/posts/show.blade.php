@@ -34,7 +34,11 @@
                         @foreach ($post->chapter->book->chapters as $chapter)
                             @if($chapter->id != $post->chapter_id)
                                 <li class="mb-4">
-                                    <h3 class="font-bold text-green-700">{{ $chapter->name }}</h3>
+                                    <h3 class="font-bold text-green-700">
+                                        <a href="{{ route('bookChapters.show', $chapter->slug) }}" title="{{ $chapter->name }}" class="text-md font-medium text-orange-400 hover:text-orange-500 hover:underline">
+                                            {{ $chapter->name }}
+                                        </a>
+                                    </h3>
                                     <ul class="list-disc list-inside mt-2">
                                         @foreach ($chapter->posts as $item)
                                             <li class="mb-2">
@@ -234,7 +238,14 @@
                     <div class="grid gap-4 md:grid-cols-2">
                         @foreach($post->chapter->book->group->category->bookGroups as $group)
                             <div>
-                                <h3 class="text-xl font-medium text-orange-400">{{ $group->name }}</h3>
+                                <h3 class="text-xl font-medium text-orange-400">
+                                    <a href="{{ route('bookGroups.show', $group->slug) }}" 
+                                    title="{{ $group->name }}" 
+                                    class="text-md font-medium text-orange-400 hover:text-orange-500 hover:underline"
+                                    >
+                                        {{ $group->name }}
+                                    </a>
+                                </h3>
 
                                 <div class="py-4 flex flex-col gap-2 border-dashed border-blue-600">
                                     @foreach($group->books as $book)
