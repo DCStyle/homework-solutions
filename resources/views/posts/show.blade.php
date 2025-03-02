@@ -95,9 +95,28 @@
                             title="{{ $post->chapter->book->name }}"
                             class="text-gray-600 hover:text-blue-500 transition-colors duration-200"
                         >
-                            {{ $post->chapter->book->group->name . ' ' . $post->chapter->book->group->category->name . ' - ' . $post->chapter->book->name }}
+                            {{ $post->chapter->book->group->name }}
                         </a>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mx-2 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </li>
+
+                    <li class="flex items-center">
+                        <a
+                            href="{{ route('bookChapters.show', $post->chapter->book->slug) }}"
+                            title="{{ $post->chapter->book->name }}"
+                            class="text-gray-600 hover:text-blue-500 transition-colors duration-200"
+                        >
+                            {{ $post->chapter->book->name }}
+                        </a>
+                    </li>
+
+                    <li class="flex items-center">
+                        <a href="{{ route('bookChapters.show', $post->chapter->slug) }}"
+                            title="{{ $post->chapter->name }}"
+                            class="text-gray-600 hover:text-blue-500 transition-colors duration-200"
+                        >
+                            {{ $post->chapter->name }}
+                        </a>
                     </li>
 
                     <li>
