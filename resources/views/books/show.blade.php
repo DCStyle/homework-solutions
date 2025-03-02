@@ -65,7 +65,8 @@
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a title="{{ setting('site_name', 'Home') }}" href="{{ route('home') }}">{{ setting('site_name', 'Home') }}</a></li>
                     <li class="breadcrumb-item"><a title="{{ $book->group->category->name }}" href="{{ route('categories.show', $book->group->category->slug) }}">{{ $book->group->category->name }}</a></li>
-                    <li class="breadcrumb-item"><a title="{{ $book->name }}" href="{{ route('books.show', $book->slug) }}" class="font-bold text-orange-400">{{ $book->group->name . ' ' . $book->group->category->name . ' - ' . $book->name }}</a></li>
+                    <li class="breadcrumb-item"><a title="{{ $book->group->name }}" href="{{ route('bookGroups.show', $book->group->slug) }}">{{ $book->group->name }}</a></li>
+                    <li class="breadcrumb-item"><a title="{{ $book->name }}" href="{{ route('books.show', $book->slug) }}" class="font-bold text-orange-400">{{ $book->name }}</a></li>
                 </ol>
             </nav>
 
