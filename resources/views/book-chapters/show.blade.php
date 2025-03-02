@@ -53,8 +53,9 @@
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a title="{{ setting('site_name', 'Home') }}" href="{{ route('home') }}">{{ setting('site_name', 'Home') }}</a></li>
                     <li class="breadcrumb-item"><a title="{{ $category->name }}" href="{{ route('categories.show', $category->slug) }}">{{ $category->name }}</a></li>
-                    <li class="breadcrumb-item"><a title="{{ $group->name }}" href="{{ route('bookGroups.show', $group->slug) }}" class="font-bold text-orange-400">{{ $group->name . ' ' . $category->name }}</a></li>
-                    <li class="breadcrumb-item"><a title="{{ $chapter->name }}" href="{{ route('bookChapters.show', $chapter->slug) }}" class="font-bold text-orange-400">{{ $chapter->name . ' ' . $chapter->book->name . ' ' . $category->name }}</a></li>
+                    <li class="breadcrumb-item"><a title="{{ $group->name }}" href="{{ route('bookGroups.show', $group->slug) }}" class="font-bold text-orange-400">{{ $group->name }}</a></li>
+                    <li class="breadcrumb-item"><a title="{{ $book->name }}" href="{{ route('books.show', $book->slug) }}" class="font-bold text-orange-400">{{ $book->name }}</a></li>
+                    <li class="breadcrumb-item"><a title="{{ $chapter->name }}" href="{{ route('bookChapters.show', $chapter->slug) }}" class="font-bold text-orange-400">{{ $chapter->name }}</a></li>
                 </ol>
             </nav>
 
