@@ -1804,3 +1804,9 @@ ul.list_style li a {
 ins {
     display: none !important;
 }
+
+#before_sub_question_nav,
+#before_sub_question_nav + span,
+.Choose-fast {
+    display: none !important;
+}
