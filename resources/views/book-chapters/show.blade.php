@@ -46,7 +46,7 @@
 
         <div class="mx-auto p-6 min-w-0 w-full max-xl:p-4 max-md:p2">
             <h1 class="text-2xl font-bold text-orange-400 py-2 border-b-2 border-b-blue-800">
-                {{ $chapter->name . ' - ' . $book->name . ' ' . $category->name }}
+                {{ $chapter->name . ' - ' . $book->name }}
             </h1>
 
             <nav aria-label="breadcrumb" class="my-4">
