@@ -28,9 +28,9 @@
             <div class="flex-1">
                 <div class="mb-4 text-lg font-bold">Preview</div>
                 <div class="border p-4 rounded bg-gray-50 dark:bg-gray-700">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 justify-items-center">
                         @foreach($columns->where('is_active', true) as $column)
-                            <div>
+                            <div class="text-center w-full max-w-xs">
                                 <h4 class="text-purple-600 font-semibold mb-4">{{ $column->title }}</h4>
                                 <ul class="space-y-2">
                                     @foreach($column->links->where('is_active', true) as $link)
