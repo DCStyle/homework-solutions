@@ -70,7 +70,7 @@
 
             <div class="mt-8">
                 <h2 class="text-center text-3xl font-medium underline mb-4">
-                    {{ $chapter->name . ' ' . $group->name . ' ' . $category->name }}
+                    {{ $chapter->name . ' - ' . $group->name  }}
                 </h2>
 
                 <div class="p-2 border">
