@@ -91,7 +91,7 @@
 
                     <li class="flex items-center">
                         <a
-                            href="{{ route('books.show', $post->chapter->book->slug) }}"
+                            href="{{ route('bookGroups.show', $post->chapter->book->group->slug) }}"
                             title="{{ $post->chapter->book->group->name }}"
                             class="text-gray-600 hover:text-blue-500 transition-colors duration-200"
                         >
@@ -102,7 +102,7 @@
 
                     <li class="flex items-center">
                         <a
-                            href="{{ route('bookChapters.show', $post->chapter->book->slug) }}"
+                            href="{{ route('books.show', $post->chapter->book->slug) }}"
                             title="{{ $post->chapter->book->name }}"
                             class="text-gray-600 hover:text-blue-500 transition-colors duration-200"
                         >
@@ -260,8 +260,8 @@
                         @foreach($post->chapter->book->group->category->bookGroups as $group)
                             <div>
                                 <h3 class="text-xl font-medium text-orange-400">
-                                    <a href="{{ route('bookGroups.show', $group->slug) }}" 
-                                    title="{{ $group->name }}" 
+                                    <a href="{{ route('bookGroups.show', $group->slug) }}"
+                                    title="{{ $group->name }}"
                                     class="text-md font-medium text-orange-400 hover:text-orange-500 hover:underline"
                                     >
                                         {{ $group->name }}
