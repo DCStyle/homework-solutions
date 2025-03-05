@@ -92,7 +92,7 @@
                     <li class="flex items-center">
                         <a
                             href="{{ route('books.show', $post->chapter->book->slug) }}"
-                            title="{{ $post->chapter->book->name }}"
+                            title="{{ $post->chapter->book->group->name }}"
                             class="text-gray-600 hover:text-blue-500 transition-colors duration-200"
                         >
                             {{ $post->chapter->book->group->name }}
