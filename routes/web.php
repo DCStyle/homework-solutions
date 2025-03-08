@@ -219,3 +219,29 @@ Route::get('/multi-search', [MultiSearchController::class, 'search'])->name('mul
 //     ->middleware(['web'])
 //     ->defaults('path', '')
 //     ->name('content.show');
+
+// Sitemap Routes
+Route::get('sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap.index');
+Route::get('sitemap-categories.xml', [App\Http\Controllers\SitemapController::class, 'categories'])->name('sitemap.categories');
+Route::get('sitemap-book-groups.xml', [App\Http\Controllers\SitemapController::class, 'bookGroups'])->name('sitemap.bookGroups');
+Route::get('sitemap-books.xml', [App\Http\Controllers\SitemapController::class, 'books'])->name('sitemap.books');
+Route::get('sitemap-book-chapters.xml', [App\Http\Controllers\SitemapController::class, 'bookChapters'])->name('sitemap.bookChapters');
+Route::get('sitemap-article-categories.xml', [App\Http\Controllers\SitemapController::class, 'articleCategories'])->name('sitemap.articleCategories');
+
+// Paginated sitemaps for large content types
+Route::get('sitemap-posts-{page}.xml', [App\Http\Controllers\SitemapController::class, 'paginatedPosts'])
+    ->where('page', '[0-9]+')
+    ->name('sitemap.posts.paginated');
+Route::get('sitemap-articles-{page}.xml', [App\Http\Controllers\SitemapController::class, 'paginatedArticles'])
+    ->where('page', '[0-9]+')
+    ->name('sitemap.articles.paginated');
+
+// Redirects for old sitemap URLs
+Route::get('sitemap-posts.xml', function() {
+    return redirect('sitemap-posts-1.xml');
+});
+Route::get('sitemap-articles.xml', function() {
+    return redirect('sitemap-articles-1.xml');
+});
+
+Route::get('robots.txt', [App\Http\Controllers\SitemapController::class, 'robots']);
