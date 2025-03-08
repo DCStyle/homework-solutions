@@ -8,8 +8,10 @@ use App\Models\BookChapter;
 use App\Models\BookGroup;
 use App\Models\Category;
 use App\Models\Book;
+use App\Services\SitemapService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class BooksController extends Controller
 {
@@ -40,7 +42,13 @@ class BooksController extends Controller
             'book_group_id' => 'required|exists:book_groups,id',
         ]);
 
-        Book::create($validated);
+        $book = Book::create($validated);
+        
+        // Update sitemap entry
+        SitemapService::updateEntry('book', $book);
+        
+        // Clear sitemap cache
+        $this->clearSitemapCache();
 
         return redirect()->route('admin.books.index')->with('success', 'Thêm sách thành công.');
     }
@@ -66,6 +74,12 @@ class BooksController extends Controller
         ]);
 
         $book->update($validated);
+        
+        // Update sitemap entry
+        SitemapService::updateEntry('book', $book);
+        
+        // Clear sitemap cache
+        $this->clearSitemapCache();
 
         return redirect()->route('admin.books.index')->with('success', 'Cập nhật sách thành công.');
     }
@@ -73,6 +87,13 @@ class BooksController extends Controller
     public function destroy($id)
     {
         $book = Book::whereId($id)->firstOrFail();
+        
+        // Remove from sitemap before deleting
+        SitemapService::removeEntry('book', $book->id);
+        
+        // Clear sitemap cache
+        $this->clearSitemapCache();
+        
         $book->delete();
 
         return redirect()->route('admin.books.index')->with('success', 'Xóa sách thành công.');
@@ -104,11 +125,35 @@ class BooksController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        BookChapter::create([
+        $chapter = BookChapter::create([
             'name' => $request->name,
             'book_id' => $book->id
         ]);
+        
+        // Update sitemap entry for the new chapter
+        SitemapService::updateEntry('book-chapter', $chapter);
+        
+        // Clear sitemap cache
+        $this->clearBookChapterSitemapCache();
 
         return redirect()->route('admin.books.chapters', $id)->with('success', 'Thêm chương sách thành công.');
+    }
+    
+    /**
+     * Clear book sitemap cache
+     */
+    private function clearSitemapCache()
+    {
+        Cache::forget('sitemap.index.data');
+        Cache::forget('sitemap.book.page.1.data');
+    }
+    
+    /**
+     * Clear book chapter sitemap cache
+     */
+    private function clearBookChapterSitemapCache()
+    {
+        Cache::forget('sitemap.index.data');
+        Cache::forget('sitemap.book-chapter.page.1.data');
     }
 }

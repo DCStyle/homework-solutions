@@ -222,26 +222,19 @@ Route::get('/multi-search', [MultiSearchController::class, 'search'])->name('mul
 
 // Sitemap Routes
 Route::get('sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap.index');
-Route::get('sitemap-categories.xml', [App\Http\Controllers\SitemapController::class, 'categories'])->name('sitemap.categories');
-Route::get('sitemap-book-groups.xml', [App\Http\Controllers\SitemapController::class, 'bookGroups'])->name('sitemap.bookGroups');
-Route::get('sitemap-books.xml', [App\Http\Controllers\SitemapController::class, 'books'])->name('sitemap.books');
-Route::get('sitemap-book-chapters.xml', [App\Http\Controllers\SitemapController::class, 'bookChapters'])->name('sitemap.bookChapters');
-Route::get('sitemap-article-categories.xml', [App\Http\Controllers\SitemapController::class, 'articleCategories'])->name('sitemap.articleCategories');
-
-// Paginated sitemaps for large content types
-Route::get('sitemap-posts-{page}.xml', [App\Http\Controllers\SitemapController::class, 'paginatedPosts'])
+Route::get('sitemap-{type}-{page}.xml', [App\Http\Controllers\SitemapController::class, 'showType'])
+    ->where('type', '[a-z\-]+')
     ->where('page', '[0-9]+')
-    ->name('sitemap.posts.paginated');
-Route::get('sitemap-articles-{page}.xml', [App\Http\Controllers\SitemapController::class, 'paginatedArticles'])
-    ->where('page', '[0-9]+')
-    ->name('sitemap.articles.paginated');
-
-// Redirects for old sitemap URLs
-Route::get('sitemap-posts.xml', function() {
-    return redirect('sitemap-posts-1.xml');
-});
-Route::get('sitemap-articles.xml', function() {
-    return redirect('sitemap-articles-1.xml');
-});
-
+    ->name('sitemap.type');
 Route::get('robots.txt', [App\Http\Controllers\SitemapController::class, 'robots']);
+
+// Legacy redirects for old sitemap URLs
+Route::redirect('sitemap-categories.xml', 'sitemap-category-1.xml');
+Route::redirect('sitemap-book-groups.xml', 'sitemap-book-group-1.xml');
+Route::redirect('sitemap-books.xml', 'sitemap-book-1.xml');
+Route::redirect('sitemap-book-chapters.xml', 'sitemap-book-chapter-1.xml');
+Route::redirect('sitemap-posts.xml', 'sitemap-post-1.xml');
+Route::redirect('sitemap-article-categories.xml', 'sitemap-article-category-1.xml');
+Route::redirect('sitemap-articles.xml', 'sitemap-article-1.xml');
+Route::redirect('sitemap-posts-{page}.xml', 'sitemap-post-{page}.xml')->where('page', '[0-9]+');
+Route::redirect('sitemap-articles-{page}.xml', 'sitemap-article-{page}.xml')->where('page', '[0-9]+');

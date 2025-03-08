@@ -9,7 +9,9 @@ use App\Models\BookGroup;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\PostAttachment;
+use App\Services\SitemapService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class PostController extends Controller
 {
@@ -37,21 +39,33 @@ class PostController extends Controller
 
         // Process Category
         $category = Category::firstOrCreate(['name' => $categoryName]);
+        
+        // Update category sitemap
+        SitemapService::updateEntry('category', $category);
 
         // Process Book Group
         $bookGroup = BookGroup::firstOrCreate(
             ['name' => $bookGroupName, 'category_id' => $category->id]
         );
+        
+        // Update book group sitemap
+        SitemapService::updateEntry('book-group', $bookGroup);
 
         // Process Book
         $book = Book::firstOrCreate(
             ['name' => $bookTitle, 'book_group_id' => $bookGroup->id]
         );
+        
+        // Update book sitemap
+        SitemapService::updateEntry('book', $book);
 
         // Process Book Chapter
         $bookChapter = BookChapter::firstOrCreate(
             ['name' => $chapterTitle, 'book_id' => $book->id]
         );
+        
+        // Update book chapter sitemap
+        SitemapService::updateEntry('book-chapter', $bookChapter);
 
         // Check if Post exists
         $existingPost = Post::where('title', $postTitle)
@@ -84,6 +98,11 @@ class PostController extends Controller
                         $attachment->delete();
                     });
             }
+            
+            // Update post sitemap
+            SitemapService::updateEntry('post', $existingPost);
+
+            $this->clearSitemapCache();
 
             return response()->json([
                 'success' => 'Post updated successfully. URL: ' .
@@ -104,11 +123,32 @@ class PostController extends Controller
                 PostAttachment::whereIn('id', $validatedData['attachment_ids'])
                     ->update(['post_id' => $post->id]);
             }
+            
+            // Update post sitemap
+            SitemapService::updateEntry('post', $post);
+            
+            $this->clearSitemapCache();
 
             return response()->json([
                 'success' => 'Post created successfully. URL: ' .
                     route('posts.show', $post->slug)
             ]);
         }
+    }
+    
+    /**
+     * Clear all relevant sitemap caches
+     */
+    private function clearSitemapCache()
+    {
+        // Clear main sitemap index cache
+        Cache::forget('sitemap.index.data');
+        
+        // Clear individual sitemap caches
+        Cache::forget('sitemap.category.page.1.data');
+        Cache::forget('sitemap.book-group.page.1.data');
+        Cache::forget('sitemap.book.page.1.data');
+        Cache::forget('sitemap.book-chapter.page.1.data');
+        Cache::forget('sitemap.post.page.1.data');
     }
 }

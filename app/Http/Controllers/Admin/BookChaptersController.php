@@ -11,8 +11,10 @@ use App\Models\Book;
 use App\Models\Image;
 use App\Models\Post;
 use App\Models\PostAttachment;
+use App\Services\SitemapService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class BookChaptersController extends Controller
 {
@@ -38,6 +40,12 @@ class BookChaptersController extends Controller
         ]);
 
         $chapter->update($validated);
+        
+        // Update sitemap entry
+        SitemapService::updateEntry('book-chapter', $chapter);
+        
+        // Clear sitemap cache
+        $this->clearSitemapCache();
 
         return redirect()->route('admin.books.chapters', $chapter->book->id)->with('success', 'Cập nhật chương sách thành công.');
     }
@@ -47,6 +55,12 @@ class BookChaptersController extends Controller
         $chapter = BookChapter::whereId($id)->firstOrFail();
 
         $book = $chapter->book;
+        
+        // Remove from sitemap before deleting
+        SitemapService::removeEntry('book-chapter', $chapter->id);
+        
+        // Clear sitemap cache
+        $this->clearSitemapCache();
 
         $chapter->delete();
 
@@ -107,8 +121,32 @@ class BookChaptersController extends Controller
                     ->update(['post_id' => $post->id]);
             }
         }
+        
+        // Update sitemap entry
+        SitemapService::updateEntry('post', $post);
+        
+        // Clear sitemap cache
+        $this->clearPostSitemapCache();
 
         return redirect()->route('admin.bookChapters.posts', $id)
             ->with('success', 'Tạo bài viết thành công.');
+    }
+    
+    /**
+     * Clear book chapter sitemap cache
+     */
+    private function clearSitemapCache()
+    {
+        Cache::forget('sitemap.index.data');
+        Cache::forget('sitemap.book-chapter.page.1.data');
+    }
+    
+    /**
+     * Clear post sitemap cache
+     */
+    private function clearPostSitemapCache()
+    {
+        Cache::forget('sitemap.index.data');
+        Cache::forget('sitemap.post.page.1.data');
     }
 }

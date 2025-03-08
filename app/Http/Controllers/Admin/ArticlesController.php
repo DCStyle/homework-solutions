@@ -7,7 +7,9 @@ use App\Models\Article;
 use App\Models\ArticleCategory;
 use App\Models\ArticleTag;
 use App\Models\Image;
+use App\Services\SitemapService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -47,9 +49,14 @@ class ArticlesController extends Controller
         if ($request->has('uploaded_image_ids')) {
             $this->handleImages($article, $request->uploaded_image_ids);
         }
+        
+        // Update sitemap entry
+        SitemapService::updateEntry('article', $article);
+        
+        // Clear sitemap cache
+        $this->clearSitemapCache();
 
-        return redirect()->route('admin.articles.index')
-            ->with('success', 'Tạo bài viết thành công.');
+        return redirect()->route('admin.articles.index')->with('success', 'Article created successfully.');
     }
 
     public function edit($id)
@@ -61,6 +68,8 @@ class ArticlesController extends Controller
 
     public function update(Request $request, $id)
     {
+        $article = Article::findOrFail($id);
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required',
@@ -69,7 +78,6 @@ class ArticlesController extends Controller
             'tags.*' => 'required|string', // Allow both IDs and new tag names
         ]);
 
-        $article = Article::findOrFail($id);
         $article->update($validated);
 
         // Handle tags
@@ -84,24 +92,36 @@ class ArticlesController extends Controller
         if ($request->has('uploaded_image_ids')) {
             $this->handleImages($article, $request->uploaded_image_ids);
         }
+        
+        // Update sitemap entry
+        SitemapService::updateEntry('article', $article);
+        
+        // Clear sitemap cache
+        $this->clearSitemapCache();
 
-        return redirect()->route('admin.articles.index')
-            ->with('success', 'Cập nhật bài viết thành công.');
+        return redirect()->route('admin.articles.index')->with('success', 'Article updated successfully.');
     }
 
     public function destroy($id)
     {
         $article = Article::findOrFail($id);
+        
+        // Remove from sitemap before deleting
+        SitemapService::removeEntry('article', $article->id);
+        
+        // Clear sitemap cache
+        $this->clearSitemapCache();
 
-        // Delete associated images from storage
+        // Delete related images
         foreach ($article->images as $image) {
-            Storage::disk('s3')->delete($image->path);
+            Storage::disk('public')->delete($image->path);
+            $image->delete();
         }
 
+        // Delete the article
         $article->delete();
 
-        return redirect()->route('admin.articles.index')
-            ->with('success', 'Xóa bài viết thành công.');
+        return redirect()->route('admin.articles.index')->with('success', 'Article deleted successfully.');
     }
 
     /**
@@ -163,5 +183,14 @@ class ArticlesController extends Controller
                     $image->delete();
                 });
         }
+    }
+
+    /**
+     * Clear sitemap cache
+     */
+    private function clearSitemapCache()
+    {
+        Cache::forget('sitemap.index.data');
+        Cache::forget('sitemap.article.page.1.data');
     }
 }

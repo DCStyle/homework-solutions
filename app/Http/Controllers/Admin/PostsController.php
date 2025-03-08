@@ -8,8 +8,10 @@ use App\Models\Category;
 use App\Models\Image;
 use App\Models\Post;
 use App\Models\PostAttachment;
+use App\Services\SitemapService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class PostsController extends Controller
@@ -76,6 +78,12 @@ class PostsController extends Controller
                 });
         }
 
+        // Update sitemap entry
+        SitemapService::updateEntry('post', $post);
+        
+        // Clear sitemap cache
+        $this->clearSitemapCache();
+
         return redirect()->route('admin.bookChapters.posts', $post->chapter->id)->with('success', 'Cập nhật bài viết thành công.');
     }
 
@@ -86,8 +94,23 @@ class PostsController extends Controller
 
         $chapter = $post->chapter;
 
+        // Remove from sitemap before deleting
+        SitemapService::removeEntry('post', $post->id);
+        
+        // Clear sitemap cache
+        $this->clearSitemapCache();
+
         $post->delete();
 
         return redirect()->route('admin.bookChapters.posts', $chapter->id)->with('success', 'Xóa bài viết thành công.');
+    }
+    
+    /**
+     * Clear sitemap cache
+     */
+    private function clearSitemapCache()
+    {
+        Cache::forget('sitemap.index.data');
+        Cache::forget('sitemap.post.page.1.data');
     }
 }

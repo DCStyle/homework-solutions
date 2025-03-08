@@ -17,6 +17,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('content:replace-urls')->daily();
 
         $schedule->command('attachments:clean-orphaned')->daily();
+
+        // Generate sitemap entries daily at midnight
+        $schedule->command('sitemap:generate')->daily();
     }
 
     /**

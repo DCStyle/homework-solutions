@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ArticleCategory;
+use App\Services\SitemapService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class ArticleCategoriesController extends Controller
 {
@@ -35,7 +37,13 @@ class ArticleCategoriesController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        ArticleCategory::create($validated);
+        $category = ArticleCategory::create($validated);
+        
+        // Update sitemap entry
+        SitemapService::updateEntry('article-category', $category);
+        
+        // Clear sitemap cache
+        $this->clearSitemapCache();
 
         return redirect()->route('admin.articleCategories.index')->with('success', 'Tạo danh mục tin tức thành công.');
     }
@@ -62,6 +70,12 @@ class ArticleCategoriesController extends Controller
 
         $category = ArticleCategory::findOrFail($id);
         $category->update($validated);
+        
+        // Update sitemap entry
+        SitemapService::updateEntry('article-category', $category);
+        
+        // Clear sitemap cache
+        $this->clearSitemapCache();
 
         return redirect()->route('admin.articleCategories.index')->with('success', 'Cập nhật danh mục tin tức thành công.');
     }
@@ -72,8 +86,24 @@ class ArticleCategoriesController extends Controller
     public function destroy(string $id)
     {
         $category = ArticleCategory::findOrFail($id);
+        
+        // Remove from sitemap before deleting
+        SitemapService::removeEntry('article-category', $category->id);
+        
+        // Clear sitemap cache
+        $this->clearSitemapCache();
+        
         $category->delete();
 
         return redirect()->route('admin.articleCategories.index')->with('success', 'Xóa danh mục tin tức thành công.');
+    }
+    
+    /**
+     * Clear sitemap cache
+     */
+    private function clearSitemapCache()
+    {
+        Cache::forget('sitemap.index.data');
+        Cache::forget('sitemap.article-category.page.1.data');
     }
 }
