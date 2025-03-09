@@ -38,8 +38,8 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // Share menu items with the header view
-        View::composer('layouts.header', function ($view) {
-            $menuItems = MenuItem::orderBy('position')->get();
+        View::composer(['layouts.header', 'layouts.app'], function ($view) {
+            $menuItems = MenuItem::orderBy('order')->get();
             $view->with('menuItems', $menuItems);
         });
     }
