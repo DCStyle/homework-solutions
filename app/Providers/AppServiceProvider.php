@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Models\Category;
+use App\Models\MenuItem;
 use App\Services\ContentMirrorService;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -34,5 +36,11 @@ class AppServiceProvider extends ServiceProvider
             $categories = Category::whereNull('parent_id')->with('children')->get();
             view()->share('categories', $categories);
         }
+
+        // Share menu items with the header view
+        View::composer('layouts.header', function ($view) {
+            $menuItems = MenuItem::orderBy('position')->get();
+            $view->with('menuItems', $menuItems);
+        });
     }
 }
