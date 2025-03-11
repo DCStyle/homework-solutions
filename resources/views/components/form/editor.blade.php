@@ -3,12 +3,6 @@
               class="w-full rounded-lg border-[1.5px] border-primary bg-transparent px-3 py-3 font-normal text-[#1c2434] outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter" rows="6">
         {!! $value ?? '' !!}
     </textarea>
-
-    <!-- Toggle Button -->
-    <button type="button" id="toggle-{{ $name }}"
-            class="absolute top-2 right-2 z-50 rounded bg-primary px-3 py-1 text-sm text-white hover:bg-primary/80">
-        Switch to HTML
-    </button>
 </div>
 
 <!-- Load MathJax first -->
@@ -46,9 +40,6 @@
     };
 
     document.addEventListener('DOMContentLoaded', function() {
-        let isCodeView = false;
-        const toggleButton = document.getElementById('toggle-{{ $name }}');
-        const textarea = document.getElementById('{{ $name }}');
         let editor = null;
 
         // Initialize image paste handler
@@ -81,7 +72,6 @@
                                 }}"
                 },
                 height: 900,
-                license_key: 'gpl',
                 images_upload_url: '{{ route('images.upload') }}',
                 images_upload_handler: function (blobInfo, progress) {
                     return new Promise((resolve, reject) => {
@@ -235,36 +225,5 @@
                 console.error('Error initializing TinyMCE:', err);
             });
         }, 500);
-
-        // Toggle button click handler
-        toggleButton.addEventListener('click', function() {
-            isCodeView = !isCodeView;
-
-            if (isCodeView) {
-                // Switch to HTML view
-                const content = editor.getContent();
-                editor.destroy();
-
-                // Show the original textarea and set its value
-                textarea.style.display = 'block';
-                textarea.value = content;
-
-                // Style the textarea for code view
-                textarea.style.fontFamily = 'monospace';
-                textarea.style.whiteSpace = 'pre-wrap';
-
-                toggleButton.textContent = 'Switch to Rich Text';
-            } else {
-                // Switch back to rich text editor
-                textarea.style.fontFamily = '';
-                textarea.style.whiteSpace = '';
-
-                initTinyMCE().then(() => {
-                    editor.setContent(textarea.value);
-                });
-
-                toggleButton.textContent = 'Switch to HTML';
-            }
-        });
     });
 </script>
