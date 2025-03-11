@@ -30,8 +30,6 @@
                 <div>
                     <label for="description" class="mb-3 block text-sm font-medium text-[#1c2434]">Nội dung</label>
                     <x-form.editor :name="'description'" value="{{ old('description', $group->description ?? '') }}" />
-
-                    <input type="hidden" name="uploaded_image_ids" id="uploaded_image_ids" value="{{ isset($group) && $group->images ? json_encode($group->images->pluck('id')) : '[]' }}">
                 </div>
 
                 <!-- Category Dropdown -->

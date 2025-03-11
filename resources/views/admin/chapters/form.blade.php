@@ -32,8 +32,6 @@
                 <div>
                     <label for="description" class="mb-3 block text-sm font-medium text-[#1c2434]">Nội dung</label>
                     <x-form.editor :name="'description'" value="{{ old('description', $chapter->description ?? '') }}" />
-
-                    <input type="hidden" name="uploaded_image_ids" id="uploaded_image_ids" value="{{ isset($chapter) && $chapter->images ? json_encode($chapter->images->pluck('id')) : '[]' }}">
                 </div>
 
                 <!-- Slug Field -->

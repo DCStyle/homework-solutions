@@ -30,8 +30,6 @@
                 <div>
                     <label for="description" class="mb-3 block text-sm font-medium text-[#1c2434]">Nội dung</label>
                     <x-form.editor :name="'description'" value="{{ old('description', $category->description ?? '') }}" />
-
-                    <input type="hidden" name="uploaded_image_ids" id="uploaded_image_ids" value="{{ isset($category) && $category->images ? json_encode($category->images->pluck('id')) : '[]' }}">
                 </div>
 
                 <!-- Submit Button -->
