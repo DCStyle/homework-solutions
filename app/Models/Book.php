@@ -6,6 +6,7 @@ use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use RalphJSmit\Laravel\SEO\Support\HasSEO;
 use RalphJSmit\Laravel\SEO\Support\SEOData;
 
@@ -32,6 +33,26 @@ class Book extends Model
 
     protected $fillable = ['name', 'slug', 'description', 'book_group_id'];
 
+    public function getThumbnail()
+    {
+        // If not, check if the article has any images
+        if ($this->images->count() > 0) {
+            return Storage::url($this->images->first()->path);
+        }
+
+        // If not, check if article content contains any images
+        $matches = [];
+        preg_match_all('/<img[^>]+>/i', $this->content, $matches);
+        if (count($matches) > 0) {
+            $img = (isset($matches[0][0])) ? $matches[0][0] : '';
+            preg_match('/src="([^"]+)"/', $img, $src);
+            return $src[1] ?? 'https://placehold.co/300?text=' . urlencode($this->title);
+        }
+
+        // If not, return a default image
+        return 'https://placehold.co/300?text=' . urlencode($this->title);
+    }
+
     public function getDescriptionSnippet($length = 100)
     {
         if (!$this->description) {
@@ -48,6 +69,7 @@ class Book extends Model
         return new SEOData(
             title: $this->name . ' | ' . $this->group->name . ' | ' . $this->group->category->name . ' | ' . setting('site_name'),
             description: $this->getDescriptionSnippet(160),
+            image: $this->getThumbnail()
         );
     }
 
@@ -87,5 +109,10 @@ class Book extends Model
     public function posts()
     {
         return $this->hasMany(Post::class);
+    }
+
+    public function images()
+    {
+        return $this->morphMany(Image::class, 'imageable');
     }
 }

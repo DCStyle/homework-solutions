@@ -26,11 +26,10 @@
 
                     <!-- Description Field -->
                     <div>
-                        <label for="description" class="mb-3 block text-sm font-medium text-[#1c2434]">Mô tả</label>
-                        <textarea name="description" id="description"
-                                  class="w-full rounded-lg border-[1.5px] border-primary bg-transparent px-3 py-3 font-normal text-[#1c2434] outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter" rows="6">
-                        {{ old('description', $category->description ?? '') }}
-                        </textarea>
+                        <label for="description" class="mb-3 block text-sm font-medium text-[#1c2434]">Nội dung</label>
+                        <x-form.editor :name="'description'" value="{{ old('description', $category->description ?? '') }}" />
+
+                        <input type="hidden" name="uploaded_image_ids" id="uploaded_image_ids" value="{{ isset($category) ? json_encode($category->images->pluck('id')) : '[]' }}">
                     </div>
 
                     <!-- Submit Button -->
@@ -41,16 +40,4 @@
             </div>
         </form>
     </div>
-
-    <!-- Include TinyMCE from the public folder -->
-    <script src="{{ asset('js/tinymce/tinymce.min.js') }}"></script>
-    <script>
-        tinymce.init({
-            selector: '#description',
-            plugins: 'lists link image table',
-            toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image table',
-            height: 300,
-            license_key: 'gpl'
-        });
-    </script>
 @endsection
