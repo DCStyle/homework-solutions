@@ -5,9 +5,6 @@
     </textarea>
 </div>
 
-<!-- Load MathJax first -->
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-
 <!-- Include TinyMCE from the public folder -->
 <script src="{{ env('APP_ENV') === 'public'
                     ? secure_asset('js/image-upload.js')
