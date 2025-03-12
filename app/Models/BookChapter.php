@@ -55,7 +55,7 @@ class BookChapter extends Model
     public function getDynamicSEOData(): SEOData
     {
         return new SEOData(
-            title: $this->name . ' | ' . $this->book->name . ' | ' . $this->book->group->name . ' ' . $this->book->group->category->name . ' | ' . setting('site_name'),
+            title: $this->name . ' | ' . $this->book->name . ' | ' . $this->book->group->name . ' | ' . setting('site_name'),
             description: $this->getDescriptionSnippet(160),
         );
     }
