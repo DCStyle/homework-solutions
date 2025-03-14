@@ -191,9 +191,9 @@
 
                                         <!-- Action buttons -->
                                         <div class="ml-4 flex items-center space-x-2">
-                                            @if(strtolower($attachment->extension) === 'pdf')
+                                            @if(in_array(strtolower($attachment->extension), ['pdf', 'doc', 'docx']))
                                                 <button
-                                                    onclick="openPdfPreview('{{ route('attachments.preview', $attachment->id) }}', '{{ $attachment->original_filename }}')"
+                                                    onclick="openFilePreview('{{ route('attachments.preview', $attachment->id) }}', '{{ $attachment->original_filename }}', '{{ strtolower($attachment->extension) }}')"
                                                     class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-150"
                                                 >
                                                     <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -220,13 +220,13 @@
                 </div>
             @endif
 
-            <!-- PDF Preview Modal -->
+            <!-- File Preview Modal -->
             <div id="pdf-preview-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
                 <div class="bg-white w-full h-full md:w-4/5 md:h-5/6 flex flex-col rounded-lg shadow-xl">
                     <!-- Modal Header -->
                     <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
                         <h3 id="pdf-preview-title" class="text-xl font-semibold text-gray-900 truncate"></h3>
-                        <button onclick="closePdfPreview()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                        <button onclick="closeFilePreview()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
                             <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -235,16 +235,9 @@
 
                     <!-- Modal Body -->
                     <div class="flex-1 p-4 bg-gray-100">
-                        <object
-                            id="pdf-preview-object"
-                            class="w-full h-full rounded-lg"
-                            type="application/pdf"
-                            data=""
-                        >
-                            <div class="flex items-center justify-center h-full bg-white rounded-lg">
-                                <p class="text-gray-500">Unable to display PDF. Please try downloading instead.</p>
-                            </div>
-                        </object>
+                        <div id="file-preview-container" class="w-full h-full">
+                            <!-- File content will be inserted here -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -327,39 +320,200 @@
         });
     </script>
 
-    <!-- PDF Preview Script -->
+    <!-- Render audio blocks -->
     <script>
-        function openPdfPreview(url, filename) {
+        /**
+         * Transform custom audio vocabulary elements into styled blocks
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Find all audio_data elements
+            const audioElements = document.querySelectorAll('img.audio_data');
+
+            // Process each element
+            audioElements.forEach((element) => {
+                // Extract data from attributes or JSON
+                let data = {};
+
+                try {
+                    // Try to parse the JSON data if available
+                    if (element.hasAttribute('data-mce-json')) {
+                        data = JSON.parse(element.getAttribute('data-mce-json').replace(/'/g, '"'));
+                    }
+
+                    // Fallback to individual attributes if JSON parsing fails
+                    data.vocabulary = data.vocabulary || element.getAttribute('vocabulary');
+                    data.spelling = data.spelling || element.getAttribute('spelling');
+                    data.mean_word = data.mean_word || element.getAttribute('mean_word');
+                    data.sentences_example1 = data.sentences_example1 || element.getAttribute('sentences_example1');
+                    data.translate_example1 = data.translate_example1 || element.getAttribute('translate_example1');
+                    data.img_des = data.img_des || element.getAttribute('img_des');
+                    data.audio_src = data.audio_src || element.getAttribute('audio_src');
+
+                    // Create new element
+                    createVocabularyBlock(element, data);
+                } catch (error) {
+                    console.error('Error processing audio element:', error);
+                }
+            });
+        });
+
+        /**
+         * Create vocabulary block to replace the original element
+         */
+        function createVocabularyBlock(originalElement, data) {
+            // Create container with the same styling as in the image
+            const container = document.createElement('div');
+            container.className = 'rounded-lg bg-yellow-100 p-4 my-4';
+
+            // Create content HTML
+            container.innerHTML = `
+        <div class="flex flex-row justify-between">
+            <div class="flex-1">
+                <div class="flex items-center gap-2">
+                    <h3 class="text-2xl font-bold">${data.vocabulary}</h3>
+                    <button class="audio-play-button" data-audio-src="${data.audio_src}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600 hover:text-gray-900">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                        </svg>
+                    </button>
+                </div>
+                <div class="text-lg text-gray-700">${data.spelling}</div>
+                <div class="mt-2">${data.mean_word}</div>
+                <div class="mt-4">
+                    ${data.sentences_example1.replace('<b>', '<strong>').replace('</b>', '</strong>')}
+                </div>
+                <div class="mt-1 text-gray-700">
+                    <span class="font-bold">1.</span> ${data.translate_example1}
+                </div>
+            </div>
+            ${data.img_des ? `
+            <div class="ml-4 flex-shrink-0">
+                <img src="${data.img_des}" alt="${data.vocabulary}" class="w-40 h-auto object-contain rounded">
+            </div>
+            ` : ''}
+        </div>
+    `;
+
+            // Add audio functionality
+            const audioButton = container.querySelector('.audio-play-button');
+            if (audioButton) {
+                audioButton.addEventListener('click', function() {
+                    playAudio(this.getAttribute('data-audio-src'));
+                });
+            }
+
+            // Replace original element with the new container
+            originalElement.parentNode.replaceChild(container, originalElement);
+        }
+
+        /**
+         * Play audio file
+         */
+        function playAudio(audioSrc) {
+            // Create audio element if it doesn't exist
+            let audio = document.getElementById('vocabulary-audio-player');
+            if (!audio) {
+                audio = document.createElement('audio');
+                audio.id = 'vocabulary-audio-player';
+                document.body.appendChild(audio);
+            }
+
+            // Set source and play
+            audio.src = audioSrc;
+            audio.play().catch(error => {
+                console.error('Error playing audio:', error);
+            });
+        }
+    </script>
+
+    <!-- File Preview Script -->
+    <script>
+        function openFilePreview(url, filename, fileType) {
             const modal = document.getElementById('pdf-preview-modal');
-            const pdfObject = document.getElementById('pdf-preview-object');
+            const previewContainer = document.getElementById('file-preview-container');
             const title = document.getElementById('pdf-preview-title');
 
             // Add loading state
             modal.classList.remove('hidden');
             title.textContent = 'Loading ' + filename + '...';
 
-            // First fetch the URL to get the redirect
-            fetch(url)
-                .then(response => {
-                    if (response.ok) {
-                        return response.url;
-                    }
-                    throw new Error('Failed to load PDF');
-                })
-                .then(finalUrl => {
-                    // Create a URL with custom protocol to prevent download
-                    const pdfUrl = finalUrl + '#toolbar=0&navpanes=0&scrollbar=1&statusbar=0&messages=0&download=0&view=FitH';
-                    pdfObject.setAttribute('data', pdfUrl);
-                    title.textContent = filename;
+            // Clear the preview container
+            previewContainer.innerHTML = '';
 
-                    // Add event listener to prevent right-click
-                    pdfObject.addEventListener('contextmenu', (e) => e.preventDefault());
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    title.textContent = 'Error loading PDF';
-                    setTimeout(closePdfPreview, 2000);
-                });
+            if (fileType === 'pdf') {
+                // For PDFs
+                fetch(url)
+                    .then(response => {
+                        if (response.ok) {
+                            return response.url;
+                        }
+                        throw new Error('Failed to load PDF');
+                    })
+                    .then(finalUrl => {
+                        // Create PDF object
+                        const pdfObject = document.createElement('object');
+                        pdfObject.setAttribute('id', 'pdf-preview-object');
+                        pdfObject.setAttribute('class', 'w-full h-full rounded-lg');
+                        pdfObject.setAttribute('type', 'application/pdf');
+
+                        // Create a URL with custom protocol to prevent download
+                        const pdfUrl = finalUrl + '#toolbar=0&navpanes=0&scrollbar=1&statusbar=0&messages=0&download=0&view=FitH';
+                        pdfObject.setAttribute('data', pdfUrl);
+
+                        // Create fallback content
+                        const fallbackDiv = document.createElement('div');
+                        fallbackDiv.className = 'flex items-center justify-center h-full bg-white rounded-lg';
+                        const fallbackP = document.createElement('p');
+                        fallbackP.className = 'text-gray-500';
+                        fallbackP.textContent = 'Unable to display PDF. Please try downloading instead.';
+                        fallbackDiv.appendChild(fallbackP);
+                        pdfObject.appendChild(fallbackDiv);
+
+                        // Add to container
+                        previewContainer.appendChild(pdfObject);
+                        title.textContent = filename;
+
+                        // Add event listener to prevent right-click
+                        pdfObject.addEventListener('contextmenu', (e) => e.preventDefault());
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        title.textContent = 'Error loading PDF';
+                        previewContainer.innerHTML = '<div class="flex items-center justify-center h-full bg-white rounded-lg"><p class="text-gray-500">Error loading PDF. Please try downloading instead.</p></div>';
+                        setTimeout(closeFilePreview, 2000);
+                    });
+            } else if (fileType === 'doc' || fileType === 'docx') {
+                // For Word documents
+                fetch(url)
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        }
+                        throw new Error('Failed to load document');
+                    })
+                    .then(data => {
+                        // Use Microsoft Office Online Viewer
+                        const msViewerUrl = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(data.url);
+
+                        // Create iframe for Word viewer
+                        const iframe = document.createElement('iframe');
+                        iframe.setAttribute('id', 'doc-preview-iframe');
+                        iframe.setAttribute('class', 'w-full h-full rounded-lg');
+                        iframe.setAttribute('src', msViewerUrl);
+                        iframe.setAttribute('frameborder', '0');
+
+                        // Add to container
+                        previewContainer.appendChild(iframe);
+                        title.textContent = filename;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        title.textContent = 'Error loading document';
+                        previewContainer.innerHTML = '<div class="flex items-center justify-center h-full bg-white rounded-lg"><p class="text-gray-500">Error loading document. Please try downloading instead.</p></div>';
+                        setTimeout(closeFilePreview, 2000);
+                    });
+            }
 
             // Prevent body scrolling
             document.body.style.overflow = 'hidden';
@@ -367,7 +521,7 @@
             // Handle click outside modal to close
             const closeOnOutsideClick = function(e) {
                 if (e.target === modal) {
-                    closePdfPreview();
+                    closeFilePreview();
                 }
             };
             modal.addEventListener('click', closeOnOutsideClick);
@@ -375,7 +529,7 @@
             // Handle escape key to close modal
             const closeOnEscape = function(e) {
                 if (e.key === 'Escape') {
-                    closePdfPreview();
+                    closeFilePreview();
                 }
             };
             document.addEventListener('keydown', closeOnEscape);
@@ -387,9 +541,9 @@
             };
         }
 
-        function closePdfPreview() {
+        function closeFilePreview() {
             const modal = document.getElementById('pdf-preview-modal');
-            const pdfObject = document.getElementById('pdf-preview-object');
+            const previewContainer = document.getElementById('file-preview-container');
 
             // Remove event listeners
             if (modal._closeHandlers) {
@@ -404,7 +558,7 @@
             setTimeout(() => {
                 modal.classList.add('hidden');
                 modal.classList.remove('animate-fade-out');
-                pdfObject.setAttribute('data', '');
+                previewContainer.innerHTML = '';
                 document.body.style.overflow = '';
             }, 200);
         }

@@ -41,8 +41,11 @@ class AttachmentsController extends Controller
 
     public function preview(PostAttachment $attachment)
     {
-        if (strtolower($attachment->extension) !== 'pdf') {
-            abort(400, 'Only PDF files can be previewed');
+        $allowedExtensions = ['pdf', 'doc', 'docx'];
+        $extension = strtolower($attachment->extension);
+
+        if (!in_array($extension, $allowedExtensions)) {
+            abort(400, 'Only PDF, DOC, and DOCX files can be previewed');
         }
 
         $path = 'post-attachments/' . $attachment->filename;
@@ -53,13 +56,23 @@ class AttachmentsController extends Controller
                 $path,
                 now()->addMinutes(5),
                 [
-                    'ResponseContentType' => 'application/pdf'
+                    'ResponseContentType' => $attachment->mime_type
                 ]
             );
 
+            // For Word documents, return file information as JSON
+            if (in_array($extension, ['doc', 'docx'])) {
+                return response()->json([
+                    'url' => $url,
+                    'filename' => $attachment->original_filename,
+                    'type' => 'office'
+                ]);
+            }
+
+            // For PDFs, redirect as before
             return redirect()->away($url);
         } catch (Exception $e) {
-            \Log::error('PDF preview failed: ' . $e->getMessage(), [
+            \Log::error('File preview failed: ' . $e->getMessage(), [
                 'attachment_id' => $attachment->id,
                 'path' => $path
             ]);
