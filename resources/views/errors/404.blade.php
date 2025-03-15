@@ -2,6 +2,11 @@
 
 @section('title', 'Ối! Trang không tìm thấy - 404 | ' . setting('site_name'))
 
+@section('seo')
+    <meta name="robots" content="noindex,nofollow">
+    <title>Ối! Trang không tìm thấy - 404 | {{ setting('site_name') }}</title>
+@endsection
+
 @section('content')
 <div class="error-container">
     <div class="error-content">
