@@ -1814,3 +1814,7 @@ ins {
 #post-content ul {
     list-style: disc; /** Default list style */
 }
+
+#post-content p {
+    max-width: none;
+}
