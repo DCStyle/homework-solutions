@@ -71,13 +71,15 @@
             </nav>
 
             <div class="mt-4 bg-white p-4 text-md text-green-700 border shadow-md">
-                <h2 class="text-xl">{!! ($book->description && strlen(trim($book->description)) > 0)
-                        ? $book->description
-                        : "Dưới đây là toàn bộ bài giải <b class='text-black'>$book->name</b>.
+                @if($book->description && strlen(trim($book->description)) > 0)
+                    <div id="post-content">{!! $book->description !!}</div>
+                @else
+                    <h2 class="text-xl">{!! "Dưới đây là toàn bộ bài giải <b class='text-black'>$book->name</b>.
                            Cách hướng dẫn, trình bày lời giải chi tiết, dễ hiểu.
                            Học sinh muốn xem bài nào thì click vào tên bài để xem.
                            Chúc các em học tốt và nắm vững kiến thức <b>$book->name</b> trên <b class='underline'><a href='" . url('/') . "'>" . config('app.name', 'Laravel') . "</a></b>."
                     !!}</h2>
+                @endif
             </div>
 
             <div class="mt-8">
