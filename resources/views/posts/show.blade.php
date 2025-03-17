@@ -140,7 +140,7 @@
             </div>
 
             <!-- Main content -->
-            <div class="mt-4 text-lg">
+            <div class="mt-4 text-lg" id="post-content">
                 {!! $content !!}
             </div>
 

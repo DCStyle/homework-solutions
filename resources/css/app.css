@@ -1810,3 +1810,7 @@ ins {
 .Choose-fast {
     display: none !important;
 }
+
+#post-content ul {
+    list-style: disc; /** Default list style */
+}
