@@ -16,7 +16,7 @@
 
                 <div class="p-4 text-md border-b border-b-gray-300">
                     <h2 class="text-xl font-bold">Bài học cùng chương</h2>
-                    <ul class="list-disc list-inside mt-4">
+                    <ul class="list-disc list-inside mt-4 mx-0 px-0">
                         @foreach ($post->chapter->posts as $item)
                             <li class="mb-2">
                                 <a title="{{ $item->title }}" href="{{ route('posts.show', $item->slug) }}"
@@ -30,16 +30,16 @@
 
                 <div class="p-4 text-md">
                     <h2 class="text-xl font-bold">Bài học chương khác</h2>
-                    <ul class="mt-4">
+                    <ul class="mt-4 mx-0 px-0">
                         @foreach ($post->chapter->book->chapters as $chapter)
                             @if($chapter->id != $post->chapter_id)
                                 <li class="mb-4">
                                     <h3 class="font-bold text-green-700">
-                                        <a href="{{ route('bookChapters.show', $chapter->slug) }}" title="{{ $chapter->name }}" class="text-md font-medium text-orange-400 hover:text-orange-500 hover:underline">
+                                        <a href="{{ route('bookChapters.show', $chapter->slug) }}" title="{{ $chapter->name }}" class="text-md font-medium text-orange-400 hover:text-orange-500">
                                             {{ $chapter->name }}
                                         </a>
                                     </h3>
-                                    <ul class="list-disc list-inside mt-2">
+                                    <ul class="list-disc list-inside mt-2 mx-0 px-0">
                                         @foreach ($chapter->posts as $item)
                                             <li class="mb-2">
                                                 <a title="{{ $item->title }}" href="{{ route('posts.show', $item->slug) }}"
@@ -255,7 +255,7 @@
                                 <h3 class="text-xl font-medium text-orange-400">
                                     <a href="{{ route('bookGroups.show', $group->slug) }}"
                                     title="{{ $group->name }}"
-                                    class="text-md font-medium text-orange-400 hover:text-orange-500 hover:underline"
+                                    class="text-md font-medium text-orange-400 hover:text-orange-500"
                                     >
                                         {{ $group->name }}
                                     </a>
@@ -266,7 +266,7 @@
                                         <li class="flex items-center gap-2">
                                             <span class="iconify text-xl" data-icon="mdi-chevron-right"></span>
 
-                                            <a href="{{ route('books.show', $book->slug) }}" title="{{ $book->name }}" class="text-md font-medium text-gray-800 hover:underline hover:text-orange-400">
+                                            <a href="{{ route('books.show', $book->slug) }}" title="{{ $book->name }}" class="text-md font-medium text-gray-800 hover:text-orange-400">
                                                 {{ $book->name }}
                                             </a>
                                         </li>

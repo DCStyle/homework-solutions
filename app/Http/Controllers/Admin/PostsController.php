@@ -31,7 +31,7 @@ class PostsController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'message' => 'required|string',
+            'content' => 'required|string',
             'slug' => 'required|string|max:255|unique:posts,slug,' . $post->id,
             'uploaded_attachment_ids' => 'nullable|json'
         ]);
@@ -80,7 +80,7 @@ class PostsController extends Controller
 
         // Update sitemap entry
         SitemapService::updateEntry('post', $post);
-        
+
         // Clear sitemap cache
         $this->clearSitemapCache();
 
@@ -96,7 +96,7 @@ class PostsController extends Controller
 
         // Remove from sitemap before deleting
         SitemapService::removeEntry('post', $post->id);
-        
+
         // Clear sitemap cache
         $this->clearSitemapCache();
 
@@ -104,7 +104,7 @@ class PostsController extends Controller
 
         return redirect()->route('admin.bookChapters.posts', $chapter->id)->with('success', 'Xóa bài viết thành công.');
     }
-    
+
     /**
      * Clear sitemap cache
      */

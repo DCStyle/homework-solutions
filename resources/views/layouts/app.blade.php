@@ -64,6 +64,9 @@
         gtag('config', 'G-QYXLDJP7G6');
     </script>
 
+    <!-- Typography -->
+    <link rel="stylesheet" href="{{ asset('css/typography.css') }}" />
+
     @stack('styles')
 </head>
 <body>

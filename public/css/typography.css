@@ -1,0 +1,462 @@
+/* Educational Typography - Optimized for readability */
+
+:root {
+    /* Color variables */
+    --text-primary: #333333;
+    --text-secondary: #555555;
+    --text-muted: #717171;
+    --link-color: #2563eb;
+    --link-hover: #1e40af;
+    --heading-color: #111827;
+    --blockquote-border: #e5e7eb;
+    --code-bg: #f3f4f6;
+    --table-border: #e5e7eb;
+    --table-stripe: #f9fafb;
+
+    /* Dark mode colors */
+    --dark-text-primary: #e5e7eb;
+    --dark-text-secondary: #d1d5db;
+    --dark-text-muted: #9ca3af;
+    --dark-link-color: #60a5fa;
+    --dark-link-hover: #93c5fd;
+    --dark-heading-color: #f3f4f6;
+    --dark-blockquote-border: #4b5563;
+    --dark-code-bg: #1f2937;
+    --dark-table-border: #4b5563;
+    --dark-table-stripe: #374151;
+}
+
+/* Base Typography */
+html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    line-height: 1.6;
+    color: var(--text-primary);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 2em;
+    margin-bottom: 0.75em;
+    line-height: 1.2;
+    color: var(--heading-color);
+    font-weight: 600;
+}
+
+h1 {
+    font-size: 2.25rem;
+}
+
+h2 {
+    font-size: 1.875rem;
+}
+
+h3 {
+    font-size: 1.5rem;
+}
+
+h4 {
+    font-size: 1.25rem;
+}
+
+h5 {
+    font-size: 1.125rem;
+}
+
+h6 {
+    font-size: 1rem;
+}
+
+/* Paragraphs and spacing */
+p {
+    margin-top: 0;
+    margin-bottom: 1.25em;
+    max-width: 70ch; /* Optimal reading line length */
+}
+
+/* Lists */
+ul, ol {
+    margin-top: 0;
+    margin-bottom: 1.25em;
+    padding-left: 2em;
+}
+
+li {
+    margin-bottom: 0.5em;
+}
+
+li > ul,
+li > ol {
+    margin-top: 0.5em;
+    margin-bottom: 0;
+}
+
+/* Definition lists */
+dl {
+    margin-top: 0;
+    margin-bottom: 1.25em;
+}
+
+dt {
+    font-weight: 600;
+    margin-top: 1em;
+}
+
+dd {
+    margin-left: 0;
+    margin-bottom: 0.5em;
+}
+
+/* Blockquotes */
+blockquote {
+    margin: 1.5em 0;
+    padding: 0 1em;
+    border-left: 4px solid var(--blockquote-border);
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+/* Code blocks */
+code, pre {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.9em;
+}
+
+code {
+    padding: 0.2em 0.4em;
+    background-color: var(--code-bg);
+    border-radius: 3px;
+}
+
+pre {
+    margin: 1.5em 0;
+    padding: 1em;
+    background-color: var(--code-bg);
+    border-radius: 6px;
+    overflow-x: auto;
+    line-height: 1.4;
+}
+
+pre code {
+    padding: 0;
+    background-color: transparent;
+}
+
+/* Links */
+a {
+    /*color: var(--link-color);*/
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: color 0.2s, border-bottom-color 0.2s;
+}
+
+a:hover,
+a:focus {
+    color: var(--link-hover);
+    border-bottom-color: currentColor;
+}
+
+/* Text formatting */
+strong, b {
+    font-weight: 600;
+}
+
+em, i {
+    font-style: italic;
+}
+
+/* Horizontal rule */
+hr {
+    margin: 2em 0;
+    border: 0;
+    border-top: 1px solid var(--blockquote-border);
+}
+
+/* Tables */
+table {
+    width: 100%;
+    margin: 1.5em 0;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+th {
+    font-weight: 600;
+    text-align: left;
+    border-bottom: 2px solid var(--table-border);
+}
+
+td {
+    border-bottom: 1px solid var(--table-border);
+}
+
+th, td {
+    padding: 0.75em 0.5em;
+    vertical-align: top;
+}
+
+tr:nth-child(even) {
+    background-color: var(--table-stripe);
+}
+
+/* Small text */
+small {
+    font-size: 0.875em;
+    color: var(--text-muted);
+}
+
+/* Subscript & Superscript */
+sub, sup {
+    font-size: 75%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+}
+
+sup {
+    top: -0.5em;
+}
+
+sub {
+    bottom: -0.25em;
+}
+
+/* Abbreviations */
+abbr[title] {
+    border-bottom: 1px dotted;
+    cursor: help;
+}
+
+/* Marks/Highlights */
+mark {
+    background-color: #fef3c7;
+    padding: 0.2em;
+}
+
+/* Responsive typography */
+@media (max-width: 768px) {
+    html {
+        font-size: 15px;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    h2 {
+        font-size: 1.75rem;
+    }
+
+    h3 {
+        font-size: 1.4rem;
+    }
+
+    blockquote {
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    html {
+        font-size: 14px;
+    }
+
+    h1 {
+        font-size: 1.875rem;
+    }
+
+    h2 {
+        font-size: 1.625rem;
+    }
+
+    h3 {
+        font-size: 1.375rem;
+    }
+
+    pre, table {
+        font-size: 0.9em;
+    }
+}
+
+/* Print styles */
+@media print {
+    body {
+        font-size: 12pt;
+        line-height: 1.5;
+        color: #000;
+    }
+
+    a {
+        color: #000;
+        text-decoration: underline;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+        page-break-inside: avoid;
+    }
+
+    p, blockquote, ul, ol, dl, table {
+        page-break-inside: avoid;
+    }
+
+    img {
+        max-width: 100% !important;
+    }
+
+    pre, code {
+        font-size: 10pt;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    body {
+        color: var(--dark-text-primary);
+        background-color: #1a1a1a;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        color: var(--dark-heading-color);
+    }
+
+    a {
+        color: var(--dark-link-color);
+    }
+
+    a:hover,
+    a:focus {
+        color: var(--dark-link-hover);
+    }
+
+    blockquote {
+        border-left-color: var(--dark-blockquote-border);
+        color: var(--dark-text-secondary);
+    }
+
+    code, pre {
+        background-color: var(--dark-code-bg);
+    }
+
+    hr {
+        border-top-color: var(--dark-blockquote-border);
+    }
+
+    th {
+        border-bottom-color: var(--dark-table-border);
+    }
+
+    td {
+        border-bottom-color: var(--dark-table-border);
+    }
+
+    tr:nth-child(even) {
+        background-color: var(--dark-table-stripe);
+    }
+
+    small {
+        color: var(--dark-text-muted);
+    }
+
+    mark {
+        background-color: #78350f;
+        color: #fef3c7;
+    }
+}
+
+/* Additional educational-specific elements */
+
+/* Definition terms - commonly used in educational content */
+.definition-term {
+    font-weight: 600;
+    color: var(--heading-color);
+}
+
+/* Important note callout */
+.note {
+    padding: 1em;
+    margin: 1.5em 0;
+    border-left: 4px solid #3b82f6;
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.note-title {
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 0.5em;
+    color: #1e40af;
+}
+
+/* Warning callout */
+.warning {
+    padding: 1em;
+    margin: 1.5em 0;
+    border-left: 4px solid #f59e0b;
+    background-color: rgba(245, 158, 11, 0.1);
+}
+
+.warning-title {
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 0.5em;
+    color: #b45309;
+}
+
+/* Formula and math text */
+.formula {
+    font-family: ui-monospace, SFMono-Regular, "Liberation Mono", Menlo, monospace;
+    background-color: var(--code-bg);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+}
+
+/* Caption text for figures and tables */
+.caption {
+    font-size: 0.875em;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 0.5em;
+}
+
+/* Dark mode adjustments for educational elements */
+@media (prefers-color-scheme: dark) {
+    .definition-term {
+        color: var(--dark-heading-color);
+    }
+
+    .note {
+        background-color: rgba(59, 130, 246, 0.15);
+    }
+
+    .note-title {
+        color: #60a5fa;
+    }
+
+    .warning {
+        background-color: rgba(245, 158, 11, 0.15);
+    }
+
+    .warning-title {
+        color: #fbbf24;
+    }
+
+    .formula {
+        background-color: var(--dark-code-bg);
+    }
+
+    .caption {
+        color: var(--dark-text-muted);
+    }
+}

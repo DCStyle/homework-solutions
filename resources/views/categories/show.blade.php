@@ -10,13 +10,13 @@
             <div class="sticky top-10 bg-white border shadow-md">
                 <div class="p-4 text-md">
                     <h2 class="text-xl font-bold">Mục lục quan tâm</h2>
-                    <ul class="mt-4">
+                    <ul class="mt-4 mx-0 px-0">
                         @foreach ($category->bookGroups as $group)
                             <li class="mb-4">
                                 <a href="{{ route('bookGroups.show', $group->slug) }}" class="font-bold text-green-700">
                                     {{ $group->name }}
                                 </a>
-                                <ul class="list-disc list-inside mt-2">
+                                <ul class="list-disc list-inside mt-2 mx-0 px-0">
                                     @foreach ($group->books as $item)
                                         <li class="mb-2">
                                             <a title="{{ $item->name }}" href="{{ route('books.show', $item->slug) }}"
@@ -64,7 +64,7 @@
                         @foreach($category->bookGroups as $group)
                             <div>
                                 <h3 class="text-xl font-medium text-orange-400">
-                                    <a href="{{ route('bookGroups.show', $group->slug) }}" title="{{ $group->name }}" class="hover:underline hover:text-orange-400">
+                                    <a href="{{ route('bookGroups.show', $group->slug) }}" title="{{ $group->name }}" class="hover:text-orange-400">
                                         {{ $group->name }}
                                     </a>
                                 </h3>
@@ -74,7 +74,7 @@
                                         <li class="flex items-center gap-2">
                                             <span class="iconify text-xl" data-icon="mdi-chevron-right"></span>
 
-                                            <a href="{{ route('books.show', $book->slug) }}" title="{{ $book->name }}" class="text-md font-medium text-gray-800 hover:underline hover:text-orange-400">
+                                            <a href="{{ route('books.show', $book->slug) }}" title="{{ $book->name }}" class="text-md font-medium text-gray-800 hover:text-orange-400">
                                                 {{ $book->name }}
                                             </a>
                                         </li>

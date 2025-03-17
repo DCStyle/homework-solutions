@@ -16,7 +16,7 @@
 
                 <div class="p-4 text-md border-b border-b-gray-300">
                     <h2 class="text-xl font-bold">Cùng chuyên mục</h2>
-                    <ul class="list-disc list-inside mt-4">
+                    <ul class="list-disc list-inside mt-4 mx-0 px-0">
                         @foreach ($category->bookGroups as $item)
                             <li class="mb-2">
                                 <a title="{{ $item->name }}" href="{{ route('bookGroups.show', $item->slug) }}"
@@ -30,7 +30,7 @@
 
                 <div class="p-4 text-md">
                     <h2 class="text-xl font-bold">Mục lục quan tâm</h2>
-                    <ul class="mt-4">
+                    <ul class="mt-4 mx-0 px-0">
                         @foreach ($group->books as $book)
                             <li class="mb-2">
                                 <a title="{{ $item->title }}" href="{{ route('books.show', $item->slug) }}"

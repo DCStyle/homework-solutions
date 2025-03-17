@@ -46,7 +46,7 @@
                     >
                         <span class="iconify text-2xl" data-icon="mdi-school"></span>
 
-                        <p class="block text-xl font-medium text-gray-800 md:text-2xl md:font-bold">
+                        <p class="block text-xl font-medium text-gray-800 my-0 md:text-2xl md:font-bold">
                             {{ $category->name }}
                         </p>
 
@@ -81,7 +81,7 @@
                                                 <li class="flex items-center gap-2">
                                                     <span class="iconify text-xl" data-icon="mdi-chevron-right"></span>
 
-                                                    <a href="{{ route('books.show', $book->slug) }}" title="{{ $book->name }}" class="text-md font-medium text-gray-800 hover:underline hover:text-orange-400">
+                                                    <a href="{{ route('books.show', $book->slug) }}" title="{{ $book->name }}" class="text-md font-medium text-gray-800 hover:text-orange-400">
                                                         {{ $book->name }}
                                                     </a>
                                                 </li>

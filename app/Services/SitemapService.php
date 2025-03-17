@@ -20,12 +20,12 @@ class SitemapService
      * The maximum number of URLs per sitemap according to the protocol
      */
     const MAX_URLS_PER_SITEMAP = 50000;
-    
+
     /**
      * For our implementation, we'll use a more conservative limit
      */
     const ITEMS_PER_SITEMAP = 1000;
-    
+
     /**
      * Map of model types to their model classes
      */
@@ -38,7 +38,7 @@ class SitemapService
         'article-category' => ArticleCategory::class,
         'article' => Article::class,
     ];
-    
+
     /**
      * Map of model types to their route names for URL generation
      */
@@ -51,7 +51,7 @@ class SitemapService
         'article-category' => 'article-categories.show',
         'article' => 'articles.show',
     ];
-    
+
     /**
      * Map of model types to their priority in the sitemap
      */
@@ -64,7 +64,7 @@ class SitemapService
         'article-category' => 0.8,
         'article' => 0.9,
     ];
-    
+
     /**
      * Map of model types to their change frequency
      */
@@ -77,7 +77,7 @@ class SitemapService
         'article-category' => 'weekly',
         'article' => 'weekly',
     ];
-    
+
     /**
      * Update or create a sitemap entry for a model
      */
@@ -86,10 +86,10 @@ class SitemapService
         try {
             // Calculate which sitemap index this entry belongs to
             $sitemapIndex = self::calculateSitemapIndex($type, $model->id);
-            
+
             // Generate the URL for this model
             $url = self::getUrlForModel($type, $model);
-            
+
             // Insert or update the sitemap entry
             DB::table('sitemaps')->updateOrInsert(
                 ['type' => $type, 'model_id' => $model->id],
@@ -110,7 +110,7 @@ class SitemapService
             ]);
         }
     }
-    
+
     /**
      * Remove a sitemap entry for a model
      */
@@ -129,7 +129,7 @@ class SitemapService
             ]);
         }
     }
-    
+
     /**
      * Calculate which sitemap index a model belongs to
      */
@@ -139,10 +139,10 @@ class SitemapService
             ->where('type', $type)
             ->where('model_id', '<=', $modelId)
             ->count();
-            
+
         return (int) ceil(($position + 1) / self::ITEMS_PER_SITEMAP);
     }
-    
+
     /**
      * Generate a URL for a model based on its type
      */
@@ -150,23 +150,24 @@ class SitemapService
     {
         try {
             $routeName = self::ROUTE_MAP[$type] ?? null;
-            
+
             if (!$routeName || !Route::has($routeName)) {
                 throw new \Exception("Route not found for type: {$type}");
             }
-            
-            return route($routeName, $model->slug);
+
+            // Use the configured APP_URL from .env instead of the current request URL
+            return route($routeName, $model->slug, true);
         } catch (\Exception $e) {
             Log::error('Error generating URL for model: ' . $e->getMessage(), [
                 'type' => $type,
                 'model_id' => $model->id ?? 'unknown',
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return '';
         }
     }
-    
+
     /**
      * Get the priority for a model type
      */
@@ -174,7 +175,7 @@ class SitemapService
     {
         return self::PRIORITY_MAP[$type] ?? 0.5;
     }
-    
+
     /**
      * Get the change frequency for a model type
      */
@@ -182,7 +183,7 @@ class SitemapService
     {
         return self::CHANGEFREQ_MAP[$type] ?? 'weekly';
     }
-    
+
     /**
      * Get the sitemap types and their page counts
      */
@@ -195,7 +196,7 @@ class SitemapService
             ->groupBy('type')
             ->get();
     }
-    
+
     /**
      * Get the entries for a specific type and page
      */
@@ -207,7 +208,7 @@ class SitemapService
             ->orderBy('lastmod', 'desc')
             ->get();
     }
-    
+
     /**
      * Get the last modified date for a type
      */
@@ -216,10 +217,10 @@ class SitemapService
         $lastmod = DB::table('sitemaps')
             ->where('type', $type)
             ->max('lastmod');
-            
+
         return $lastmod ? Carbon::parse($lastmod)->toIso8601String() : Carbon::now()->toIso8601String();
     }
-    
+
     /**
      * Rebuild the sitemap indices after bulk operations
      */
@@ -229,21 +230,21 @@ class SitemapService
             ->where('type', $type)
             ->orderBy('id')
             ->get(['id']);
-            
+
         $index = 1;
         $count = 0;
-        
+
         foreach ($entries as $entry) {
             $count++;
-            
+
             if ($count > self::ITEMS_PER_SITEMAP) {
                 $index++;
                 $count = 1;
             }
-            
+
             DB::table('sitemaps')
                 ->where('id', $entry->id)
                 ->update(['sitemap_index' => $index]);
         }
     }
-} 
+}

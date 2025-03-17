@@ -3,7 +3,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         @foreach($posts as $post)
-            <a href="{{ route('posts.show', $post->slug) }}" class="flex items-center space-x-2 hover:text-blue-600">
+            <a href="{{ route('posts.show', $post->slug) }}" class="flex items-center space-x-2 hover:text-blue-600 hover:no-underline">
                 <span class="iconify text-xl" data-icon="mdi-chevron-right"></span>
                 <span>{{ $post->title }}</span>
             </a>

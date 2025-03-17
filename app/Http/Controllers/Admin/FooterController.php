@@ -14,7 +14,7 @@ class FooterController extends Controller
         $columns = FooterColumn::with('links')
             ->orderBy('position')
             ->get();
-            
+
         return view('admin.footer.index', compact('columns'));
     }
 
@@ -64,7 +64,7 @@ class FooterController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'url' => 'required|string|max:255',
+            'url' => 'required|string',
         ]);
 
         $position = $column->links()->max('position') + 1;
@@ -84,7 +84,7 @@ class FooterController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'url' => 'required|string|max:255',
+            'url' => 'required|string',
             'is_active' => 'sometimes|boolean',
         ]);
 

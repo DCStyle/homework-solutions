@@ -22,7 +22,7 @@
 
             <form class="inline" method="POST" action="{{ route('verification.resend') }}">
                 @csrf
-                <button type="submit" class="text-indigo-600 hover:underline">{{ __('click here to request another') }}</button>.
+                <button type="submit" class="text-indigo-600">{{ __('click here to request another') }}</button>.
             </form>
         </div>
     </div>
