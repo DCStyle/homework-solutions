@@ -31,12 +31,16 @@ class PostsController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'content' => 'required|string',
+            'message' => 'required|string',
             'slug' => 'required|string|max:255|unique:posts,slug,' . $post->id,
             'uploaded_attachment_ids' => 'nullable|json'
         ]);
 
-        $post->update($validated);
+        $post->update([
+            'title' => $validated['title'],
+            'content' => $validated['message'],
+            'slug' => $validated['slug']
+        ]);
 
         // Update image associations
         if ($request->has('uploaded_image_ids')) {
