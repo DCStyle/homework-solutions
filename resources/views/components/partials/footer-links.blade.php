@@ -1,4 +1,4 @@
-<div class="bg-white py-10 dark:bg-dark-primary">
+<div class="bg-white py-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         @php
             $activeColumns = \App\Models\FooterColumn::with('links')

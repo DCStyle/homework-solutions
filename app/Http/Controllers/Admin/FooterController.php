@@ -29,7 +29,7 @@ class FooterController extends Controller
         FooterColumn::create([
             'title' => $request->title,
             'position' => $position,
-            'is_active' => true,
+            'is_active' => $request->has('is_active')
         ]);
 
         return redirect()->route('admin.footer.index')
@@ -73,7 +73,7 @@ class FooterController extends Controller
             'title' => $request->title,
             'url' => $request->url,
             'position' => $position,
-            'is_active' => true,
+            'is_active' => $request->has('is_active')
         ]);
 
         return redirect()->route('admin.footer.index')

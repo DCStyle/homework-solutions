@@ -17,7 +17,7 @@
                 <div class="p-4 text-md border-b border-b-gray-300">
                     <h2 class="text-xl font-bold">Cùng chuyên mục</h2>
                     <ul class="list-disc list-inside mt-4 mx-0 px-0">
-                        @foreach ($book->chapters as $item)
+                        @foreach ($chapter->book->chapters as $item)
                             <li class="mb-2">
                                 <a title="{{ $item->name }}" href="{{ route('bookChapters.show', $item->slug) }}"
                                    class="text-gray-800 hover:text-orange-400 {{ $item->id == $chapter->id ? 'text-orange-400' : '' }}">
@@ -30,12 +30,12 @@
 
                 <div class="p-4 text-md">
                     <h2 class="text-xl font-bold">Mục lục quan tâm</h2>
-                    <ul class="mt-4 mx-0 px-0">
-                        @foreach ($group->books as $book)
+                    <ul class="list-disc list-inside mt-4 mx-0 px-0">
+                        @foreach ($chapter->book->group->books as $book)
                             <li class="mb-2">
-                                <a title="{{ $item->title }}" href="{{ route('books.show', $item->slug) }}"
+                                <a title="{{ $book->name }}" href="{{ route('books.show', $book->slug) }}"
                                    class="text-gray-800 hover:text-orange-400">
-                                    {{ $item->title }}
+                                    {{ $book->name }}
                                 </a>
                             </li>
                         @endforeach
@@ -69,6 +69,32 @@
                            Chúc các em học tốt và nắm vững kiến thức <b>$chapter->name</b> trên <b class='underline'><a href='" . url('/') . "'>" . setting('site_name', 'Homework Solutions') . "</a></b>."
                     !!}</h2>
                 @endif
+
+                <div class="mt-4 max-h-[250px] md:max-h-none overflow-y-auto">
+                    <h3 class="text-primary sticky top-0 bg-white">Các bài giải khác có thể bạn quan tâm</h3>
+                    <ul class="mx-0 px-0 grid lg:grid-cols-2 gap-4">
+                        @foreach ($chapter->book->chapters as $otherChapter)
+                            @if($otherChapter->id != $chapter->id)
+                                <li class="mb-2">
+                                    <a title="{{ $otherChapter->name }}" href="{{ route('bookChapters.show', $otherChapter->slug) }}"
+                                       class="font-bold text-green-700">
+                                        {{ $otherChapter->name }}
+                                    </a>
+                                    <ul class="list-disc list-inside mt-2 mx-0 px-0">
+                                        @foreach ($otherChapter->posts as $post)
+                                            <li class="mb-2">
+                                                <a title="{{ $post->title }}" href="{{ route('posts.show', $post->slug) }}"
+                                                   class="text-gray-800 hover:text-orange-400">
+                                                    {{ $post->title }}
+                                                </a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </li>
+                            @endif
+                        @endforeach
+                    </ul>
+                </div>
             </div>
 
             <div class="mt-8">

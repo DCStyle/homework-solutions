@@ -140,10 +140,19 @@
                       data-bs-target="#search-modal"
                 ></span>
 
+                <!-- Mobile menu -->
                 <span class="iconify text-2xl text-white cursor-pointer xl:hidden"
                       data-icon="mdi-view-grid"
                       data-bs-toggle="modal"
                       data-bs-target="#mobile-menu-modal"></span>
+
+                <!-- Administrator button -->
+                @if(auth()->user()?->isAdmin() ?? false)
+                    <a href="{{ route('admin.dashboard') }}" target="_blank" class="text-white">
+                        <span class="iconify text-2xl cursor-pointer"
+                              data-icon="mdi-cog"></span>
+                    </a>
+                @endif
             </div>
         </div>
     </div>

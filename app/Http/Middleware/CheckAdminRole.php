@@ -21,6 +21,6 @@ class CheckAdminRole
             return $next($request);
         }
 
-        return redirect('/')->with('error', 'You do not have permission to view this page.');
+        return redirect('/login')->with('error', 'You do not have permission to view this page.');
     }
 }
