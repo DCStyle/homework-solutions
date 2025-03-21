@@ -1,8 +1,40 @@
 import './bootstrap';
 
 $(document).ready(function() {
-    $('[data-plugin-select2]').each(function() {
+    // Initialize all Select2 elements outside of modals
+    $('[data-plugin-select2]').not('.modal [data-plugin-select2]').each(function() {
         $(this).select2();
+    });
+
+    // Handle Bootstrap modal events
+    $('.modal').each(function() {
+        var modal = $(this);
+
+        // Initialize Select2 after modal is fully shown
+        modal.on('shown.bs.modal', function() {
+            setTimeout(function() {
+                modal.find('[data-plugin-select2]').each(function() {
+                    // Destroy if already initialized
+                    if ($(this).hasClass('select2-hidden-accessible')) {
+                        $(this).select2('destroy');
+                    }
+
+                    // Reinitialize with modal as parent
+                    $(this).select2({
+                        dropdownParent: modal
+                    });
+                });
+            }, 50); // Short delay to ensure DOM is ready
+        });
+
+        // Clean up on modal hide
+        modal.on('hide.bs.modal', function() {
+            modal.find('[data-plugin-select2]').each(function() {
+                if ($(this).hasClass('select2-hidden-accessible')) {
+                    $(this).select2('destroy');
+                }
+            });
+        });
     });
 
     $('[data-plugin-relative-time]').each(function() {

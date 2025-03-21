@@ -31,4 +31,8 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'deepseek' => [
+        'api_key' => env('DEEPSEEK_API_KEY'),
+        'endpoint' => env('DEEPSEEK_API_ENDPOINT', 'https://api.deepseek.com/v1/completions'),
+    ],
 ];

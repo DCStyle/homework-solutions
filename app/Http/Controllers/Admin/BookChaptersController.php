@@ -90,7 +90,9 @@ class BookChaptersController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'message' => 'required|string',
-            'uploaded_attachment_ids' => 'nullable|json'
+            'uploaded_attachment_ids' => 'nullable|json',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:500'
         ]);
 
         $post = Post::create([
@@ -98,6 +100,8 @@ class BookChaptersController extends Controller
             'content' => $request->message,
             'book_chapter_id' => $chapter->id,
             'user_id' => Auth::id(),
+            'meta_title' => $request->meta_title,
+            'meta_description' => $request->meta_description
         ]);
 
         // Handle image attachments

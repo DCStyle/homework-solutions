@@ -2,21 +2,57 @@
 
 @section('content')
     <div>
-        <h2 class="text-3xl font-bold mb-4">{{ isset($book) ? 'Cập nhật thông tin sách' : 'Tạo sách mới' }}</h2>
+        <div class="flex flex-wrap items-center justify-between mb-4">
+            <h2 class="text-3xl font-bold mb-2">
+                {{ isset($book) ? 'Cập nhật thông tin sách' : 'Thêm sách mới' }}
+            </h2>
 
-        @isset($book)
-            <div class="mb-6 flex items-center space-x-2 justify-end">
-                <a href="{{ route('admin.books.chapters', $book->id) }}" class="btn btn-info btn-sm">
-                    Xem chương
+            @if(isset($book))
+                <div class="flex items-center gap-2 whitespace-nowrap">
+                    <a href="{{ route('books.show', $book->slug) }}"
+                       class="px-4 py-2 rounded bg-primary text-white hover:!bg-blue-600"
+                       target="_blank"
+                    >
+                        Xem sách
+                    </a>
+
+                    <a href="{{ route('admin.books.chapters', $book->id) }}"
+                       class="px-4 py-2 rounded bg-orange-400 text-white hover:!bg-orange-500"
+                       target="_blank"
+                    >
+                        Danh sách chương
+                    </a>
+
+                    <form method="POST" action="{{ route('admin.books.destroy', $book->id) }}">
+                        @csrf
+                        @method('DELETE')
+
+                        <button type="submit" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                            onclick="return confirm('Bạn có chắc chắn muốn xóa sách này không?')"
+                        >
+                            Xóa
+                        </button>
+                    </form>
+                </div>
+            @endif
+        </div>
+
+        @if(isset($book))
+            <p class="mb-6">
+                @include('layouts.badge-primary', ['content' => "<a href='" . route('admin.categories.edit', $book->group->category->id) . "' data-bs-toggle='tooltip' data-bs-placement='top' title='Chỉnh sửa' target='_blank'>" . $book->group->category->name  . "</a>"])
+                <span class="font-medium">
+                <a href="{{ route('admin.bookGroups.edit', $book->group->id) }}"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   title="Chỉnh sửa"
+                   target="_blank"
+                   class="hover:underline"
+                >
+                    {{ $book->group->name }}
                 </a>
-
-                <form action="{{ route('admin.books.destroy', $book->id) }}" method="POST" class="d-inline">
-                    @csrf
-                    @method('DELETE')
-                    <button class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xoá?')">Xoá</button>
-                </form>
-            </div>
-        @endisset
+            </span>
+            </p>
+        @endif
 
         <form class="rounded-sm border bg-white shadow"
               method="POST"
@@ -36,7 +72,7 @@
 
                 <!-- Description Field -->
                 <div>
-                    <label for="description" class="mb-3 block text-sm font-medium text-[#1c2434]">Nội dung</label>
+                    <label for="description" class="mb-3 block text-sm font-medium text-[#1c2434]">Mô tả</label>
                     <x-form.editor :name="'description'" value="{{ old('description', $book->description ?? '') }}" />
                 </div>
 

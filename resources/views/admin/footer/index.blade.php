@@ -25,7 +25,7 @@
 
             <!-- Success Message -->
             @if(session('success'))
-                <div class="mx-6 mt-4 p-4 bg-green-50 border-l-4 border-green-500 dark:border-green-400 rounded-md">
+                <div class="mx-6 mt-4 p-4 bg-green-50 border-l-4 border-green-500 rounded-md">
                     <div class="flex">
                         <div class="flex-shrink-0">
                             <svg class="h-5 w-5 text-green-500 " fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -57,12 +57,12 @@
                 <div id="previewSection" class="mb-8">
                     <div class="flex items-center mb-4">
                         <h2 class="text-lg font-semibold text-gray-800 ">Footer Preview</h2>
-                        <div class="ml-2 bg-gray-100 text-xs px-2 py-1 rounded-full text-gray-500 dark:text-gray-400">
+                        <div class="ml-2 bg-gray-100 text-xs px-2 py-1 rounded-full text-gray-500 ">
                             Showing active items only
                         </div>
                     </div>
 
-                    <div class="bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-6">
                         @php
                             $activeColumns = $columns->where('is_active', true);
                             $columnCount = $activeColumns->count();
@@ -92,7 +92,7 @@
                                     <ul class="space-y-3">
                                         @foreach($column->links->where('is_active', true) as $link)
                                             <li>
-                                                <a href="{{ $link->url }}" class="text-gray-600 hover:text-purple-600 dark:hover:text-purple-400 transition-colors duration-200">
+                                                <a href="{{ $link->url }}" class="text-gray-600 hover:text-purple-600 transition-colors duration-200">
                                                     {{ $link->title }}
                                                 </a>
                                             </li>
@@ -108,7 +108,7 @@
                 <div id="manageSection" class="hidden">
                     <div class="flex items-center mb-4">
                         <h2 class="text-lg font-semibold text-gray-800 ">Manage Footer Columns</h2>
-                        <div class="ml-2 bg-blue-100 text-xs px-2 py-1 rounded-full text-blue-600 dark:text-blue-400">
+                        <div class="ml-2 bg-blue-100 text-xs px-2 py-1 rounded-full text-blue-600 ">
                             <div class="flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
@@ -120,9 +120,9 @@
 
                     <div id="footer-columns" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                         @foreach($columns as $column)
-                            <div class="footer-column-item bg-white border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200" data-column-id="{{ $column->id }}">
+                            <div class="footer-column-item bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200" data-column-id="{{ $column->id }}">
                                 <!-- Column Header -->
-                                <div class="p-4 border-b border-gray-200 flex justify-between items-center cursor-move bg-gray-50 dark:bg-gray-700/50 rounded-t-lg">
+                                <div class="p-4 border-b border-gray-200 flex justify-between items-center cursor-move bg-gray-50 rounded-t-lg">
                                     <div class="flex items-center">
                                     <span class="inline-flex items-center justify-center h-6 w-6 rounded-md bg-primary/10 text-primary mr-3">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -155,7 +155,7 @@
                                 <div class="p-4">
                                     <div class="flex items-center mb-4">
                                         <span class="text-sm mr-2">Status:</span>
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $column->is_active ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' }}">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $column->is_active ? 'bg-green-100 text-green-800 ' : 'bg-red-100 text-red-800' }}">
                                         {{ $column->is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                     </div>
@@ -163,7 +163,7 @@
                                     <!-- Links Section -->
                                     <div>
                                         <div class="flex justify-between items-center mb-3">
-                                            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            <h4 class="text-sm font-medium text-gray-700 ">
                                                 Links ({{ $column->links->count() }})
                                             </h4>
                                             <button type="button" onclick="showAddLinkModal({{ $column->id }})"
@@ -177,11 +177,11 @@
 
                                         <!-- Empty State -->
                                         @if($column->links->count() === 0)
-                                            <div class="flex flex-col items-center justify-center p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                                            <div class="flex flex-col items-center justify-center p-4 border border-dashed border-gray-300 rounded-lg">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                                 </svg>
-                                                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">No links yet</p>
+                                                <p class="mt-2 text-sm text-gray-500">No links yet</p>
                                                 <button type="button" onclick="showAddLinkModal({{ $column->id }})"
                                                         class="mt-2 inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-white bg-primary hover:bg-primary/90">
                                                     Add First Link
@@ -190,9 +190,9 @@
                                         @else
                                             <ul class="space-y-2 links-container" data-column-id="{{ $column->id }}">
                                                 @foreach($column->links as $link)
-                                                    <li class="footer-link-item flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800/50 rounded-md border border-gray-200 dark:border-gray-700" data-link-id="{{ $link->id }}">
+                                                    <li class="footer-link-item flex justify-between items-center p-3 bg-gray-50 rounded-md border border-gray-200 " data-link-id="{{ $link->id }}">
                                                         <!-- Drag handle -->
-                                                        <div class="drag-handle flex items-center mr-2 px-2 py-4 -my-3 -ml-3 rounded-l-md cursor-move bg-gray-100 dark:bg-gray-700/50 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                                                        <div class="drag-handle flex items-center mr-2 px-2 py-4 -my-3 -ml-3 rounded-l-md cursor-move bg-gray-100 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                                                             </svg>

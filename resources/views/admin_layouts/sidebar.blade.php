@@ -28,6 +28,14 @@
 
             <!-- Menu Group -->
             <div class="mt-4">
+                <h3 class="mb-4 text-sm font-medium text-[#8a99af] px-6">AI Tools</h3>
+                <ul class="mb-6 flex flex-col gap-1.5">
+                    @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Công cụ AI", 'itemIcon' => 'mdi-robot', 'itemLink' => route('admin.ai-dashboard.index')])
+                </ul>
+            </div>
+
+            <!-- Menu Group -->
+            <div class="mt-4">
                 <h3 class="mb-4 text-sm font-medium text-[#8a99af] px-6">Danh mục</h3>
                 <ul class="mb-6 flex flex-col gap-1.5">
                     @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Tất cả danh mục", 'itemIcon' => 'mdi-format-list-bulleted', 'itemLink' => route('admin.categories.index')])

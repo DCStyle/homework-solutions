@@ -30,6 +30,40 @@ Auth::routes();
 Route::prefix('admin')->middleware(['admin'])->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
 
+    // AI Dashboard
+    Route::prefix('ai-dashboard')->group(function () {
+        // Main dashboard
+        Route::get('/', [App\Http\Controllers\Admin\AIDashboardController::class, 'index'])->name('admin.ai-dashboard.index');
+        Route::get('/system-message/{type}', [App\Http\Controllers\Admin\AIDashboardController::class, 'getSystemMessage'])->name('admin.ai-dashboard.system-message');
+
+        // SEO Stats
+        Route::get('/stats', [App\Http\Controllers\Admin\AIDashboardController::class, 'stats'])->name('admin.ai-dashboard.stats');
+        Route::get('/stats/data', [App\Http\Controllers\Admin\AIDashboardController::class, 'getStatsData'])->name('admin.ai-dashboard.stats.data');
+
+        // AI Playground
+        Route::get('/playground', [App\Http\Controllers\Admin\AIDashboardController::class, 'playground'])->name('admin.ai-dashboard.playground');
+        Route::get('/content/categories', [App\Http\Controllers\Admin\AIDashboardController::class, 'getCategories']);
+        Route::get('/content/book-groups/{categoryId}', [App\Http\Controllers\Admin\AIDashboardController::class, 'getBookGroups']);
+        Route::get('/content/books/{groupId}', [App\Http\Controllers\Admin\AIDashboardController::class, 'getBooks']);
+        Route::get('/content/chapters/{bookId}', [App\Http\Controllers\Admin\AIDashboardController::class, 'getChapters']);
+        Route::get('/content/posts/{chapterId}', [App\Http\Controllers\Admin\AIDashboardController::class, 'getPosts']);
+        Route::get('/content/details/{type}/{id}', [App\Http\Controllers\Admin\AIDashboardController::class, 'getContentDetails']);
+
+        // API Endpoints
+        Route::post('/generate-sample', [App\Http\Controllers\Admin\AIDashboardController::class, 'generateSample'])->name('admin.ai-dashboard.generate-sample');
+        Route::post('/apply-prompt', [App\Http\Controllers\Admin\AIDashboardController::class, 'applyPrompt'])->name('admin.ai-dashboard.apply-prompt');
+        Route::post('/save-prompt', [App\Http\Controllers\Admin\AIDashboardController::class, 'savePrompt'])->name('admin.ai-dashboard.save-prompt');
+        Route::get('/prompts/default', [App\Http\Controllers\Admin\AIDashboardController::class, 'getDefaultPrompt'])->name('admin.ai-dashboard.prompts.default');
+        Route::get('/prompts/by-type', [App\Http\Controllers\Admin\AIDashboardController::class, 'getPromptsByType'])->name('admin.ai-dashboard.prompts.by-type');
+        Route::get('/prompts/{id}', [App\Http\Controllers\Admin\AIDashboardController::class, 'getPrompt'])->name('admin.ai-dashboard.get-prompt');
+        Route::delete('/prompts/{id}', [App\Http\Controllers\Admin\AIDashboardController::class, 'deletePrompt'])->name('admin.ai-dashboard.delete-prompt');
+
+        // Vision Analysis (Optional)
+        Route::get('/vision', [App\Http\Controllers\Admin\VisionAnalysisController::class, 'index'])->name('admin.ai-dashboard.vision');
+        Route::post('/vision/analyze', [App\Http\Controllers\Admin\VisionAnalysisController::class, 'analyze'])->name('admin.ai-dashboard.vision.analyze');
+        Route::post('/vision/analyze-api', [App\Http\Controllers\Admin\VisionAnalysisController::class, 'analyzeApi'])->name('admin.ai-dashboard.vision.analyze-api');
+    });
+
     // Settings
     Route::prefix('settings')->group(function() {
         Route::get('/', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('admin.settings.index');
@@ -41,17 +75,17 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
     // Footer Management
     Route::prefix('footer')->group(function() {
         Route::get('/', [App\Http\Controllers\Admin\FooterController::class, 'index'])->name('admin.footer.index');
-        
+
         // Column routes
         Route::post('/columns', [App\Http\Controllers\Admin\FooterController::class, 'storeColumn'])->name('admin.footer.columns.store');
         Route::put('/columns/{column}', [App\Http\Controllers\Admin\FooterController::class, 'updateColumn'])->name('admin.footer.columns.update');
         Route::delete('/columns/{column}', [App\Http\Controllers\Admin\FooterController::class, 'destroyColumn'])->name('admin.footer.columns.destroy');
-        
+
         // Link routes
         Route::post('/columns/{column}/links', [App\Http\Controllers\Admin\FooterController::class, 'storeLink'])->name('admin.footer.links.store');
         Route::put('/links/{link}', [App\Http\Controllers\Admin\FooterController::class, 'updateLink'])->name('admin.footer.links.update');
         Route::delete('/links/{link}', [App\Http\Controllers\Admin\FooterController::class, 'destroyLink'])->name('admin.footer.links.destroy');
-        
+
         // Positions
         Route::post('/positions', [App\Http\Controllers\Admin\FooterController::class, 'updatePositions'])->name('admin.footer.positions.update');
     });
@@ -138,7 +172,7 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
         Route::put('/{id}', [App\Http\Controllers\Admin\PostsController::class, 'update'])->name('admin.posts.update');
 
         Route::delete('/{id}', [App\Http\Controllers\Admin\PostsController::class, 'destroy'])->name('admin.posts.destroy');
-        
+
         // Add route for clearing post cache
         Route::post('/{id}/clear-cache', [PostsController::class, 'clearCache'])->name('admin.posts.clearCache');
     });
@@ -179,7 +213,7 @@ Route::get('/categories/{category_slug}.html', [App\Http\Controllers\CategoriesC
 Route::get('/book-groups/{group_slug}.html', [App\Http\Controllers\BookGroupsController::class, 'show'])->name('bookGroups.show');
 
 // Books
-Route::get('/books/{group_slug}.html', [App\Http\Controllers\BooksController::class, 'show'])->name('books.show');
+Route::get('/books/{book_slug}.html', [App\Http\Controllers\BooksController::class, 'show'])->name('books.show');
 
 // Book chapters
 Route::get('/book-chapters/{chapter_slug}.html', [App\Http\Controllers\BookChaptersController::class, 'show'])->name('bookChapters.show');

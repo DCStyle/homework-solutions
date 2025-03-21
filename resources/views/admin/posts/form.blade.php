@@ -2,15 +2,48 @@
 
 @section('content')
     <div>
-        <h2 class="text-3xl font-bold mb-2">
-            {{ isset($post) ? 'Sửa bài viết' : 'Tạo bài viết' }}
-        </h2>
+        <div class="flex flex-wrap items-center justify-between mb-4">
+            <h2 class="text-3xl font-bold mb-2">
+                {{ isset($post) ? 'Sửa bài viết' : 'Tạo bài viết' }}
+            </h2>
+
+            @if(isset($post))
+                <div class="flex items-center gap-2 whitespace-nowrap">
+                    <a href="{{ route('posts.show', $post->slug) }}"
+                       class="px-4 py-2 rounded bg-primary text-white hover:!bg-blue-600"
+                       target="_blank"
+                    >
+                        Xem bài viết
+                    </a>
+
+                    <form action="{{ route('admin.posts.destroy', $post->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600"
+                            onclick="return confirm('Bạn có chắc chắn muốn xóa bài viết này?')"
+                        >
+                            Xóa bài viết
+                        </button>
+                    </form>
+                </div>
+            @endif
+        </div>
 
         <p class="mb-6">
-            @include('layouts.badge-primary', ['content' => $chapter->book->group->category->name])
-            @include('layouts.badge-secondary', ['content' => $chapter->book->group->name])
-            @include('layouts.badge-green', ['content' => $chapter->book->name])
-            <span class="font-medium">{{ $chapter->name }}</span>
+            @include('layouts.badge-primary', ['content' => "<a href='" . route('admin.categories.edit', $chapter->book->group->category->id) . "' data-bs-toggle='tooltip' data-bs-placement='top' title='Chỉnh sửa' target='_blank'>" . $chapter->book->group->category->name  . "</a>"])
+            @include('layouts.badge-secondary', ['content' => "<a href='" . route('admin.bookGroups.edit', $chapter->book->group->id) . "' data-bs-toggle='tooltip' data-bs-placement='top' title='Chỉnh sửa' target='_blank'>" . $chapter->book->group->name  . "</a>"])
+            @include('layouts.badge-green', ['content' => "<a href='" . route('admin.books.edit', $chapter->book->id) . "' data-bs-toggle='tooltip' data-bs-placement='top' title='Chỉnh sửa' target='_blank'>" . $chapter->book->name  . "</a>"])
+            <span class="font-medium">
+                <a href="{{ route('admin.bookChapters.edit', $chapter->id) }}"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   title="Chỉnh sửa"
+                   target="_blank"
+                   class="hover:underline"
+                >
+                    {{ $chapter->name }}
+                </a>
+            </span>
         </p>
 
         <form class="rounded-sm border bg-white shadow"
@@ -31,6 +64,18 @@
 
                 <!-- Slug Field -->
                 @include('layouts.form-input', ['name' => 'slug', 'label' => 'Đường dẫn', 'value' => old('slug', $post->slug ?? '')])
+
+                <!-- Meta Title Field -->
+                @include('layouts.form-input', ['name' => 'meta_title', 'label' => 'Tiêu đề meta (SEO)', 'value' => old('meta_title', $post->meta_title ?? '')])
+
+                <!-- Meta Description Field -->
+                <div class="mb-4">
+                    <label for="meta_description" class="mb-3 block text-sm font-medium text-[#1c2434]">Mô tả meta (SEO)</label>
+                    <x-form.editor
+                        :name="'meta_description'"
+                        value="{{ old('meta_description', $post->meta_description ?? '') }}"
+                    />
+                </div>
 
                 <!-- Content Field -->
                 <div>
@@ -126,6 +171,24 @@
                     <input type="hidden" name="uploaded_attachment_ids" id="uploaded_attachment_ids"
                            value="{{ isset($post) ? json_encode($post->attachments->pluck('id')) : '[]' }}">
                 </div>
+
+                <!-- Source URL field (Uneditable) -->
+                @if(isset($post) && $post->source_url)
+                    <div class="mb-4">
+                        <label for="source_url" class="mb-3 block text-sm font-medium text-[#1c2434]">URL nguồn</label>
+
+                        <div class="flex items-center gap-4">
+                            <input type="text" id="source_url" name="source_url" value="{{ $post->source_url }}"
+                                   class="flex-1 px-3 py-2 border rounded-md text-gray-900 bg-gray-100"
+                                   readonly>
+
+                            <a href="{{ $post->source_url }}" target="_blank" rel="noopener noreferrer nofollow"
+                               class="whitespace-nowrap bg-indigo-600 hover:bg-indigo-900 p-2 rounded text-white text-sm font-medium">
+                                Mở URL
+                            </a>
+                        </div>
+                    </div>
+                @endif
 
                 <!-- Submit Button -->
                 <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md shadow-sm hover:bg-indigo-700 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none focus:ring-2">

@@ -2,9 +2,39 @@
 
 @section('content')
     <div>
-        <h1 class="text-3xl font-bold mb-6">
-            {{ isset($group) ? "Cập nhật môn học" : "Thêm môn học" }}
-        </h1>
+        <div class="flex flex-wrap items-center justify-between mb-4">
+            <h2 class="text-3xl font-bold mb-2">
+                {{ isset($group) ? 'Cập nhật môn học' : 'Thêm môn học mới' }}
+            </h2>
+
+            @if(isset($group))
+                <div class="flex items-center gap-2 whitespace-nowrap">
+                    <a href="{{ route('bookGroups.show', $group->slug) }}"
+                       class="px-4 py-2 rounded bg-primary text-white hover:!bg-blue-600"
+                       target="_blank"
+                    >
+                        Xem môn học
+                    </a>
+
+                    <form method="POST" action="{{ route('admin.bookGroups.destroy', $group->id) }}">
+                        @csrf
+                        @method('DELETE')
+
+                        <button type="submit" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                            onclick="return confirm('Bạn có chắc chắn muốn xóa môn học này không?')"
+                        >
+                            Xóa
+                        </button>
+                    </form>
+                </div>
+            @endif
+        </div>
+
+        @if(isset($group))
+            <p class="mb-6">
+                @include('layouts.badge-primary', ['content' => "<a href='" . route('admin.categories.edit', $group->category->id) . "' data-bs-toggle='tooltip' data-bs-placement='top' title='Chỉnh sửa' target='_blank'>" . $group->category->name  . "</a>"])
+            </p>
+        @endif
 
         <form
             class="rounded-sm border bg-white shadow"
@@ -28,7 +58,7 @@
 
                 <!-- Description Field -->
                 <div>
-                    <label for="description" class="mb-3 block text-sm font-medium text-[#1c2434]">Nội dung</label>
+                    <label for="description" class="mb-3 block text-sm font-medium text-[#1c2434]">Mô tả</label>
                     <x-form.editor :name="'description'" value="{{ old('description', $group->description ?? '') }}" />
                 </div>
 

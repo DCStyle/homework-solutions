@@ -33,13 +33,17 @@ class PostsController extends Controller
             'title' => 'required|string|max:255',
             'message' => 'required|string',
             'slug' => 'required|string|max:255|unique:posts,slug,' . $post->id,
-            'uploaded_attachment_ids' => 'nullable|json'
+            'uploaded_attachment_ids' => 'nullable|json',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:500'
         ]);
 
         $post->update([
             'title' => $validated['title'],
             'content' => $validated['message'],
-            'slug' => $validated['slug']
+            'slug' => $validated['slug'],
+            'meta_title' => $validated['meta_title'] ?? null,
+            'meta_description' => $validated['meta_description'] ?? null
         ]);
 
         // Update image associations

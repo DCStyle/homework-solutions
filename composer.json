@@ -5,10 +5,12 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.1",
+        "php": "^8.2",
         "ext-fileinfo": "*",
         "cviebrock/eloquent-sluggable": "^10.0",
+        "deepseek-php/deepseek-laravel": "^2.0",
         "doctrine/dbal": "^3.9",
+        "grok-php/laravel": "^1.0",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",

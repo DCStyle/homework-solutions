@@ -5,20 +5,6 @@
     </textarea>
 </div>
 
-<!-- Include TinyMCE from the public folder -->
-<script src="{{ env('APP_ENV') === 'public'
-                    ? secure_asset('js/image-upload.js')
-                    : asset('js/image-upload.js')
-              }}"></script>
-<script src="{{ env('APP_ENV') === 'public'
-                    ? secure_asset('js/image-paste-handler.js')
-                    : asset('js/image-paste-handler.js')
-              }}"></script>
-<script src="{{ env('APP_ENV') === 'public'
-                ? secure_asset('js/tinymce/tinymce.min.js')
-                : asset('js/tinymce/tinymce.min.js')
-              }}"></script>
-
 <script>
     // Ensure MathJax is loaded and initialized
     window.MathJax = {

@@ -21,7 +21,9 @@ class Post extends Model
         'user_id',
         'slug',
         'book_chapter_id',
-        'source_url'
+        'source_url',
+        'meta_title',
+        'meta_description'
     ];
 
     protected static function boot()
@@ -81,8 +83,8 @@ class Post extends Model
         $siteName = setting('site_name');
 
         return new SEOData(
-            title: $this->title . ' | ' . $this->chapter->book->name . ' | ' . $this->chapter->book->group->category->name . ' | ' . setting('site_name'),
-            description: "Hướng dẫn học bài: $this->title - {$this->chapter->book->group->name}. Đây là sách giáo khoa nằm trong bộ sách '{$this->chapter->book->name} {$this->chapter->book->group->category->name}' trên $siteName được biên soạn theo chương trình đổi mới của Bộ giáo dục. Hi vọng, với cách hướng dẫn cụ thể và giải chi tiết các bé sẽ nắm bài học tốt hơn.",
+            title: $this->meta_title ?? $this->title . ' | ' . $this->chapter->book->name . ' | ' . $this->chapter->book->group->category->name . ' | ' . setting('site_name'),
+            description: $this->meta_description ?? "Hướng dẫn học bài: $this->title - {$this->chapter->book->group->name}. Đây là sách giáo khoa nằm trong bộ sách '{$this->chapter->book->name}' trên $siteName được biên soạn theo chương trình đổi mới của Bộ giáo dục. Hi vọng, với cách hướng dẫn cụ thể và giải chi tiết các bé sẽ nắm bài học tốt hơn.",
             image: $this->getThumbnail()
         );
     }

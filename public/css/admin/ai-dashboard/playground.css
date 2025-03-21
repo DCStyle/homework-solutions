@@ -1,0 +1,112 @@
+/* Custom styling for the content selector */
+
+/* Content type buttons hover effect */
+.content-type-btn {
+    transition: all 0.2s ease-in-out;
+}
+
+.content-type-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Search input styling */
+#content-search:focus {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* Content selector styling */
+.content-selector-wrapper {
+    max-height: 250px;
+    overflow: hidden;
+    position: relative;
+}
+
+#content-selector {
+    scrollbar-width: thin;
+    scrollbar-color: #a1a1aa #e4e4e7;
+    border-radius: 0 0 0.5rem 0.5rem;
+}
+
+#content-selector::-webkit-scrollbar {
+    width: 8px;
+}
+
+#content-selector::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 0 0 0.5rem 0;
+}
+
+#content-selector::-webkit-scrollbar-thumb {
+    background: #c7d2fe;
+    border-radius: 4px;
+}
+
+#content-selector::-webkit-scrollbar-thumb:hover {
+    background: #818cf8;
+}
+
+#content-selector option {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out;
+}
+
+#content-selector option:last-child {
+    border-bottom: none;
+}
+
+#content-selector option:hover,
+#content-selector option:focus {
+    background-color: #eef2ff;
+}
+
+/* Content details card styling */
+#content-details-card {
+    transition: all 0.3s ease-in-out;
+    min-height: 300px;
+}
+
+#content-details-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-color: #818cf8;
+}
+
+/* Breadcrumb styling */
+.breadcrumb-item {
+    display: inline-block;
+    font-weight: 500;
+}
+
+.path-item {
+    transition: color 0.15s ease-in-out;
+}
+
+.path-item:hover {
+    color: #4f46e5 !important;
+    text-decoration: underline;
+}
+
+/* Badge animation */
+#content-badge {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Refresh button animation */
+#refresh-content .iconify {
+    transition: transform 0.5s ease-in-out;
+}
+
+#refresh-content:hover .iconify {
+    transform: rotate(180deg);
+}
+
+/* Highlight animation for content details updates */
+@keyframes highlight {
+    0% { background-color: rgba(99, 102, 241, 0.2); }
+    100% { background-color: transparent; }
+}
+
+.highlight-update {
+    animation: highlight 1.5s ease-in-out;
+}

@@ -80,32 +80,6 @@
                            Chúc các em học tốt và nắm vững kiến thức <b>$book->name</b> trên <b class='underline'><a href='" . url('/') . "'>" . config('app.name', 'Laravel') . "</a></b>."
                     !!}</h2>
                 @endif
-
-                <div class="mt-4 max-h-[250px] md:max-h-none overflow-y-auto">
-                    <h3 class="text-primary sticky top-0 bg-white">Các bài giải khác có thể bạn quan tâm</h3>
-                    <ul class="mx-0 px-0 grid lg:grid-cols-3">
-                        @foreach ($book->group->books as $otherBook)
-                            @if($otherBook->id != $book->id)
-                                <li class="mb-2">
-                                    <a title="{{ $otherBook->name }}" href="{{ route('books.show', $otherBook->slug) }}"
-                                       class="font-bold text-green-700">
-                                        {{ $otherBook->name }}
-                                    </a>
-                                    <ul class="list-disc list-inside mt-2 mx-0 px-0">
-                                        @foreach ($otherBook->chapters as $chapter)
-                                            <li class="mb-2">
-                                                <a title="{{ $chapter->name }}" href="{{ route('bookChapters.show', $chapter->slug) }}"
-                                                   class="text-gray-800 hover:text-orange-400">
-                                                    {{ $chapter->name }}
-                                                </a>
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </li>
-                            @endif
-                        @endforeach
-                    </ul>
-                </div>
             </div>
 
             <div class="mt-8">
@@ -138,6 +112,32 @@
                         @endforeach
                     </div>
                 </div>
+            </div>
+
+            <div class="mt-8 max-h-[250px] md:max-h-none overflow-y-auto">
+                <h3 class="text-primary sticky top-0 bg-white">Các bài giải khác có thể bạn quan tâm</h3>
+                <ul class="mx-0 px-0 grid lg:grid-cols-3">
+                    @foreach ($book->group->books as $otherBook)
+                        @if($otherBook->id != $book->id)
+                            <li class="mb-2">
+                                <a title="{{ $otherBook->name }}" href="{{ route('books.show', $otherBook->slug) }}"
+                                   class="font-bold text-green-700">
+                                    {{ $otherBook->name }}
+                                </a>
+                                <ul class="list-disc list-inside mt-2 mx-0 px-0">
+                                    @foreach ($otherBook->chapters as $chapter)
+                                        <li class="mb-2">
+                                            <a title="{{ $chapter->name }}" href="{{ route('bookChapters.show', $chapter->slug) }}"
+                                               class="text-gray-800 hover:text-orange-400">
+                                                {{ $chapter->name }}
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </li>
+                        @endif
+                    @endforeach
+                </ul>
             </div>
 
             <div class="mt-8">

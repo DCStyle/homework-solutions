@@ -53,32 +53,6 @@
                            Chúc các em học tốt và nắm vững kiến thức <b>$group->name</b> trên <b class='underline'><a href='" . url('/') . "'>" . setting('site_name', 'Homework Solutions') . "</a></b>."
                     !!}</h2>
                 @endif
-
-                <div class="mt-4 max-h-[250px] md:max-h-none overflow-y-auto">
-                    <h3 class="text-primary sticky top-0 bg-white">Các bài giải khác có thể bạn quan tâm</h3>
-                    <ul class="mx-0 px-0 grid lg:grid-cols-3">
-                        @foreach ($category->bookGroups as $otherGroup)
-                            @if($otherGroup->id != $group->id)
-                                <li class="mb-2">
-                                    <a title="{{ $otherGroup->name }}" href="{{ route('bookGroups.show', $otherGroup->slug) }}"
-                                       class="font-bold text-green-700">
-                                        {{ $otherGroup->name }}
-                                    </a>
-                                    <ul class="list-disc list-inside mt-2 mx-0 px-0">
-                                        @foreach ($otherGroup->books as $book)
-                                            <li class="mb-2">
-                                                <a title="{{ $book->name }}" href="{{ route('books.show', $book->slug) }}"
-                                                   class="text-gray-800 hover:text-orange-400">
-                                                    {{ $book->name }}
-                                                </a>
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </li>
-                            @endif
-                        @endforeach
-                    </ul>
-                </div>
             </div>
 
             <div class="mt-8">
@@ -99,6 +73,32 @@
                         @endforeach
                     </div>
                 </div>
+            </div>
+
+            <div class="mt-8 max-h-[250px] md:max-h-none overflow-y-auto">
+                <h3 class="text-primary sticky top-0 bg-white">Các bài giải khác có thể bạn quan tâm</h3>
+                <ul class="mx-0 px-0 grid lg:grid-cols-3">
+                    @foreach ($category->bookGroups as $otherGroup)
+                        @if($otherGroup->id != $group->id)
+                            <li class="mb-2">
+                                <a title="{{ $otherGroup->name }}" href="{{ route('bookGroups.show', $otherGroup->slug) }}"
+                                   class="font-bold text-green-700">
+                                    {{ $otherGroup->name }}
+                                </a>
+                                <ul class="list-disc list-inside mt-2 mx-0 px-0">
+                                    @foreach ($otherGroup->books as $book)
+                                        <li class="mb-2">
+                                            <a title="{{ $book->name }}" href="{{ route('books.show', $book->slug) }}"
+                                               class="text-gray-800 hover:text-orange-400">
+                                                {{ $book->name }}
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </li>
+                        @endif
+                    @endforeach
+                </ul>
             </div>
 
             <div class="mt-8">

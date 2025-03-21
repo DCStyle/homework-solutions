@@ -2,14 +2,55 @@
 
 @section('content')
     <div>
-        <h2 class="text-3xl font-bold mb-2">
-            {{ isset($chapter) ? 'Cập nhật chương sách' : 'Thêm chương mới' }}
-        </h2>
+        <div class="flex flex-wrap items-center justify-between mb-4">
+            <h2 class="text-3xl font-bold mb-2">
+                {{ isset($chapter) ? 'Cập nhật chương sách' : 'Thêm chương mới' }}
+            </h2>
+
+            @if(isset($chapter))
+                <div class="flex items-center gap-2 whitespace-nowrap">
+                    <a href="{{ route('bookChapters.show', $chapter->slug) }}"
+                       class="px-4 py-2 rounded bg-primary text-white hover:!bg-blue-600"
+                       target="_blank"
+                    >
+                        Xem chương
+                    </a>
+
+                    <a href="{{ route('admin.bookChapters.posts', $chapter->id) }}"
+                       class="px-4 py-2 rounded bg-orange-400 text-white hover:!bg-orange-500"
+                       target="_blank"
+                    >
+                        Danh sách bài viết
+                    </a>
+
+                    <form method="POST" action="{{ route('admin.bookChapters.destroy', $chapter->id) }}">
+                        @csrf
+                        @method('DELETE')
+
+                        <button type="submit" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                            onclick="return confirm('Bạn có chắc chắn muốn xóa chương sách này không?')"
+                        >
+                            Xóa
+                        </button>
+                    </form>
+                </div>
+            @endif
+        </div>
 
         <p class="mb-6">
-            @include('layouts.badge-primary', ['content' => $book->group->category->name])
-            @include('layouts.badge-secondary', ['content' => $book->group->name])
-            <span class="font-medium">{{ $book->name }}</span>
+            @include('layouts.badge-primary', ['content' => "<a href='" . route('admin.categories.edit', $book->group->category->id) . "' data-bs-toggle='tooltip' data-bs-placement='top' title='Chỉnh sửa' target='_blank'>" . $book->group->category->name  . "</a>"])
+            @include('layouts.badge-secondary', ['content' => "<a href='" . route('admin.bookGroups.edit', $book->group->id) . "' data-bs-toggle='tooltip' data-bs-placement='top' title='Chỉnh sửa' target='_blank'>" . $book->group->name  . "</a>"])
+            <span class="font-medium">
+                <a href="{{ route('admin.books.edit', $book->id) }}"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="top"
+                   title="Chỉnh sửa"
+                   target="_blank"
+                   class="hover:underline"
+                >
+                    {{ $book->name }}
+                </a>
+            </span>
         </p>
 
         <form class="rounded-sm border bg-white shadow"
@@ -30,7 +71,7 @@
 
                 <!-- Description Field -->
                 <div>
-                    <label for="description" class="mb-3 block text-sm font-medium text-[#1c2434]">Nội dung</label>
+                    <label for="description" class="mb-3 block text-sm font-medium text-[#1c2434]">Mô tả</label>
                     <x-form.editor :name="'description'" value="{{ old('description', $chapter->description ?? '') }}" />
                 </div>
 
