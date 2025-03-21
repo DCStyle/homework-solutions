@@ -452,7 +452,7 @@
                         <div>
                             <label for="bulk-max-tokens" class="mb-2.5 block font-medium text-gray-700">Token Tối Đa</label>
                             <div class="flex items-center gap-3">
-                                <input type="range" id="bulk-max-tokens" min="100" max="2000" step="100" value="1000" class="form-range w-full cursor-pointer h-6">
+                                <input type="range" id="bulk-max-tokens" min="100" max="4096" step="100" value="1000" class="form-range w-full cursor-pointer h-6">
                                 <span id="bulk-max-tokens-value" class="w-14 text-right text-sm font-medium">1000</span>
                             </div>
                         </div>
