@@ -569,5 +569,5 @@
         }
     </script>
 
-    <script src="{{ asset('js/admin/ai-dashboard/stats_main.js') }}"></script>
+    @vite('resources/js/admin/ai-dashboard/stats_main.js')
 @endpush

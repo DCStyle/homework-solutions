@@ -437,6 +437,6 @@
 @endpush
 
 @push('scripts')
-    <script src="{{ asset('js/admin/ai-dashboard/playground_main.js') }}"></script>
-    <script src="{{ asset('js/admin/ai-dashboard/playground_prompt_selector.js') }}"></script>
+    @vite('resources/js/admin/ai-dashboard/playground_main.js')
+    @vite('resources/js/admin/ai-dashboard/playground_prompt_selector.js')
 @endpush
