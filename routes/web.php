@@ -34,6 +34,8 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
     Route::prefix('ai-dashboard')->group(function () {
         // Main dashboard
         Route::get('/', [App\Http\Controllers\Admin\AIDashboardController::class, 'index'])->name('admin.ai-dashboard.index');
+        Route::get('/stats-api', [App\Http\Controllers\Admin\AIDashboardController::class, 'getStats'])->name('admin.ai-dashboard.stats-api');
+        Route::get('/lazy-load-prompts', [App\Http\Controllers\Admin\AIDashboardController::class, 'lazyLoadPrompts'])->name('lazy-load-prompts');
         Route::get('/system-message/{type}', [App\Http\Controllers\Admin\AIDashboardController::class, 'getSystemMessage'])->name('admin.ai-dashboard.system-message');
 
         // SEO Stats
