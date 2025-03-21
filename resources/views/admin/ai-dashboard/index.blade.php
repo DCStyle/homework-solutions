@@ -151,7 +151,7 @@
                         <div class="mb-2 flex items-center justify-between">
                             <p class="text-sm font-medium flex items-center">
                                 <span class="iconify mr-2 text-amber-500" data-icon="mdi-folder-multiple-outline"></span>
-                                Nhóm Sách
+                                Môn học
                             </p>
                             <p class="text-sm font-medium">{{ $seoProgress['book_groups']['percentage'] }}%</p>
                         </div>
@@ -331,7 +331,7 @@
                                     <option value="posts">Bài Viết</option>
                                     <option value="chapters">Chương Sách</option>
                                     <option value="books">Sách</option>
-                                    <option value="book_groups">Nhóm Sách</option>
+                                    <option value="book_groups">Môn học</option>
                                 </select>
                                 <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500">
                                 <span class="iconify" data-icon="mdi-chevron-down"></span>
