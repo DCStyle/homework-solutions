@@ -388,7 +388,7 @@ class AIDashboardController extends Controller
         $useHtmlMeta = (bool)$request->input('use_html_meta', false);
 
         try {
-            // Get content object - use cache if available
+            // Get content object
             $content = $this->getContentObject($contentType, $contentId);
             if (!$content) {
                 return response()->json(['error' => 'Content not found'], 404);
@@ -396,10 +396,7 @@ class AIDashboardController extends Controller
 
             // Use prompt from database if ID provided
             if ($promptId) {
-                $promptObj = Cache::remember("prompt_{$promptId}", self::CACHE_TTL, function () use ($promptId) {
-                    return Prompt::find($promptId);
-                });
-
+                $promptObj = Prompt::find($promptId);
                 if ($promptObj) {
                     $promptText = $promptObj->prompt_text;
                 }
@@ -411,13 +408,12 @@ class AIDashboardController extends Controller
             // Prepare options based on model and request parameters
             $options = [
                 'content_type' => $contentType,
-                'max_tokens' => (int)$request->input('max_tokens', 1000),
+                'max_tokens' => (int)$request->input('max_tokens', 4000),
                 'temperature' => (float)$request->input('temperature', 0.7),
-                'use_html_meta' => $useHtmlMeta
             ];
 
             // Add model-specific parameters
-            if (strpos($model, 'deepseek') === 0) {
+            if (str_starts_with($model, 'deepseek')) {
                 // Use custom system message if provided, otherwise use default
                 $systemMessage = $request->input('system_message');
                 if (empty($systemMessage)) {
@@ -429,7 +425,21 @@ class AIDashboardController extends Controller
             }
 
             // Call AI model to generate content
-            $result = $this->aiService->generate($model, $prompt, $options);
+            $result = $this->aiService->generate($model, $prompt, $options, $useHtmlMeta);
+
+            // Format the result with our helper
+            if ($contentType === 'posts' && is_array($result)) {
+                // For posts with meta title and description
+                if (isset($result['meta_title'])) {
+                    $result['meta_title'] = \App\Helpers\OpenRouterResponseFormatter::formatResponse($result['meta_title'], false);
+                }
+                if (isset($result['meta_description'])) {
+                    $result['meta_description'] = \App\Helpers\OpenRouterResponseFormatter::formatResponse($result['meta_description'], true);
+                }
+            } else {
+                // For other content types
+                $result = \App\Helpers\OpenRouterResponseFormatter::formatResponse($result, true);
+            }
 
             return response()->json([
                 'success' => true,
@@ -529,9 +539,8 @@ class AIDashboardController extends Controller
                     // Prepare options based on model
                     $options = [
                         'content_type' => $contentType,
-                        'max_tokens' => (int)$request->input('max_tokens', 1000),
+                        'max_tokens' => (int)$request->input('max_tokens', 4000),
                         'temperature' => (float)$request->input('temperature', 0.7),
-                        'use_html_meta' => $useHtmlMeta
                     ];
 
                     // Add system message for DeepSeek
@@ -545,7 +554,21 @@ class AIDashboardController extends Controller
                         $options['model_variant'] = $request->input('deepseek_model', 'deepseek-chat');
                     }
 
-                    $result = $this->aiService->generate($model, $prompt, $options);
+                    $result = $this->aiService->generate($model, $prompt, $options, $useHtmlMeta);
+
+                    // Format the result with our helper
+                    if ($contentType === 'posts' && is_array($result)) {
+                        // For posts with meta title and description
+                        if (isset($result['meta_title'])) {
+                            $result['meta_title'] = \App\Helpers\OpenRouterResponseFormatter::formatResponse($result['meta_title'], false);
+                        }
+                        if (isset($result['meta_description'])) {
+                            $result['meta_description'] = \App\Helpers\OpenRouterResponseFormatter::formatResponse($result['meta_description'], true);
+                        }
+                    } else {
+                        // For other content types
+                        $result = \App\Helpers\OpenRouterResponseFormatter::formatResponse($result, true);
+                    }
 
                     if ($result && $this->updateContentSEO($item, $contentType, $result)) {
                         $processed++;

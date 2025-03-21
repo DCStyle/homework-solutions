@@ -238,12 +238,14 @@
                                     <div class="relative z-20 bg-white">
                                         <select data-plugin-select2 id="model" class="relative z-20 w-full appearance-none rounded-lg border border-stroke bg-transparent py-2 px-4 outline-none transition focus:border-primary active:border-primary">
                                             <optgroup label="Grok Models">
-                                                <option value="grok-2">Grok-2 (Mặc định)</option>
-                                                <option value="grok-2-latest">Grok-2 Mới Nhất</option>
-                                                <option value="grok-2-1212">Grok-2 1212 (Tối ưu)</option>
+                                                <option value="grok-2">Grok-2</option>
+                                                <option value="grok-2-1212">Grok-2 1212</option>
+                                                <option value="grok-2-mini">Grok-2 Mini</option>
+                                                <option value="grok-2-vision">Grok-2 Vision</option>
                                             </optgroup>
                                             <optgroup label="DeepSeek Models">
                                                 <option value="deepseek-v3">DeepSeek Chat</option>
+                                                <option value="deepseek-r1">DeepSeek R1</option>
                                             </optgroup>
                                         </select>
                                         <span class="absolute top-1/2 right-4 z-10 -translate-y-1/2">
@@ -284,7 +286,7 @@
                                             type="range"
                                             id="max-tokens"
                                             min="100"
-                                            max="2000"
+                                            max="4096"
                                             step="100"
                                             value="1000"
                                             class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
@@ -359,7 +361,18 @@
                         </div>
 
                         <div id="results" class="rounded-lg border border-stroke bg-gray-50 p-4">
-                            <!-- Results will be displayed here -->
+                            <!-- For posts with meta title and description -->
+                            <template id="posts-template">
+                                <div class="ai-response">
+                                    <div class="meta-title"></div>
+                                    <div class="meta-description"></div>
+                                </div>
+                            </template>
+
+                            <!-- For chapters, books, and book groups -->
+                            <template id="description-template">
+                                <div class="ai-response"></div>
+                            </template>
                         </div>
 
                         <div class="mt-4 flex items-center justify-end space-x-4">
@@ -417,7 +430,6 @@
             </div>
         </div>
     </div>
-
 @endsection
 
 @push('styles')

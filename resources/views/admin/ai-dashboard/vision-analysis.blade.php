@@ -59,12 +59,15 @@
                             <label for="model" class="mb-2.5 block font-medium text-gray-700">Mô Hình AI</label>
                             <div class="relative bg-white">
                                 <select id="model" name="model" class="form-select w-full appearance-none rounded-lg border border-gray-300 bg-transparent py-3 px-5 outline-none transition focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                                    <optgroup label="Mô Hình Grok">
-                                        <option value="grok-2-vision">Grok Vision</option>
-                                        <option value="grok-2-vision-latest">Grok Vision Mới Nhất</option>
+                                    <optgroup label="Grok Models">
+                                        <option value="grok-2">Grok-2</option>
+                                        <option value="grok-2-1212">Grok-2 1212</option>
+                                        <option value="grok-2-mini">Grok-2 Mini</option>
+                                        <option value="grok-2-vision">Grok-2 Vision</option>
                                     </optgroup>
-                                    <optgroup label="Mô Hình DeepSeek">
-                                        <option value="deepseek-vision">DeepSeek Vision</option>
+                                    <optgroup label="DeepSeek Models">
+                                        <option value="deepseek-v3">DeepSeek Chat</option>
+                                        <option value="deepseek-r1">DeepSeek R1</option>
                                     </optgroup>
                                 </select>
                                 <span class="absolute top-1/2 right-4 -translate-y-1/2 pointer-events-none">

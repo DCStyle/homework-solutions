@@ -110,3 +110,62 @@
 .highlight-update {
     animation: highlight 1.5s ease-in-out;
 }
+
+/* CSS for AI-generated content */
+.ai-response {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    hyphens: auto;
+}
+
+.ai-response p {
+    margin-bottom: 16px;
+}
+
+.ai-response strong {
+    font-weight: 600;
+    color: #1a73e8;
+}
+
+.ai-response em {
+    font-style: italic;
+    color: #555;
+}
+
+.ai-response ul, .ai-response ol {
+    list-style: disc;
+    margin-left: 20px;
+    margin-bottom: 16px;
+}
+
+.ai-response li {
+    margin-bottom: 8px;
+}
+
+/* Meta information formatting */
+.meta-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a73e8;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 8px;
+}
+
+.meta-description {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.5;
+}
+
+/* SEO keywords formatting */
+.keywords {
+    margin-top: 16px;
+    padding-top: 8px;
+    border-top: 1px solid #e0e0e0;
+    font-style: italic;
+    color: #666;
+}

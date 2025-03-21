@@ -17,6 +17,7 @@
         "laravel/tinker": "^2.8",
         "laravel/ui": "^4.5",
         "league/flysystem-aws-s3-v3": "^3.29",
+        "moe-mizrak/laravel-openrouter": "^2.0",
         "ralphjsmit/laravel-seo": "^1.6",
         "spatie/laravel-settings": "^3.4",
         "symfony/css-selector": "^6.4",
@@ -35,6 +36,7 @@
     "autoload": {
         "psr-4": {
             "App\\": "app/",
+            "App\\Helpers\\": "app/Helpers/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         },

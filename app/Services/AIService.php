@@ -2,64 +2,108 @@
 
 namespace App\Services;
 
-use GrokPHP\Laravel\Facades\GrokAI;
-use GrokPHP\Client\Config\ChatOptions;
-use GrokPHP\Client\Enums\Model as GrokModel;
-use GrokPHP\Client\Exceptions\GrokException;
-use DeepSeek\DeepSeekClient;
+use MoeMizrak\LaravelOpenrouter\DTO\ChatData;
+use MoeMizrak\LaravelOpenrouter\DTO\ImageContentPartData;
+use MoeMizrak\LaravelOpenrouter\DTO\ImageUrlData;
+use MoeMizrak\LaravelOpenrouter\DTO\MessageData;
+use MoeMizrak\LaravelOpenrouter\DTO\ProviderPreferencesData;
+use MoeMizrak\LaravelOpenrouter\DTO\ResponseFormatData;
+use MoeMizrak\LaravelOpenrouter\DTO\TextContentData;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Arr;
+use MoeMizrak\LaravelOpenrouter\Facades\LaravelOpenRouter;
+use MoeMizrak\LaravelOpenrouter\Types\RoleType;
 
 class AIService
 {
-    protected $deepseekClient;
-
-    public function __construct(DeepSeekClient $deepseekClient)
-    {
-        $this->deepseekClient = $deepseekClient;
-    }
-
     /**
      * Call AI model to generate content
      *
-     * @param string $model The model to use (grok-2, grok-2-latest, deepseek-v3)
+     * @param string $model The model to use
      * @param string $prompt The prompt to send to the model
      * @param array $options Additional options for the API call
      *
      * @return string|array The generated content
      */
-    public function generate($model, $prompt, $options = [])
+    public function generate($model, $prompt, $options = [], $useHtmlMeta = false)
     {
         try {
-            // Add formatting instructions via system message if not already provided
-            if (empty($options['system_message'])) {
-                $options['system_message'] = $this->getFormattingSystemMessage(
-                    $options['content_type'] ?? 'generic',
-                    $options['use_html_meta'] ?? false // Pass the HTML option
+            // Map model names to OpenRouter format
+            $openRouterModel = $this->mapModelName($model);
+
+            // Prepare system message if provided
+            $messages = [];
+            if (!empty($options['system_message'])) {
+                $messages[] = new MessageData(
+                    content: $options['system_message'],
+                    role: RoleType::SYSTEM
                 );
             }
 
-            if (strpos($model, 'grok') === 0) {
-                return $this->callGrokModel($prompt, $model, $options);
-            } elseif (strpos($model, 'deepseek') === 0) {
-                return $this->callDeepseekModel($prompt, $options);
-            } else {
-                throw new \Exception("Unsupported model: $model");
+            $prompt = $this->processPrompt($prompt, $options['content_type'] ?? 'generic', $useHtmlMeta);
+
+            // Add user message
+            $messages[] = new MessageData(
+                content: $prompt,
+                role: RoleType::USER
+            );
+
+            // Prepare parameters for ChatData with ONLY the required fields
+            $chatDataParams = [
+                'messages' => $messages,
+                'model' => $openRouterModel
+            ];
+
+            // Add optional parameters EXCEPT ones that conflict with XOR validation
+            $allowedParams = [
+                'temperature', 'top_p', 'frequency_penalty',
+                'presence_penalty', 'stop', 'max_tokens'
+            ];
+
+            foreach ($allowedParams as $param) {
+                if (isset($options[$param]) && !empty($options[$param])) {
+                    $chatDataParams[$param] = $options[$param];
+                }
             }
+
+            // IMPORTANT: Use fromArray to avoid DTO validation issues with properties
+            // that aren't explicitly set in the constructor
+            $chatData = ChatData::from($chatDataParams);
+
+            // Handle structured output if requested
+            if (!empty($options['use_html_meta'])) {
+                $chatData->response_format = new ResponseFormatData(
+                    type: 'json_object'
+                );
+
+                $chatData->provider = new ProviderPreferencesData(
+                    require_parameters: true
+                );
+
+                Log::debug('Added structured output format for HTML meta');
+            }
+
+            // Make the request
+            $response = LaravelOpenRouter::chatRequest($chatData);
+
+            // Process the response
+            $processedResponse = $this->processResponse($response, $options['content_type'] ?? 'generic', $options);
+
+            return $processedResponse;
         } catch (\Exception $e) {
             Log::error('AI generation error', [
                 'model' => $model,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
             ]);
 
             return $this->getFallbackResponse($options['content_type'] ?? 'generic');
         }
     }
 
-    /**
-     * Get system message with formatting instructions based on content type
-     */
-    private function getFormattingSystemMessage($contentType, $useHtmlMeta = false)
+    private function processPrompt($prompt, $contentType, $useHtmlMeta = false)
     {
         // Base system messages with common instructions
         $baseMessages = [
@@ -69,161 +113,135 @@ Meta Description: [Your description here]
 
 Do not include any other text, explanations, or formatting. Just provide the Meta Title and Meta Description with these exact labels.",
 
-            'chapters' => "You are an educational content writer. Provide a clear, informative description for a book chapter.
-Format your response as plain text paragraphs with no headers, prefixes or labels.
-Write 2-3 concise paragraphs that explain what students will learn from this chapter.",
-
-            'books' => "You are an educational content specialist. Provide a comprehensive description for an educational book.
-Format your response as plain text paragraphs with no headers, prefixes or labels.
-Write 3-4 paragraphs explaining the educational value of the book, the target audience, and key learning outcomes.",
-
-            'book_groups' => "You are a curriculum specialist. Provide a description for an educational subject/course.
-Format your response as plain text paragraphs with no headers, prefixes or labels.
-Write 2-3 paragraphs explaining what students will learn in this subject, focusing on educational benefits and skills developed.",
-
+            'chapters' => "You are an educational content writer.",
+            'books' => "You are an educational content specialist.",
+            'book_groups' => "You are a curriculum specialist.",
             'generic' => "Format your response clearly and consistently. If providing metadata, use explicit labels like 'Meta Title:' and 'Meta Description:'."
         ];
 
-        // Add HTML formatting instructions for posts when requested
-        if ($useHtmlMeta && $contentType === 'posts') {
-            $baseMessages['posts'] = "You are an SEO specialist for educational content. Format your response EXACTLY as follows:
-Meta Title: [Your title here - maximum 60 characters]
-Meta Description: [Your description here]
+        $outputSystemMessage = $baseMessages[$contentType] ?? $baseMessages['generic'];
 
-For the Meta Description, use basic HTML formatting:
+        $prompt .= $outputSystemMessage . "\n\n WRITE EVERYTHING IN VIETNAMESE, IN EXACT OUTPUT LENGTH AS REQUESTED. DO NOT CUT THE LENGTH
+OR SHORTEN THE OUTPUT RESPONSE, OR DO ANYTHING OTHER THAN REQUESTED!!! REMEMBER TO DO EXACTLY WHATEVER I REQUEST, NO MATER WHAT'S YOUR LIMIT WHATSOEVER.\n\n";
+
+        // Add HTML formatting instructions for posts when requested
+        if ($useHtmlMeta) {
+            $prompt .= "Remember to use basic HTML formatting:
 - Use <p> tags for paragraphs
 - Use <strong> for important terms or emphasis
 - Use <em> for light emphasis
 - Use <ul> and <li> for lists
 - Keep the HTML clean and simple
 
-Do not include any other text, explanations, or formatting. Just provide the Meta Title and Meta Description with these exact labels.";
+Do not include any other text, explanations, or formatting.";
         }
 
-        return $baseMessages[$contentType] ?? $baseMessages['generic'];
+        return $prompt;
     }
 
     /**
-     * Call Grok model API
+     * Map old model names to OpenRouter model IDs
      */
-    private function callGrokModel($prompt, $modelName, $options = [])
+    private function mapModelName($model)
     {
-        // Convert model name to Grok enum
-        $grokModel = $this->getGrokModelEnum($modelName);
+        // Map model names from old format to OpenRouter format
+        $modelMap = [
+            // DeepSeek models
+            'deepseek-v3' => 'deepseek/deepseek-chat:free',
+            'deepseek-chat' => 'deepseek/deepseek-chat:free',
+            'deepseek-r1' => 'deepseek/deepseek-r1:free',
 
-        // Prepare messages - formatting as expected by Grok API
-        $messages = [];
+            // Grok models - text
+            'grok-2' => 'x-ai/grok-2',
+            'grok-2-latest' => 'x-ai/grok-2',
+            'grok-2-1212' => 'x-ai/grok-2-1212',
+            'grok-2-mini' => 'x-ai/grok-2-mini',
 
-        // Add system message if available
-        if (!empty($options['system_message'])) {
-            $messages[] = ['role' => 'system', 'content' => $options['system_message']];
+            // Grok models - vision
+            'grok-2-vision' => 'x-ai/grok-2-vision-1212',
+            'grok-2-vision-latest' => 'x-ai/grok-2-vision-1212',
+        ];
+
+        // If the model is already in the correct format (contains a slash), use it directly
+        if (str_contains($model, '/')) {
+            return $model;
         }
 
-        // Add user prompt
-        $messages[] = ['role' => 'user', 'content' => $prompt];
-
-        // Create chat options
-        $chatOptions = new ChatOptions(
-            model: $grokModel,
-            stream: false,
-            temperature: $options['temperature'] ?? 0.7
-        );
-
-        try {
-            // Call the Grok API
-            $response = GrokAI::chat($messages, $chatOptions);
-
-            // Extract response content
-            $content = $response->content();
-
-            // Post-process the content based on content type
-            return $this->processResponse($content, $options['content_type'] ?? 'generic');
-        } catch (GrokException $e) {
-            Log::error('Grok API error', [
-                'error' => $e->getMessage()
-            ]);
-            throw $e;
-        }
-    }
-
-    /**
-     * Call DeepSeek model API
-     */
-    private function callDeepseekModel($prompt, $options = [])
-    {
-        $contentType = $options['content_type'] ?? 'generic';
-        $temperature = $options['temperature'] ?? 0.7;
-        $model = $options['model_variant'] ?? 'deepseek-chat';
-
-        try {
-            // Create DeepSeek client with specified options
-            $client = $this->deepseekClient
-                ->withModel($model)
-                ->setTemperature($temperature);
-
-            // Add system message if available
-            if (!empty($options['system_message'])) {
-                $client->query($options['system_message'], 'system');
-            }
-
-            // Add user prompt
-            $client->query($prompt, 'user');
-
-            // Execute the query
-            $response = $client->run();
-
-            // Process the response based on content type
-            return $this->processResponse($response, $contentType);
-        } catch (\Exception $e) {
-            Log::error('DeepSeek API error', [
-                'error' => $e->getMessage()
-            ]);
-            throw $e;
-        }
-    }
-
-    /**
-     * Convert model name to Grok model enum
-     */
-    private function getGrokModelEnum($modelName)
-    {
-        return match ($modelName) {
-            'grok-2' => GrokModel::GROK_2,
-            'grok-2-latest' => GrokModel::GROK_2_LATEST,
-            'grok-2-1212' => GrokModel::GROK_2_1212,
-            'grok-2-vision' => GrokModel::GROK_2_VISION,
-            'grok-2-vision-latest' => GrokModel::GROK_2_VISION_LATEST,
-            default => GrokModel::GROK_2,
-        };
+        return $modelMap[$model] ?? 'x-ai/grok-2';  // Default to Grok-2 if unknown
     }
 
     /**
      * Process and format response based on content type
      */
-    private function processResponse($content, $contentType, $options = [])
+    private function processResponse($response, $contentType, $options = [])
     {
-        $useHtmlMeta = $options['use_html_meta'] ?? false;
+        try {
+            // Extract response content from OpenRouter response structure
+            $content = '';
 
-        switch ($contentType) {
-            case 'posts':
-                // Extract meta title and description from the response
-                $metaTitle = $this->extractMetaTitle($content);
-                $metaDescription = $this->extractMetaDescription($content, $useHtmlMeta);
+            // Check if response is in the expected format
+            if (isset($response->choices) && !empty($response->choices)) {
+                if (isset($response->choices[0]->message) && isset($response->choices[0]->message->content)) {
+                    $content = $response->choices[0]->message->content;
+                } else {
+                    Log::warning('Unexpected response structure', [
+                        'response' => json_encode(Arr::except((array)$response, ['usage']))
+                    ]);
+                    $content = json_encode($response->choices[0]);
+                }
+            } else {
+                Log::warning('Choices not found in response', [
+                    'response_keys' => array_keys((array)$response)
+                ]);
+                // Try to extract content from the first level if choices is missing
+                $content = $response->content ?? json_encode($response);
+            }
 
-                return [
-                    'meta_title' => $metaTitle,
-                    'meta_description' => $metaDescription
-                ];
+            switch ($contentType) {
+                case 'posts':
+                    // For posts, extract meta title and description
+                    Log::debug('Processing posts response', ['content_preview' => substr($content, 0, 100)]);
 
-            case 'chapters':
-            case 'books':
-            case 'book_groups':
-                // For these types, the entire response is the description
-                return $this->cleanupDescription($content);
+                    // Try to parse JSON if it's a JSON response
+                    if ($this->isJson($content)) {
+                        $jsonContent = json_decode($content, true);
+                        return [
+                            'meta_title' => $jsonContent['Meta Title'] ?? $jsonContent['meta_title'] ?? $this->extractMetaTitle($content),
+                            'meta_description' => $jsonContent['Meta Description'] ?? $jsonContent['meta_description'] ?? $this->extractMetaDescription($content, $options['use_html_meta'] ?? false)
+                        ];
+                    }
 
-            default:
-                return $content;
+                    // Otherwise use regex extraction
+                    return [
+                        'meta_title' => $this->extractMetaTitle($content),
+                        'meta_description' => $this->extractMetaDescription($content, $options['use_html_meta'] ?? false)
+                    ];
+
+                case 'chapters':
+                case 'books':
+                case 'book_groups':
+                    // For these types, the entire response is the description
+                    Log::debug('Processing description response', ['content_preview' => substr($content, 0, 100)]);
+                    return $this->cleanupDescription($content);
+
+                default:
+                    return $content;
+            }
+        } catch (\Exception $e) {
+            Log::error('Error processing response', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return $content ?? 'Error processing response';
         }
+    }
+
+    /**
+     * Check if a string is valid JSON
+     */
+    private function isJson($string) {
+        json_decode($string);
+        return json_last_error() === JSON_ERROR_NONE;
     }
 
     /**
@@ -232,11 +250,11 @@ Do not include any other text, explanations, or formatting. Just provide the Met
     private function extractMetaTitle($content)
     {
         // First try to extract using markdown or specific formatting
-        if (preg_match('/meta title:?\s*([^\n]+)/i', $content, $matches)) {
+        if (preg_match('/(?:meta title|tiêu đề meta):?\s*([^\n]+)/i', $content, $matches)) {
             return trim($matches[1]);
         }
 
-        if (preg_match('/title:?\s*([^\n]+)/i', $content, $matches)) {
+        if (preg_match('/(?:title|tiêu đề):?\s*([^\n]+)/i', $content, $matches)) {
             return trim($matches[1]);
         }
 
@@ -262,11 +280,11 @@ Do not include any other text, explanations, or formatting. Just provide the Met
     private function extractMetaDescription($content, $useHtmlMeta = false)
     {
         // First try to extract using markdown or specific formatting
-        if (preg_match('/meta description:?\s*([^\n]+(\n[^#\n][^\n]*)*)/i', $content, $matches)) {
+        if (preg_match('/(?:meta description|mô tả meta):?\s*([^\n]+(?:\n[^#\n][^\n]*)*)/i', $content, $matches)) {
             $description = trim($matches[1]);
-        } elseif (preg_match('/description:?\s*([^\n]+(\n[^#\n][^\n]*)*)/i', $content, $matches)) {
+        } elseif (preg_match('/(?:description|mô tả):?\s*([^\n]+(?:\n[^#\n][^\n]*)*)/i', $content, $matches)) {
             $description = trim($matches[1]);
-        } elseif (preg_match('/2\.\s*([^\n]+(\n[^#\n][^\n]*)*)/i', $content, $matches)) {
+        } elseif (preg_match('/2\.\s*([^\n]+(?:\n[^#\n][^\n]*)*)/i', $content, $matches)) {
             // Try to extract from structured patterns
             $description = trim($matches[1]);
         } else {
@@ -320,7 +338,7 @@ Do not include any other text, explanations, or formatting. Just provide the Met
         $content = preg_replace('/^#+\s+.*$/m', '', $content);
 
         // Remove any "Description:" prefix
-        $content = preg_replace('/^Description:?\s*/i', '', $content);
+        $content = preg_replace('/^(?:Description|Mô tả):?\s*/i', '', $content);
 
         // Convert multiple line breaks to a single line break
         $content = preg_replace('/(\r\n|\r|\n){2,}/', "\n\n", $content);
@@ -349,37 +367,101 @@ Do not include any other text, explanations, or formatting. Just provide the Met
     }
 
     /**
-     * For image analysis (if needed)
+     * For image analysis
      */
     public function analyzeImage($imageUrl, $prompt, $options = [])
     {
         try {
-            $useDeepseek = $options['use_deepseek'] ?? false;
+            Log::debug('Starting image analysis', [
+                'prompt_preview' => substr($prompt, 0, 100),
+                'image_url' => $imageUrl
+            ]);
 
-            if ($useDeepseek && isset($options['deepseek_model'])) {
-                // If DeepSeek supports image analysis
-                $client = $this->deepseekClient
-                    ->withModel($options['deepseek_model'])
-                    ->setTemperature($options['temperature'] ?? 0.7);
-
-                if (!empty($options['system_message'])) {
-                    $client->query($options['system_message'], 'system');
-                }
-
-                // Assuming DeepSeek has a method for image analysis
-                $client->queryWithImage($imageUrl, $prompt);
-                $response = $client->run();
-
-                return $response;
-            } else {
-                // Use Grok for image analysis
-                $response = GrokAI::vision()->analyze($imageUrl, $prompt);
-                return $response->content();
+            // Map model name if necessary
+            $modelName = $options['model'] ?? 'grok-2-vision';
+            if (isset($options['model_variant'])) {
+                $modelName = $options['model_variant'];
             }
+            $openRouterModel = $this->mapModelName($modelName);
+
+            Log::debug('Mapped vision model', [
+                'original' => $modelName,
+                'mapped' => $openRouterModel
+            ]);
+
+            // For direct URLs, create content parts with text and image
+            $messageParts = [];
+
+            // Add text content
+            $messageParts[] = new TextContentData(
+                type: TextContentData::ALLOWED_TYPE,
+                text: $prompt
+            );
+
+            // Add image content
+            $messageParts[] = new ImageContentPartData(
+                type: ImageContentPartData::ALLOWED_TYPE,
+                image_url: new ImageUrlData(
+                    url: $imageUrl
+                )
+            );
+
+            // Prepare messages
+            $messages = [];
+            if (!empty($options['system_message'])) {
+                $messages[] = new MessageData(
+                    content: $options['system_message'],
+                    role: RoleType::SYSTEM
+                );
+
+                Log::debug('Added system message for vision analysis');
+            }
+
+            // Add user message with content parts
+            $messages[] = new MessageData(
+                content: $messageParts,
+                role: RoleType::USER
+            );
+
+            Log::debug('Creating vision ChatData', [
+                'model' => $openRouterModel,
+                'message_count' => count($messages)
+            ]);
+
+            // Create ChatData
+            $chatData = new ChatData([
+                'messages' => $messages,
+                'model' => $openRouterModel,
+                'temperature' => $options['temperature'] ?? 0.7
+            ]);
+
+            // Only add max_tokens if it was provided or is a reasonable value
+            if (!empty($options['max_tokens']) && $options['max_tokens'] > 0) {
+                $chatData->max_tokens = $options['max_tokens'];
+            }
+
+            // Make request
+            Log::debug('Sending vision request to OpenRouter');
+            $response = LaravelOpenRouter::chatRequest($chatData);
+
+            Log::debug('Received vision response', [
+                'has_choices' => isset($response->choices) ? 'yes' : 'no'
+            ]);
+
+            // Return content
+            if (isset($response->choices) && !empty($response->choices)) {
+                return $response->choices[0]->message->content ?? '';
+            }
+
+            return json_encode($response);
         } catch (\Exception $e) {
             Log::error('Vision API error', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
             ]);
+
             return "Unable to analyze image: " . $e->getMessage();
         }
     }

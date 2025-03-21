@@ -1070,7 +1070,7 @@ function initializeContentGeneration() {
         });
     }
 
-    // Generate content function
+    // Main function to generate content
     function generateContent() {
         // Get selected content
         const contentId = $contentFinalSelector.val();
@@ -1092,7 +1092,7 @@ function initializeContentGeneration() {
         const temperature = $temperature.val();
         const maxTokens = $maxTokens.val();
         const promptText = $prompt.val();
-        const systemMessage = $systemMessage.val();
+        const systemMessage = $systemMessage?.val();
         const useHtmlMeta = $('#use-html-meta').is(':checked');
 
         // Show loading
@@ -1148,22 +1148,22 @@ function initializeContentGeneration() {
 
                 // Display error
                 $results.html(`
-                    <div class="rounded-sm border border-red-300 bg-red-50 p-4">
-                        <div class="flex items-start">
-                            <span class="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-red-100">
-                                <i class="iconify text-red-500" data-icon="mdi-alert"></i>
-                            </span>
-                            <div>
-                                <h5 class="mb-1 font-semibold text-red-700">
-                                    Lỗi
-                                </h5>
-                                <p class="text-sm text-red-600">
-                                    ${xhr.responseJSON?.error || 'Đã xảy ra lỗi khi tạo nội dung.'}
-                                </p>
-                            </div>
+                <div class="rounded-sm border border-red-300 bg-red-50 p-4">
+                    <div class="flex items-start">
+                        <span class="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-red-100">
+                            <i class="iconify text-red-500" data-icon="mdi-alert"></i>
+                        </span>
+                        <div>
+                            <h5 class="mb-1 font-semibold text-red-700">
+                                Lỗi
+                            </h5>
+                            <p class="text-sm text-red-600">
+                                ${xhr.responseJSON?.error || 'Đã xảy ra lỗi khi tạo nội dung.'}
+                            </p>
                         </div>
                     </div>
-                `);
+                </div>
+            `);
             }
         });
     }
@@ -1174,57 +1174,60 @@ function initializeContentGeneration() {
 
         if (contentType === 'posts') {
             // For posts, show meta title and description
-            const metaTitle = response.result.meta_title || '';
-            const metaDesc = response.result.meta_description || '';
+            const metaResult = response.result;
+
+            // The backend should have already decoded the Unicode for us
+            const metaTitle = metaResult.meta_title || '';
+            const metaDesc = metaResult.meta_description || '';
 
             resultHtml = `
-                <div class="space-y-4">
-                    <div>
-                        <h5 class="text-lg font-semibold mb-2">Tiêu Đề Meta</h5>
-                        <div class="p-3 bg-white border border-gray-300 rounded-lg">
-                            ${metaTitle}
-                        </div>
-                        <div class="mt-1 text-xs text-gray-500 flex items-center">
-                            <span>${metaTitle.length} ký tự</span>
-                            <span class="mx-2">•</span>
-                            <span class="${metaTitle.length > 60 ? 'text-red-500' : 'text-green-500'}">
-                                ${metaTitle.length > 60 ? 'Quá dài' : 'Độ dài tốt'}
-                            </span>
-                        </div>
-                    </div>
-                    <div>
-                        <h5 class="text-lg font-semibold mb-2">Mô Tả Meta</h5>
-                        <div class="p-3 bg-white border border-gray-300 rounded-lg">
-                            ${metaDesc}
-                        </div>
-                        <div class="mt-1 text-xs text-gray-500 flex items-center">
-                            <span>${metaDesc.length} ký tự</span>
-                            <span class="mx-2">•</span>
-                            <span class="${metaDesc.length > 160 ? 'text-red-500' : (metaDesc.length < 120 ? 'text-yellow-500' : 'text-green-500')}">
-                                ${metaDesc.length > 160 ? 'Quá dài' : (metaDesc.length < 120 ? 'Có thể dài hơn' : 'Độ dài tốt')}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        } else {
-            // For other content types, show description
-            const description = response.result || '';
-
-            resultHtml = `
+            <div class="ai-response space-y-4">
                 <div>
-                    <h5 class="text-lg font-semibold mb-2">Mô Tả</h5>
-                    <div class="p-3 bg-white border border-gray-300 rounded-lg whitespace-pre-wrap">
-                        ${description}
+                    <h5 class="text-lg font-semibold mb-2">Tiêu Đề Meta</h5>
+                    <div class="meta-title p-3 bg-white border border-gray-300 rounded-lg">
+                        ${metaTitle}
                     </div>
-                    <div class="mt-1 text-xs text-gray-500">
-                        ${description.length} ký tự
+                    <div class="mt-1 text-xs text-gray-500 flex items-center">
+                        <span>${metaTitle.length} ký tự</span>
+                        <span class="mx-2">•</span>
+                        <span class="${metaTitle.length > 60 ? 'text-red-500' : 'text-green-500'}">
+                            ${metaTitle.length > 60 ? 'Quá dài' : 'Độ dài tốt'}
+                        </span>
                     </div>
                 </div>
-            `;
+                <div>
+                    <h5 class="text-lg font-semibold mb-2">Mô Tả Meta</h5>
+                    <div class="meta-description p-3 bg-white border border-gray-300 rounded-lg">
+                        ${metaDesc}
+                    </div>
+                    <div class="mt-1 text-xs text-gray-500 flex items-center">
+                        <span>${metaDesc.length} ký tự</span>
+                        <span class="mx-2">•</span>
+                        <span class="${metaDesc.length > 160 ? 'text-red-500' : (metaDesc.length < 120 ? 'text-yellow-500' : 'text-green-500')}">
+                            ${metaDesc.length > 160 ? 'Quá dài' : (metaDesc.length < 120 ? 'Có thể dài hơn' : 'Độ dài tốt')}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        `;
+        } else {
+            // For other content types, show description as HTML
+            // The backend should have already processed and formatted the content
+            resultHtml = `
+            <div class="ai-response">
+                ${response.result}
+            </div>
+        `;
         }
 
         $results.html(resultHtml);
+
+        // Highlight SEO keywords if present
+        if ($results.find('*:contains("Từ khóa SEO:")').length) {
+            // Find and style keywords section
+            const keywordsText = $results.find('*:contains("Từ khóa SEO:")').last();
+            keywordsText.addClass('keywords');
+        }
     }
 
     // Apply changes to content
