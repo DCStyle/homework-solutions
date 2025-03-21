@@ -320,62 +320,6 @@ mark {
         font-size: 10pt;
     }
 }
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    body {
-        color: var(--dark-text-primary);
-        background-color: #1a1a1a;
-    }
-
-    h1, h2, h3, h4, h5, h6 {
-        color: var(--dark-heading-color);
-    }
-
-    a {
-        color: var(--dark-link-color);
-    }
-
-    a:hover,
-    a:focus {
-        color: var(--dark-link-hover);
-    }
-
-    blockquote {
-        border-left-color: var(--dark-blockquote-border);
-        color: var(--dark-text-secondary);
-    }
-
-    code, pre {
-        background-color: var(--dark-code-bg);
-    }
-
-    hr {
-        border-top-color: var(--dark-blockquote-border);
-    }
-
-    th {
-        border-bottom-color: var(--dark-table-border);
-    }
-
-    td {
-        border-bottom-color: var(--dark-table-border);
-    }
-
-    tr:nth-child(even) {
-        background-color: var(--dark-table-stripe);
-    }
-
-    small {
-        color: var(--dark-text-muted);
-    }
-
-    mark {
-        background-color: #78350f;
-        color: #fef3c7;
-    }
-}
-
 /* Additional educational-specific elements */
 
 /* Definition terms - commonly used in educational content */
