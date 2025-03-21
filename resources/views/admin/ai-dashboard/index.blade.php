@@ -19,6 +19,11 @@
                         <span class="iconify" data-icon="mdi-thermostat"></span>
                         Thống kê chi tiết
                     </a>
+                    
+                    <a href="{{ route('admin.ai-history.index') }}" class="inline-flex items-center justify-center gap-2.5 rounded-lg bg-white py-3 px-5 text-center font-medium text-primary hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 shadow-md lg:px-6">
+                        <span class="iconify" data-icon="mdi-history"></span>
+                        Lịch sử tạo AI
+                    </a>
                 </div>
             </div>
 

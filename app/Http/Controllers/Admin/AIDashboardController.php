@@ -614,6 +614,107 @@ class AIDashboardController extends Controller
     }
 
     /**
+     * Queue a bulk generation job
+     */
+    public function queueBulkGeneration(Request $request)
+    {
+        try {
+            $contentType = $request->input('content_type');
+            $filterType = $request->input('filter_type');
+            $filterId = $request->input('filter_id');
+            $model = $request->input('model', 'grok-2');
+            $promptText = $request->input('prompt');
+            $promptId = $request->input('prompt_id');
+            $useHtmlMeta = (bool)$request->input('use_html_meta', false);
+            $temperature = (float)$request->input('temperature', 0.7);
+            $maxTokens = (int)$request->input('max_tokens', 1000);
+            $systemMessage = $request->input('system_message');
+            
+            // Use prompt from database if ID provided
+            if ($promptId) {
+                $promptObj = Prompt::find($promptId);
+                if ($promptObj) {
+                    $promptText = $promptObj->prompt_text;
+                    // If system message is empty and the prompt has one, use it
+                    if (empty($systemMessage) && !empty($promptObj->system_message)) {
+                        $systemMessage = $promptObj->system_message;
+                    }
+                }
+            }
+            
+            // Get current user ID
+            $userId = auth()->id();
+            
+            // Handle multiple IDs case
+            $multipleIds = null;
+            if ($filterType === 'ids' && strpos($filterId, ',') !== false) {
+                // For multiple IDs, set filter_id to 0 (placeholder value)
+                // and store the actual IDs in the settings JSON
+                $multipleIds = explode(',', $filterId);
+                $filterIdForDB = 0; // Placeholder value for the integer column
+            } else {
+                $filterIdForDB = (int)$filterId;
+            }
+            
+            // Create settings array with all parameters
+            $settings = [
+                'temperature' => $temperature,
+                'max_tokens' => $maxTokens,
+                'use_html_meta' => $useHtmlMeta,
+                'system_message' => $systemMessage
+            ];
+            
+            // Add multiple IDs to settings if present
+            if ($multipleIds) {
+                $settings['multiple_ids'] = $multipleIds;
+            }
+            
+            // Create a history record
+            $history = \App\Models\AIGenerationHistory::create([
+                'user_id' => $userId,
+                'content_type' => $contentType,
+                'filter_type' => $filterType,
+                'filter_id' => $filterIdForDB,
+                'prompt_text' => $promptText,
+                'model' => $model,
+                'settings' => $settings,
+                'status' => 'processing'
+            ]);
+            
+            // Dispatch the job to the queue
+            \App\Jobs\BulkGenerateSEO::dispatch(
+                $contentType,
+                $filterType,
+                $filterId, // Keep original format for the job
+                $model,
+                $promptText,
+                $temperature,
+                $maxTokens,
+                $useHtmlMeta,
+                $userId,
+                $systemMessage,
+                $history->id
+            );
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Bulk generation job has been queued and will be processed in the background.',
+                'job_id' => $history->id, // Return the actual history ID
+                'history_id' => $history->id // Also return as history_id for clarity
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in queueing bulk generation job', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'error' => 'Error processing request: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Save a custom prompt
      */
     public function savePrompt(Request $request)

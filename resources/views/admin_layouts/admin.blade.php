@@ -46,7 +46,113 @@
 
     <!-- Include external scripts -->
     @include('layouts.externalScripts');
-
     @stack('scripts')
+    
+    <script>
+        /**
+         * Display a toast notification
+         * @param {Object} options - The notification options
+         * @param {string} options.title - The notification title
+         * @param {string} options.message - The notification message
+         * @param {string} options.type - The notification type (success, warning, error, info)
+         * @param {number} options.duration - The duration in milliseconds
+         */
+        function showNotification(options = {}) {
+            const { 
+                title = 'Thông báo', 
+                message = '', 
+                type = 'success', 
+                duration = 5000 
+            } = options;
+            
+            // Create toast container if it doesn't exist
+            let toastContainer = document.getElementById('toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toast-container';
+                toastContainer.className = 'fixed top-4 right-4 z-50 flex flex-col gap-3 max-w-md';
+                document.body.appendChild(toastContainer);
+            }
+            
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = 'rounded-lg shadow-lg p-4 flex items-start gap-3 transform translate-x-full transition-transform duration-300 ease-out';
+            
+            // Set background color based on type
+            switch (type) {
+                case 'success':
+                    toast.classList.add('bg-green-50', 'border-l-4', 'border-green-500', 'text-green-800');
+                    break;
+                case 'warning':
+                    toast.classList.add('bg-yellow-50', 'border-l-4', 'border-yellow-500', 'text-yellow-800');
+                    break;
+                case 'error':
+                    toast.classList.add('bg-red-50', 'border-l-4', 'border-red-500', 'text-red-800');
+                    break;
+                case 'info':
+                default:
+                    toast.classList.add('bg-indigo-50', 'border-l-4', 'border-indigo-500', 'text-indigo-800');
+                    break;
+            }
+            
+            // Set icon based on type
+            let icon = 'mdi-information';
+            switch (type) {
+                case 'success': icon = 'mdi-check-circle'; break;
+                case 'warning': icon = 'mdi-alert'; break;
+                case 'error': icon = 'mdi-alert-circle'; break;
+            }
+            
+            // Add toast content
+            toast.innerHTML = `
+                <div class="flex-shrink-0">
+                    <span class="iconify text-2xl" data-icon="${icon}"></span>
+                </div>
+                <div class="flex-1">
+                    <div class="font-medium">${title}</div>
+                    <div class="text-sm mt-1">${message}</div>
+                </div>
+                <button class="text-gray-400 hover:text-gray-600">
+                    <span class="iconify" data-icon="mdi-close"></span>
+                </button>
+            `;
+            
+            // Add to container
+            toastContainer.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+            }, 10);
+            
+            // Set up close button
+            const closeBtn = toast.querySelector('button');
+            closeBtn.addEventListener('click', () => {
+                removeToast(toast);
+            });
+            
+            // Auto remove after duration
+            if (duration > 0) {
+                setTimeout(() => {
+                    removeToast(toast);
+                }, duration);
+            }
+            
+            // Function to remove toast with animation
+            function removeToast(toastElement) {
+                toastElement.classList.add('translate-x-full');
+                setTimeout(() => {
+                    toastElement.remove();
+                    
+                    // Remove container if empty
+                    if (toastContainer.children.length === 0) {
+                        toastContainer.remove();
+                    }
+                }, 300);
+            }
+            
+            return toast;
+        }
+    </script>
 </body>
 </html>

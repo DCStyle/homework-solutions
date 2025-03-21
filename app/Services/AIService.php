@@ -30,76 +30,94 @@ class AIService
         try {
             // Map model names to OpenRouter format
             $openRouterModel = $this->mapModelName($model);
-
-            // Prepare system message if provided
-            $messages = [];
-            if (!empty($options['system_message'])) {
-                $messages[] = new MessageData(
-                    content: $options['system_message'],
-                    role: RoleType::SYSTEM
-                );
-            }
-
-            $prompt = $this->processPrompt($prompt, $options['content_type'] ?? 'generic', $useHtmlMeta);
-
-            // Add user message
-            $messages[] = new MessageData(
-                content: $prompt,
-                role: RoleType::USER
+            
+            // Process the prompt to ensure it's in the right format
+            $processedPrompt = $this->processPrompt($prompt, $options['content_type'] ?? 'default', $useHtmlMeta);
+            
+            // Set up message for chat models
+            $userMessage = new MessageData(
+                role: RoleType::USER,
+                content: [
+                    new TextContentData(
+                        type: TextContentData::ALLOWED_TYPE,
+                        text: $processedPrompt
+                    )
+                ]
             );
-
-            // Prepare parameters for ChatData with ONLY the required fields
-            $chatDataParams = [
-                'messages' => $messages,
-                'model' => $openRouterModel
+            
+            // Configure response format - we want JSON for structured data
+            $responseFormatData = [
+                'type' => 'json_object'
             ];
-
-            // Add optional parameters EXCEPT ones that conflict with XOR validation
-            $allowedParams = [
-                'temperature', 'top_p', 'frequency_penalty',
-                'presence_penalty', 'stop', 'max_tokens'
+            
+            // Create the chat data from an array to avoid property access issues
+            $chatData = [
+                'model' => $openRouterModel,
+                'messages' => [$userMessage],
+                'temperature' => isset($options['temperature']) ? (float) $options['temperature'] : 0.7,
+                'top_p' => 1,
+                'max_tokens' => isset($options['max_tokens']) ? (int) $options['max_tokens'] : 1000,
+                'response_format' => $responseFormatData
             ];
-
-            foreach ($allowedParams as $param) {
-                if (isset($options[$param]) && !empty($options[$param])) {
-                    $chatDataParams[$param] = $options[$param];
+            
+            // Add system message if provided (for models that support it like DeepSeek)
+            if (isset($options['system_message']) && !empty($options['system_message'])) {
+                $systemMessage = new MessageData(
+                    role: RoleType::SYSTEM,
+                    content: [
+                        new TextContentData(
+                            type: TextContentData::ALLOWED_TYPE,
+                            text: $options['system_message']
+                        )
+                    ]
+                );
+                
+                $chatData['messages'] = [$systemMessage, $userMessage];
+            }
+            
+            // Add provider preferences if needed
+            if (isset($options['model_variant']) && $options['model_variant'] === 'deepseek-chat') {
+                $chatData['provider_preferences'] = [
+                    [
+                        'model' => $openRouterModel,
+                        'provider' => 'deepseek'
+                    ]
+                ];
+            }
+            
+            // Create the chat object using fromArray to ensure proper validation
+            $chat = ChatData::from($chatData);
+            
+            try {
+                // Make the API call
+                $response = LaravelOpenRouter::chatRequest($chat);
+                
+                // Process the response
+                return $this->processResponse($response, $options['content_type'] ?? 'default', $options);
+            } catch (\TypeError $e) {
+                // Handle case where OpenRouter returns a null ID in the response
+                if (strpos($e->getMessage(), 'Argument #1 ($id) must be of type string, null given') !== false) {
+                    Log::warning('OpenRouter returned null ID in response, using fallback response', [
+                        'model' => $model,
+                        'content_type' => $options['content_type'] ?? 'default'
+                    ]);
+                    
+                    // Return a fallback response based on content type
+                    return $this->getFallbackResponse($options['content_type'] ?? 'default');
                 }
+                
+                // Re-throw other type errors
+                throw $e;
             }
-
-            // IMPORTANT: Use fromArray to avoid DTO validation issues with properties
-            // that aren't explicitly set in the constructor
-            $chatData = ChatData::from($chatDataParams);
-
-            // Handle structured output if requested
-            if (!empty($options['use_html_meta'])) {
-                $chatData->response_format = new ResponseFormatData(
-                    type: 'json_object'
-                );
-
-                $chatData->provider = new ProviderPreferencesData(
-                    require_parameters: true
-                );
-
-                Log::debug('Added structured output format for HTML meta');
-            }
-
-            // Make the request
-            $response = LaravelOpenRouter::chatRequest($chatData);
-
-            // Process the response
-            $processedResponse = $this->processResponse($response, $options['content_type'] ?? 'generic', $options);
-
-            return $processedResponse;
         } catch (\Exception $e) {
-            Log::error('AI generation error', [
-                'model' => $model,
+            // Log the error
+            Log::error('Error generating content with AI', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
+                'model' => $model,
+                'content_type' => $options['content_type'] ?? 'default'
             ]);
 
-            return $this->getFallbackResponse($options['content_type'] ?? 'generic');
+            return $this->getFallbackResponse($options['content_type'] ?? 'default');
         }
     }
 
@@ -108,7 +126,7 @@ class AIService
         // Base system messages with common instructions
         $baseMessages = [
             'posts' => "You are an SEO specialist for educational content. Format your response EXACTLY as follows:
-Meta Title: [Your title here - maximum 60 characters]
+Meta Title: [Your title here - DO NOT INCLUDE HTML TAGS HERE]
 Meta Description: [Your description here]
 
 Do not include any other text, explanations, or formatting. Just provide the Meta Title and Meta Description with these exact labels.",

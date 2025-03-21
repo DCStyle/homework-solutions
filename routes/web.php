@@ -26,6 +26,13 @@ Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('ho
 
 Auth::routes();
 
+// Notifications routes (for authenticated users)
+Route::middleware(['auth'])->group(function() {
+    Route::post('/notifications/{id}/mark-as-read', [App\Http\Controllers\NotificationsController::class, 'markAsRead']);
+    Route::post('/notifications/mark-all-read', [App\Http\Controllers\NotificationsController::class, 'markAllAsRead']);
+    Route::get('/notifications', [App\Http\Controllers\NotificationsController::class, 'index'])->name('notifications.index');
+});
+
 // Admin
 Route::prefix('admin')->middleware(['admin'])->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
@@ -54,6 +61,7 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
         // API Endpoints
         Route::post('/generate-sample', [App\Http\Controllers\Admin\AIDashboardController::class, 'generateSample'])->name('admin.ai-dashboard.generate-sample');
         Route::post('/apply-prompt', [App\Http\Controllers\Admin\AIDashboardController::class, 'applyPrompt'])->name('admin.ai-dashboard.apply-prompt');
+        Route::post('/queue-bulk-generation', [App\Http\Controllers\Admin\AIDashboardController::class, 'queueBulkGeneration'])->name('admin.ai-dashboard.queue-bulk-generation');
         Route::post('/save-prompt', [App\Http\Controllers\Admin\AIDashboardController::class, 'savePrompt'])->name('admin.ai-dashboard.save-prompt');
         Route::get('/prompts/default', [App\Http\Controllers\Admin\AIDashboardController::class, 'getDefaultPrompt'])->name('admin.ai-dashboard.prompts.default');
         Route::get('/prompts/by-type', [App\Http\Controllers\Admin\AIDashboardController::class, 'getPromptsByType'])->name('admin.ai-dashboard.prompts.by-type');
@@ -64,6 +72,13 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
         Route::get('/vision', [App\Http\Controllers\Admin\VisionAnalysisController::class, 'index'])->name('admin.ai-dashboard.vision');
         Route::post('/vision/analyze', [App\Http\Controllers\Admin\VisionAnalysisController::class, 'analyze'])->name('admin.ai-dashboard.vision.analyze');
         Route::post('/vision/analyze-api', [App\Http\Controllers\Admin\VisionAnalysisController::class, 'analyzeApi'])->name('admin.ai-dashboard.vision.analyze-api');
+    });
+
+    // AI Generation History
+    Route::prefix('ai-history')->group(function() {
+        Route::get('/', [App\Http\Controllers\Admin\AIHistoryController::class, 'index'])->name('admin.ai-history.index');
+        Route::get('/{id}', [App\Http\Controllers\Admin\AIHistoryController::class, 'show'])->name('admin.ai-history.show');
+        Route::get('/{id}/download', [App\Http\Controllers\Admin\AIHistoryController::class, 'downloadReport'])->name('admin.ai-history.download');
     });
 
     // Settings

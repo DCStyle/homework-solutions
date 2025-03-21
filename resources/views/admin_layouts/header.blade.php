@@ -8,6 +8,8 @@
         </div>
 
         <div class="ml-auto flex items-center gap-3 2xsm:gap-7">
+            @include('layouts.notifications')
+
             <!-- User Area -->
             <div class="relative dropdown">
                 <a class="flex items-center gap-4"

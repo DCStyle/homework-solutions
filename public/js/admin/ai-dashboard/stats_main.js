@@ -99,12 +99,10 @@
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
             success: function(data) {
-                // Store the default prompts
                 defaultPrompts = data;
             },
             error: function(error) {
                 console.error('Error loading default prompts:', error);
-                defaultPrompts = {};
             }
         });
 
@@ -571,6 +569,8 @@
             });
         });
 
+        let pendingBulkRequests = false;
+
         // Bulk generate start button
         $("#bulk-generate-start-btn").on('click', function() {
             const selectedItems = $(".item-checkbox:checked");
@@ -581,27 +581,30 @@
             }
 
             const model = $("#bulk-model").val();
-            const prompt = $("#bulk-prompt").val();
+            const promptSource = $("#bulk-prompt-source").val();
+            let prompt = $("#bulk-prompt").val();
+            let promptId = '';
             const temperature = $("#bulk-temperature").val();
             const maxTokens = $("#bulk-max-tokens").val();
             const systemMessage = $("#bulk-system-message").val();
             const useHtmlMeta = $("#bulk-use-html-meta").is(':checked');
 
-            if (!prompt) {
+            // Get prompt ID if using saved prompt
+            if (promptSource === 'saved') {
+                promptId = $("#bulk-saved-prompt").val();
+                if (!promptId) {
+                    alert('Vui lòng chọn một prompt đã lưu');
+                    return;
+                }
+            } else if (promptSource === 'default') {
+                // Use default prompt for this content type
+                prompt = defaultPrompts[currentContentType] || '';
+            }
+
+            if (!prompt && !promptId) {
                 alert('Vui lòng cung cấp lời nhắc');
                 return;
             }
-
-            // Show progress
-            $("#bulk-progress-container").removeClass('d-none');
-            $("#bulk-progress-bar").css('width', '0%').attr('aria-valuenow', 0);
-            $("#bulk-progress-percentage").text('0%');
-            $("#bulk-processed").text('0');
-            $("#bulk-total").text(selectedItems.length);
-
-            // Disable the button
-            $(this).prop('disabled', true);
-            $(this).text('Đang xử lý...');
 
             // Get all selected IDs
             const selectedIds = $.map(selectedItems, function(item) {
@@ -615,6 +618,7 @@
             formData.append('filter_id', selectedIds);
             formData.append('model', model);
             formData.append('prompt', prompt);
+            formData.append('prompt_id', promptId);
             formData.append('temperature', temperature);
             formData.append('max_tokens', maxTokens);
             formData.append('use_html_meta', useHtmlMeta ? '1' : '0');
@@ -623,9 +627,29 @@
                 formData.append('system_message', systemMessage);
             }
 
-            // Send AJAX request
+            // Close the modal first before making the AJAX request
+            if (typeof bulkGenerateModal !== 'undefined' && bulkGenerateModal) {
+                bulkGenerateModal.hide();
+            } else {
+                // Fallback methods
+                $('#bulk-generate-modal').modal('hide');
+            }
+
+            // Show immediate notification that job is being queued
+            if (typeof showNotification === 'function') {
+                showNotification({
+                    title: 'Đang xử lý',
+                    message: 'Đang gửi yêu cầu tạo nội dung vào hàng đợi...',
+                    type: 'info'
+                });
+            }
+
+            // Set pending request flag
+            pendingBulkRequests = true;
+
+            // Now send AJAX request after modal is closed
             $.ajax({
-                url: `${apiBaseUrl}/admin/ai-dashboard/apply-prompt`,
+                url: `${apiBaseUrl}/admin/ai-dashboard/queue-bulk-generation`,
                 type: 'POST',
                 data: formData,
                 processData: false,
@@ -634,30 +658,112 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(data) {
+                    console.log('Bulk generation response:', data);
+                    pendingBulkRequests = false;
+                    
                     if (data.success) {
-                        // Update progress
-                        $("#bulk-progress-bar").css('width', '100%').attr('aria-valuenow', 100);
-                        $("#bulk-progress-percentage").text('100%');
-                        $("#bulk-processed").text(data.processed);
-
-                        alert(`Đã xử lý thành công ${data.processed} mục. Lỗi: ${data.failed}`);
-                        loadContentData(); // Reload content data
-                        if (bulkGenerateModal) {
-                            bulkGenerateModal.hide();
+                        // Store the job information in localStorage
+                        try {
+                            const timestamp = new Date().toISOString();
+                            const jobInfo = {
+                                jobId: data.job_id || 'unknown',
+                                contentCount: selectedItems.length,
+                                timestamp: timestamp,
+                                contentType: currentContentType,
+                                status: 'queued'
+                            };
+                            
+                            // Get existing jobs or initialize empty array
+                            const pendingJobs = JSON.parse(localStorage.getItem('pendingBulkJobs') || '[]');
+                            pendingJobs.push(jobInfo);
+                            localStorage.setItem('pendingBulkJobs', JSON.stringify(pendingJobs));
+                        } catch (e) {
+                            console.error('Error storing job info:', e);
+                        }
+                        
+                        if (typeof showNotification === 'function') {
+                            showNotification({
+                                title: 'Đã gửi yêu cầu',
+                                message: 'Công việc tạo nội dung đã được gửi vào hàng đợi. Bạn có thể an toàn điều hướng đến trang khác.',
+                                type: 'success',
+                                duration: 8000
+                            });
+                        } else {
+                            alert('Công việc tạo nội dung đã được gửi vào hàng đợi. Bạn sẽ nhận thông báo khi hoàn tất.');
                         }
                     } else {
-                        alert('Lỗi: ' + (data.error || 'Không thể xử lý các mục'));
-                        $("#bulk-generate-start-btn").prop('disabled', false);
-                        $("#bulk-generate-start-btn").text('Bắt Đầu Tạo');
+                        if (typeof showNotification === 'function') {
+                            showNotification({
+                                title: 'Lỗi',
+                                message: data.error || 'Không thể xử lý các mục',
+                                type: 'error'
+                            });
+                        } else {
+                            alert('Lỗi: ' + (data.error || 'Không thể xử lý các mục'));
+                        }
                     }
                 },
-                error: function(error) {
-                    console.error('Error:', error);
-                    alert('Đã xảy ra lỗi. Vui lòng thử lại.');
+                error: function(xhr, status, error) {
+                    console.error('AJAX error:', {
+                        status: status,
+                        error: error,
+                        response: xhr.responseText
+                    });
+                    
+                    pendingBulkRequests = false;
+                    
+                    if (typeof showNotification === 'function') {
+                        showNotification({
+                            title: 'Lỗi',
+                            message: 'Đã xảy ra lỗi khi gửi yêu cầu. Vui lòng thử lại sau.',
+                            type: 'error'
+                        });
+                    } else {
+                        alert('Đã xảy ra lỗi khi gửi yêu cầu. Vui lòng thử lại sau.');
+                    }
+                },
+                complete: function() {
+                    // Reset button state in case the modal reopens
                     $("#bulk-generate-start-btn").prop('disabled', false);
                     $("#bulk-generate-start-btn").text('Bắt Đầu Tạo');
                 }
             });
+        });
+
+        // Add this code to display pending jobs information on page load
+        $(document).ready(function() {
+            try {
+                const pendingJobs = JSON.parse(localStorage.getItem('pendingBulkJobs') || '[]');
+                const recentJobs = pendingJobs.filter(job => {
+                    // Only show jobs from the last 24 hours
+                    const jobTime = new Date(job.timestamp).getTime();
+                    const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+                    return jobTime > oneDayAgo;
+                });
+                
+                if (recentJobs.length > 0) {
+                    if (typeof showNotification === 'function') {
+                        showNotification({
+                            title: 'Công việc đang xử lý',
+                            message: `Bạn có ${recentJobs.length} công việc đang xử lý trong hàng đợi. Bạn sẽ nhận thông báo khi hoàn tất.`,
+                            type: 'info',
+                            duration: 6000
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error('Error checking pending jobs:', e);
+            }
+        });
+
+        // Add this to handle navigation away from page during pending requests
+        window.addEventListener('beforeunload', function(e) {
+            if (pendingBulkRequests) {
+                // This message may be shown, depending on browser
+                const message = 'Bạn có yêu cầu tạo nội dung đang xử lý. Bạn có chắc chắn muốn rời khỏi trang?';
+                e.returnValue = message;
+                return message;
+            }
         });
 
         // Bulk prompt source toggle
@@ -1392,5 +1498,4 @@
 
     // Initialize when document is ready
     $(document).ready(init);
-
 })();

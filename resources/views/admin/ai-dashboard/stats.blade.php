@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="space-y-6">
-        <div class="sticky top-[84px] z-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-indigo-50 p-6 rounded-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-indigo-50 p-6 rounded-xl">
             <div>
                 <h2 class="text-3xl font-bold text-indigo-800">Phân Tích Nội Dung SEO</h2>
                 <p class="mt-1 text-indigo-600">Tìm và tối ưu hóa nội dung thiếu thông tin SEO</p>
@@ -11,6 +11,10 @@
                 <a href="{{ route('admin.ai-dashboard.index') }}" class="inline-flex items-center justify-center gap-2 rounded-md border border-indigo-300 py-2 px-4 text-center font-medium text-indigo-700 hover:bg-indigo-100 sm:px-6">
                     <span class="iconify" data-icon="mdi-arrow-left"></span>
                     Quay Lại Trang Chính
+                </a>
+                <a href="{{ route('admin.ai-history.index') }}" class="inline-flex items-center justify-center gap-2 rounded-md border border-indigo-300 py-2 px-4 text-center font-medium text-indigo-700 hover:bg-indigo-100 sm:px-6">
+                    <span class="iconify" data-icon="mdi-history"></span>
+                    Lịch Sử Tạo AI
                 </a>
                 <button id="bulk-generate-btn" class="inline-flex items-center justify-center gap-2.5 rounded-md bg-indigo-600 py-2 px-4 text-center font-medium text-white hover:bg-indigo-700 sm:px-6">
                     <span class="iconify" data-icon="mdi-plus"></span>
@@ -245,13 +249,15 @@
                         <label for="modal-model" class="mb-2.5 block font-medium text-gray-700">Mô Hình AI</label>
                         <div class="relative bg-white">
                             <select data-plugin-select2 id="modal-model" class="form-select w-full rounded border border-gray-300 py-3 px-5 outline-none transition focus:border-indigo-600">
-                                <optgroup label="Mô Hình Grok">
-                                    <option value="grok-2">Grok-2 (Mặc định)</option>
-                                    <option value="grok-2-latest">Grok-2 Mới Nhất</option>
-                                    <option value="grok-2-1212">Grok-2 1212 (Tối ưu)</option>
+                                <optgroup label="Grok Models">
+                                    <option value="grok-2">Grok-2</option>
+                                    <option value="grok-2-1212">Grok-2 1212</option>
+                                    <option value="grok-2-mini">Grok-2 Mini</option>
+                                    <option value="grok-2-vision">Grok-2 Vision</option>
                                 </optgroup>
-                                <optgroup label="Mô Hình DeepSeek">
+                                <optgroup label="DeepSeek Models">
                                     <option value="deepseek-v3">DeepSeek Chat</option>
+                                    <option value="deepseek-r1">DeepSeek R1</option>
                                 </optgroup>
                             </select>
                         </div>
@@ -379,13 +385,15 @@
                         <label for="bulk-model" class="mb-2.5 block font-medium text-gray-700">Mô Hình AI</label>
                         <div class="relative bg-white">
                             <select data-plugin-select2 id="bulk-model" class="form-select w-full rounded border border-gray-300 py-3 px-5 outline-none transition focus:border-indigo-600">
-                                <optgroup label="Mô Hình Grok">
-                                    <option value="grok-2">Grok-2 (Mặc định)</option>
-                                    <option value="grok-2-latest">Grok-2 Mới Nhất</option>
-                                    <option value="grok-2-1212">Grok-2 1212 (Tối ưu)</option>
+                                <optgroup label="Grok Models">
+                                    <option value="grok-2">Grok-2</option>
+                                    <option value="grok-2-1212">Grok-2 1212</option>
+                                    <option value="grok-2-mini">Grok-2 Mini</option>
+                                    <option value="grok-2-vision">Grok-2 Vision</option>
                                 </optgroup>
-                                <optgroup label="Mô Hình DeepSeek">
+                                <optgroup label="DeepSeek Models">
                                     <option value="deepseek-v3">DeepSeek Chat</option>
+                                    <option value="deepseek-r1">DeepSeek R1</option>
                                 </optgroup>
                             </select>
                         </div>
@@ -497,5 +505,69 @@
 @endpush
 
 @push('scripts')
+    <script>
+        if (typeof showNotification !== 'function') {
+            window.showNotification = function(options) {
+                const { title, message, type = 'info', duration = 5000 } = options;
+                
+                // Create toast container if it doesn't exist
+                let toastContainer = document.getElementById('toast-container');
+                if (!toastContainer) {
+                    toastContainer = document.createElement('div');
+                    toastContainer.id = 'toast-container';
+                    toastContainer.style.cssText = 'position:fixed; top:20px; right:20px; z-index:9999;';
+                    document.body.appendChild(toastContainer);
+                }
+                
+                // Create toast element
+                const toast = document.createElement('div');
+                toast.style.cssText = 'min-width:250px; margin-bottom:10px; padding:15px; border-radius:4px; box-shadow:0 2px 10px rgba(0,0,0,0.2); animation:fadeIn 0.5s;';
+                
+                // Set background color based on type
+                const colors = {
+                    success: { bg: '#4caf50', text: '#fff' },
+                    error: { bg: '#f44336', text: '#fff' },
+                    warning: { bg: '#ff9800', text: '#fff' },
+                    info: { bg: '#2196f3', text: '#fff' }
+                };
+                
+                const color = colors[type] || colors.info;
+                toast.style.backgroundColor = color.bg;
+                toast.style.color = color.text;
+                
+                // Set content
+                toast.innerHTML = `
+                    <div style="font-weight:bold; margin-bottom:5px;">${title}</div>
+                    <div>${message}</div>
+                `;
+                
+                // Add to container
+                toastContainer.appendChild(toast);
+                
+                // Remove after duration
+                setTimeout(() => {
+                    toast.style.animation = 'fadeOut 0.5s';
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 500);
+                }, duration);
+            };
+            
+            // Add CSS animations for the toasts
+            const style = document.createElement('style');
+            style.innerHTML = `
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(-20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes fadeOut {
+                    from { opacity: 1; transform: translateY(0); }
+                    to { opacity: 0; transform: translateY(-20px); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    </script>
+
     <script src="{{ asset('js/admin/ai-dashboard/stats_main.js') }}"></script>
 @endpush
