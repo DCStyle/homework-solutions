@@ -89,11 +89,98 @@ class AIService
             $chat = ChatData::from($chatData);
             
             try {
-                // Make the API call
-                $response = LaravelOpenRouter::chatRequest($chat);
+                // Add retry logic for API calls
+                $maxRetries = 3;
+                $retryCount = 0;
+                $lastException = null;
                 
-                // Process the response
-                return $this->processResponse($response, $options['content_type'] ?? 'default', $options);
+                while ($retryCount < $maxRetries) {
+                    try {
+                        // Make the API call
+                        $response = LaravelOpenRouter::chatRequest($chat);
+                        
+                        // Check if response contains valid choices and content
+                        if (!$this->isValidResponse($response)) {
+                            Log::warning('Invalid response structure from OpenRouter', [
+                                'model' => $model,
+                                'content_type' => $options['content_type'] ?? 'default',
+                                'response_preview' => $this->getResponsePreview($response)
+                            ]);
+                            
+                            // If this is the last retry, use fallback
+                            if ($retryCount == $maxRetries - 1) {
+                                return $this->getFallbackResponse($options['content_type'] ?? 'default');
+                            }
+                            
+                            // Otherwise retry
+                            $retryCount++;
+                            sleep(1); // Wait before retry
+                            continue;
+                        }
+                        
+                        // Process the response
+                        return $this->processResponse($response, $options['content_type'] ?? 'default', $options);
+                    } catch (\TypeError $e) {
+                        $lastException = $e;
+                        
+                        // Handle case where OpenRouter returns a null ID in the response
+                        if (strpos($e->getMessage(), 'Argument #1 ($id) must be of type string, null given') !== false) {
+                            Log::warning('OpenRouter returned null ID in response, retrying', [
+                                'model' => $model,
+                                'content_type' => $options['content_type'] ?? 'default',
+                                'retry_count' => $retryCount + 1,
+                                'max_retries' => $maxRetries
+                            ]);
+                            
+                            // If this is the last retry, use fallback
+                            if ($retryCount == $maxRetries - 1) {
+                                return $this->getFallbackResponse($options['content_type'] ?? 'default');
+                            }
+                            
+                            // Otherwise retry
+                            $retryCount++;
+                            sleep(1); // Wait before retry
+                            continue;
+                        }
+                        
+                        // Re-throw other type errors
+                        throw $e;
+                    } catch (\Exception $e) {
+                        $lastException = $e;
+                        
+                        // Log the error
+                        Log::warning('Error in API call, retrying', [
+                            'error' => $e->getMessage(),
+                            'model' => $model,
+                            'retry_count' => $retryCount + 1,
+                            'max_retries' => $maxRetries
+                        ]);
+                        
+                        // If this is the last retry, use fallback
+                        if ($retryCount == $maxRetries - 1) {
+                            Log::error('All retry attempts failed for OpenRouter API call', [
+                                'error' => $e->getMessage(),
+                                'model' => $model,
+                                'content_type' => $options['content_type'] ?? 'default'
+                            ]);
+                            return $this->getFallbackResponse($options['content_type'] ?? 'default');
+                        }
+                        
+                        // Otherwise retry
+                        $retryCount++;
+                        sleep(1); // Wait before retry
+                        continue;
+                    }
+                }
+                
+                // If we get here, all retries failed
+                Log::error('All retry attempts failed for OpenRouter API call', [
+                    'model' => $model,
+                    'content_type' => $options['content_type'] ?? 'default',
+                    'last_error' => $lastException ? $lastException->getMessage() : 'Unknown error'
+                ]);
+                return $this->getFallbackResponse($options['content_type'] ?? 'default');
+                
             } catch (\TypeError $e) {
                 // Handle case where OpenRouter returns a null ID in the response
                 if (strpos($e->getMessage(), 'Argument #1 ($id) must be of type string, null given') !== false) {
@@ -118,6 +205,57 @@ class AIService
             ]);
 
             return $this->getFallbackResponse($options['content_type'] ?? 'default');
+        }
+    }
+    
+    /**
+     * Check if the OpenRouter response is valid
+     */
+    private function isValidResponse($response) 
+    {
+        if (!isset($response->choices) || empty($response->choices)) {
+            return false;
+        }
+        
+        $choice = $response->choices[0] ?? null;
+        if (!$choice) {
+            return false;
+        }
+        
+        if (!isset($choice->message) || !isset($choice->message->content)) {
+            return false;
+        }
+        
+        $content = $choice->message->content;
+        if (empty($content) || $content === '{}' || $content === '[]' || $content === '[1]<|eos|>') {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Get a preview of the response for logging purposes
+     */
+    private function getResponsePreview($response) 
+    {
+        try {
+            $responseArr = (array)$response;
+            // Remove large objects to prevent log bloat
+            unset($responseArr['usage']);
+            
+            // If choices exist, get first choice content preview
+            if (isset($responseArr['choices']) && !empty($responseArr['choices'])) {
+                $choice = $responseArr['choices'][0];
+                if (isset($choice->message) && isset($choice->message->content)) {
+                    $content = $choice->message->content;
+                    $responseArr['content_preview'] = substr($content, 0, 50) . (strlen($content) > 50 ? '...' : '');
+                }
+            }
+            
+            return json_encode($responseArr);
+        } catch (\Exception $e) {
+            return 'Could not generate response preview: ' . $e->getMessage();
         }
     }
 

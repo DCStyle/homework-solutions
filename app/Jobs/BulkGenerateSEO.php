@@ -105,10 +105,20 @@ class BulkGenerateSEO implements ShouldQueue
             $failed = 0;
             $errors = [];
             $processedItems = [];
+            
+            // Configure request delay to prevent rate limiting
+            $requestDelay = 2; // 2 seconds delay between requests
 
             // Process each item
-            foreach ($items as $item) {
+            foreach ($items as $index => $item) {
                 try {
+                    // Add a delay between API calls to prevent overwhelming the service
+                    // Skip delay for the first item
+                    if ($index > 0) {
+                        Log::info('Adding delay between API requests', ['delay_seconds' => $requestDelay]);
+                        sleep($requestDelay);
+                    }
+                    
                     $prompt = $this->preparePrompt($item);
 
                     // Prepare options based on model
@@ -481,4 +491,4 @@ class BulkGenerateSEO implements ShouldQueue
         
         return $content;
     }
-} 
+}
