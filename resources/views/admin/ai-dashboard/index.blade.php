@@ -78,7 +78,7 @@
                 <div class="flex justify-between items-center gap-4">
                     <div>
                         <h3 class="text-xl font-bold text-black">{{ number_format($missingData['book_groups_no_desc']) }}</h3>
-                        <p class="text-sm font-medium text-gray-600 group-hover:text-primary transition-colors">Nhóm thiếu mô tả</p>
+                        <p class="text-sm font-medium text-gray-600 group-hover:text-primary transition-colors">Môn học thiếu mô tả</p>
                     </div>
                     <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
                         <span class="iconify text-primary text-2xl" data-icon="mdi-folder-multiple-outline"></span>
