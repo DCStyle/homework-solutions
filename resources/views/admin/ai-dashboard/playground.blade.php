@@ -237,19 +237,7 @@
                                     <label for="model" class="mb-2.5 block text-sm font-medium text-black">Mô Hình AI</label>
                                     <div class="relative z-20 bg-white">
                                         <select data-plugin-select2 id="model" class="relative z-20 w-full appearance-none rounded-lg border border-stroke bg-transparent py-2 px-4 outline-none transition focus:border-primary active:border-primary">
-                                            <optgroup label="Grok Models">
-                                                <option value="grok-2">Grok-2</option>
-                                                <option value="grok-2-1212">Grok-2 1212</option>
-                                                <option value="grok-2-mini">Grok-2 Mini</option>
-                                                <option value="grok-2-vision">Grok-2 Vision</option>
-                                            </optgroup>
-                                            <optgroup label="DeepSeek Models">
-                                                <option value="deepseek-v3">DeepSeek Chat</option>
-                                                <option value="deepseek-r1">DeepSeek R1</option>
-                                            </optgroup>
-                                            <optgroup label="Google Models">
-                                                <option value="google/gemini-2.0-flash-thinking-exp:free">Gemini 2.0 Flash Free</option>
-                                            </optgroup>
+                                            @include('admin.ai-dashboard.partials.model-options')
                                         </select>
                                         <span class="absolute top-1/2 right-4 z-10 -translate-y-1/2">
                                             <span class="iconify" data-icon="mdi-chevron-down"></span>
@@ -299,7 +287,8 @@
                                 </div>
                             </div>
 
-                            <div>
+                            <!-- HTML Option -->
+                            <!-- <div>
                                 <label for="use-html-meta" class="mb-2.5 block text-sm font-medium text-black">HTML cho Mô Tả Meta</label>
                                 <div class="flex items-center space-x-2">
                                     <input
@@ -312,7 +301,7 @@
                                     </label>
                                 </div>
                                 <p class="mt-1 text-xs text-gray-500">Phù hợp cho TinyMCE và hiển thị trực tiếp trên frontend</p>
-                            </div>
+                            </div> -->
 
                             <!-- Prompt Editor -->
                             <div class="mb-4">

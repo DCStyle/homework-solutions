@@ -245,17 +245,7 @@
                         <label for="modal-model" class="mb-2.5 block font-medium text-gray-700">Mô Hình AI</label>
                         <div class="relative bg-white">
                             <select data-plugin-select2 id="modal-model" class="form-select w-full rounded border border-gray-300 py-3 px-5 outline-none transition focus:border-indigo-600">
-                                <optgroup label="Mô Hình Grok">
-                                    <option value="grok-2">Grok-2 (Mặc định)</option>
-                                    <option value="grok-2-latest">Grok-2 Mới Nhất</option>
-                                    <option value="grok-2-1212">Grok-2 1212 (Tối ưu)</option>
-                                </optgroup>
-                                <optgroup label="Mô Hình DeepSeek">
-                                    <option value="deepseek-v3">DeepSeek Chat</option>
-                                </optgroup>
-                                <optgroup label="Google Models">
-                                    <option value="google/gemini-2.0-flash-thinking-exp:free">Gemini 2.0 Flash Free</option>
-                                </optgroup>
+                                @include('admin.ai-dashboard.partials.model-options')
                             </select>
                         </div>
                     </div>
@@ -313,7 +303,7 @@
                         <div>
                             <label for="modal-max-tokens" class="mb-2.5 block font-medium text-gray-700">Token Tối Đa</label>
                             <div class="flex items-center gap-3">
-                                <input type="range" id="modal-max-tokens" min="100" max="2000" step="100" value="1000" class="form-range w-full cursor-pointer h-6">
+                                <input type="range" id="modal-max-tokens" min="100" max="4096" step="100" value="1000" class="form-range w-full cursor-pointer h-6">
                                 <span id="modal-max-tokens-value" class="w-14 text-right text-sm font-medium">1000</span>
                             </div>
                         </div>
@@ -382,17 +372,7 @@
                         <label for="bulk-model" class="mb-2.5 block font-medium text-gray-700">Mô Hình AI</label>
                         <div class="relative bg-white">
                             <select data-plugin-select2 id="bulk-model" class="form-select w-full rounded border border-gray-300 py-3 px-5 outline-none transition focus:border-indigo-600">
-                                <optgroup label="Mô Hình Grok">
-                                    <option value="grok-2">Grok-2 (Mặc định)</option>
-                                    <option value="grok-2-latest">Grok-2 Mới Nhất</option>
-                                    <option value="grok-2-1212">Grok-2 1212 (Tối ưu)</option>
-                                </optgroup>
-                                <optgroup label="Mô Hình DeepSeek">
-                                    <option value="deepseek-v3">DeepSeek Chat</option>
-                                </optgroup>
-                                <optgroup label="Google Models">
-                                    <option value="google/gemini-2.0-flash-thinking-exp:free">Gemini 2.0 Flash Free</option>
-                                </optgroup>
+                                @include('admin.ai-dashboard.partials.model-options')
                             </select>
                         </div>
                     </div>
@@ -450,13 +430,14 @@
                         <div>
                             <label for="bulk-max-tokens" class="mb-2.5 block font-medium text-gray-700">Token Tối Đa</label>
                             <div class="flex items-center gap-3">
-                                <input type="range" id="bulk-max-tokens" min="100" max="2000" step="100" value="1000" class="form-range w-full cursor-pointer h-6">
+                                <input type="range" id="bulk-max-tokens" min="100" max="4096" step="100" value="1000" class="form-range w-full cursor-pointer h-6">
                                 <span id="bulk-max-tokens-value" class="w-14 text-right text-sm font-medium">1000</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="mb-4">
+                    <!-- HTML Option -->
+                    <!-- <div class="mb-4">
                         <label class="mb-2.5 block font-medium text-gray-700">HTML cho Mô Tả Meta</label>
                         <div class="flex items-center space-x-2">
                             <input
@@ -469,7 +450,7 @@
                             </label>
                         </div>
                         <p class="mt-1 text-xs text-gray-500">Phù hợp cho TinyMCE và hiển thị trực tiếp trên frontend</p>
-                    </div>
+                    </div> -->
 
                     <!-- Progress (Hidden initially) -->
                     <div id="bulk-progress-container" class="mb-4 d-none">
