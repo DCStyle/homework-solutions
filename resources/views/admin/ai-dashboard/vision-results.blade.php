@@ -123,5 +123,5 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('js/admin/ai-dashboard/vision_results_main.js') }}"></script>
+    @vite('resources/js/admin/ai-dashboard/vision_results_main.js')
 @endpush
