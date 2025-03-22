@@ -1200,4 +1200,192 @@ class AIDashboardController extends Controller
             Cache::forget("prompts_{$type}");
         }
     }
+
+    /**
+     * Queue bulk content generation instead of processing synchronously
+     */
+    public function queueBulkGeneration(Request $request)
+    {
+        try {
+            $contentType = $request->input('content_type');
+            $filterType = $request->input('filter_type');
+            $filterId = $request->input('filter_id');
+            $model = $request->input('model', 'grok-2');
+            $promptText = $request->input('prompt');
+            $promptId = $request->input('prompt_id');
+            $useHtmlMeta = (bool)$request->input('use_html_meta', false);
+            
+            // Use prompt from database if ID provided
+            if ($promptId) {
+                $promptObj = Prompt::find($promptId);
+                if ($promptObj) {
+                    $promptText = $promptObj->prompt_text;
+                }
+            }
+            
+            // Get content items based on filter
+            $items = $this->getContentByFilter($contentType, $filterType, $filterId);
+            
+            if (count($items) === 0) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'No content items found matching the filter criteria'
+                ], 404);
+            }
+            
+            // Extract item IDs
+            $itemIds = $items->pluck('id')->toArray();
+            
+            // Prepare settings array
+            $settings = [
+                'model' => $model,
+                'prompt' => $promptText,
+                'max_tokens' => (int)$request->input('max_tokens', 4000),
+                'temperature' => (float)$request->input('temperature', 0.7),
+                'use_html_meta' => $useHtmlMeta,
+            ];
+            
+            // Add model-specific parameters
+            if (str_starts_with($model, 'deepseek')) {
+                $systemMessage = $request->input('system_message');
+                if (empty($systemMessage)) {
+                    $systemMessage = $this->getSystemMessage($contentType);
+                }
+                
+                $settings['system_message'] = $systemMessage;
+                $settings['model_variant'] = $request->input('deepseek_model', 'deepseek-chat');
+            }
+            
+            // Create a new job record
+            $job = new \App\Models\AIContentJob([
+                'batch_id' => uniqid('batch_', true),
+                'user_id' => Auth::id(),
+                'content_type' => $contentType,
+                'total_items' => count($itemIds),
+                'status' => 'pending',
+                'settings' => $settings,
+                'item_ids' => $itemIds,
+            ]);
+            
+            $job->save();
+            
+            // Dispatch background job
+            \App\Jobs\ProcessAIContentBatch::dispatch($job->id);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Bulk generation job has been queued',
+                'job_id' => $job->id,
+                'batch_id' => $job->batch_id,
+                'total_items' => count($itemIds)
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error queueing bulk generation job', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Error processing request: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Check job status
+     */
+    public function checkJobStatus(Request $request, $jobId)
+    {
+        try {
+            $job = \App\Models\AIContentJob::findOrFail($jobId);
+            
+            return response()->json([
+                'success' => true,
+                'id' => $job->id,
+                'batch_id' => $job->batch_id,
+                'status' => $job->status,
+                'total_items' => $job->total_items,
+                'processed_items' => $job->processed_items,
+                'success_count' => $job->success_count,
+                'failed_count' => $job->failed_count,
+                'progress_percentage' => $job->progress_percentage,
+                'created_at' => $job->created_at->format('Y-m-d H:i:s'),
+                'settings' => $job->settings,
+                'failed_items' => $job->failed_items,
+                'content_type' => $job->content_type,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error checking job status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * List jobs for current user
+     */
+    public function listJobs(Request $request)
+    {
+        try {
+            $jobs = \App\Models\AIContentJob::where('user_id', Auth::id())
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
+            
+            return response()->json([
+                'success' => true,
+                'jobs' => $jobs
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error listing jobs: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Jobs management view
+     */
+    public function jobsView()
+    {
+        $jobs = \App\Models\AIContentJob::where('user_id', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+        
+        return view('admin.ai-dashboard.jobs', compact('jobs'));
+    }
+
+    /**
+     * Retry failed items in a job
+     */
+    public function retryFailedItems(Request $request, $jobId)
+    {
+        try {
+            $job = \App\Models\AIContentJob::findOrFail($jobId);
+            
+            // Check if job belongs to current user
+            if ($job->user_id !== Auth::id()) {
+                return redirect()->back()->with('error', 'Bạn không có quyền thử lại công việc này');
+            }
+            
+            // Retry failed items
+            $newJobId = $job->retryFailedItems();
+            
+            if ($newJobId) {
+                return redirect()->route('admin.ai-dashboard.jobs')
+                    ->with('success', "Đã tạo công việc mới #{$newJobId} để thử lại các mục lỗi");
+            } else {
+                return redirect()->back()->with('error', 'Không có mục lỗi nào để thử lại');
+            }
+        } catch (\Exception $e) {
+            Log::error('Error retrying failed items', [
+                'job_id' => $jobId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return redirect()->back()->with('error', 'Lỗi khi thử lại: ' . $e->getMessage());
+        }
+    }
 }

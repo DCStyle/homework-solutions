@@ -366,10 +366,7 @@
                                 <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="currentColor" d="M12,2A2,2 0 0,1 14,4C14,4.74 13.6,5.39 13,5.73V7H14A7,7 0 0,1 21,14H22A1,1 0 0,1 23,15V18A1,1 0 0,1 22,19H21V20A2,2 0 0,1 19,22H5A2,2 0 0,1 3,20V19H2A1,1 0 0,1 1,18V15A1,1 0 0,1 2,14H3A7,7 0 0,1 10,7H11V5.73C10.4,5.39 10,4.74 10,4A2,2 0 0,1 12,2M7.5,13A2.5,2.5 0 0,0 5,15.5A2.5,2.5 0 0,0 7.5,18A2.5,2.5 0 0,0 10,15.5A2.5,2.5 0 0,0 7.5,13M16.5,13A2.5,2.5 0 0,0 14,15.5A2.5,2.5 0 0,0 16.5,18A2.5,2.5 0 0,0 19,15.5A2.5,2.5 0 0,0 16.5,13Z" /></svg>
                             </span>
                                 <select data-plugin-select2 id="ai_model" name="ai_model" class="w-full appearance-none rounded-lg border border-gray-300 bg-white py-3 pl-10 pr-10 font-medium outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30">
-                                    <option value="">Bất Kỳ Mô Hình</option>
-                                    <option value="grok-2">Grok-2</option>
-                                    <option value="grok-2-latest">Grok-2 Latest</option>
-                                    <option value="deepseek-v3">DeepSeek</option>
+                                    @include('admin.ai-dashboard.partials.model-options')
                                 </select>
                                 <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500">
                                 <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="currentColor" d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z" /></svg>

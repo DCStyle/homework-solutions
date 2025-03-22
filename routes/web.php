@@ -59,7 +59,14 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
         Route::get('/prompts/by-type', [App\Http\Controllers\Admin\AIDashboardController::class, 'getPromptsByType'])->name('admin.ai-dashboard.prompts.by-type');
         Route::get('/prompts/{id}', [App\Http\Controllers\Admin\AIDashboardController::class, 'getPrompt'])->name('admin.ai-dashboard.get-prompt');
         Route::delete('/prompts/{id}', [App\Http\Controllers\Admin\AIDashboardController::class, 'deletePrompt'])->name('admin.ai-dashboard.delete-prompt');
-
+        
+        // Queue management routes
+        Route::post('/queue-generation', [App\Http\Controllers\Admin\AIDashboardController::class, 'queueBulkGeneration'])->name('admin.ai-dashboard.queue-generation');
+        Route::get('/jobs', [App\Http\Controllers\Admin\AIDashboardController::class, 'jobsView'])->name('admin.ai-dashboard.jobs');
+        Route::get('/jobs/list', [App\Http\Controllers\Admin\AIDashboardController::class, 'listJobs'])->name('admin.ai-dashboard.jobs.list');
+        Route::get('/jobs/{jobId}', [App\Http\Controllers\Admin\AIDashboardController::class, 'checkJobStatus'])->name('admin.ai-dashboard.jobs.status');
+        Route::post('/jobs/{jobId}/retry', [App\Http\Controllers\Admin\AIDashboardController::class, 'retryFailedItems'])->name('admin.ai-dashboard.retry-job');
+        
         // Vision Analysis (Optional)
         Route::get('/vision', [App\Http\Controllers\Admin\VisionAnalysisController::class, 'index'])->name('admin.ai-dashboard.vision');
         Route::post('/vision/analyze', [App\Http\Controllers\Admin\VisionAnalysisController::class, 'analyze'])->name('admin.ai-dashboard.vision.analyze');

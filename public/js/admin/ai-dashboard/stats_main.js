@@ -574,40 +574,34 @@
         // Bulk generate start button
         $("#bulk-generate-start-btn").on('click', function() {
             const selectedItems = $(".item-checkbox:checked");
-
             if (selectedItems.length === 0) {
                 alert('Vui lòng chọn ít nhất một mục');
                 return;
             }
-
             const model = $("#bulk-model").val();
             const prompt = $("#bulk-prompt").val();
             const temperature = $("#bulk-temperature").val();
             const maxTokens = $("#bulk-max-tokens").val();
             const systemMessage = $("#bulk-system-message").val();
             const useHtmlMeta = $("#bulk-use-html-meta").is(':checked');
-
             if (!prompt) {
                 alert('Vui lòng cung cấp lời nhắc');
                 return;
             }
-
             // Show progress
             $("#bulk-progress-container").removeClass('d-none');
+            $("#bulk-progress-message").html('<div class="text-indigo-600">Đang xếp hàng công việc...</div>');
             $("#bulk-progress-bar").css('width', '0%').attr('aria-valuenow', 0);
             $("#bulk-progress-percentage").text('0%');
             $("#bulk-processed").text('0');
             $("#bulk-total").text(selectedItems.length);
-
             // Disable the button
             $(this).prop('disabled', true);
             $(this).text('Đang xử lý...');
-
             // Get all selected IDs
             const selectedIds = $.map(selectedItems, function(item) {
                 return $(item).data('id');
             }).join(',');
-
             // Create form data
             const formData = new FormData();
             formData.append('content_type', currentContentType);
@@ -618,14 +612,13 @@
             formData.append('temperature', temperature);
             formData.append('max_tokens', maxTokens);
             formData.append('use_html_meta', useHtmlMeta ? '1' : '0');
-
             if (model.startsWith('deepseek') && systemMessage) {
                 formData.append('system_message', systemMessage);
             }
-
-            // Send AJAX request
+            
+            // Use the new queue endpoint instead of the direct apply-prompt endpoint
             $.ajax({
-                url: `${apiBaseUrl}/admin/ai-dashboard/apply-prompt`,
+                url: `${apiBaseUrl}/admin/ai-dashboard/queue-generation`,
                 type: 'POST',
                 data: formData,
                 processData: false,
@@ -635,18 +628,32 @@
                 },
                 success: function(data) {
                     if (data.success) {
-                        // Update progress
-                        $("#bulk-progress-bar").css('width', '100%').attr('aria-valuenow', 100);
-                        $("#bulk-progress-percentage").text('100%');
-                        $("#bulk-processed").text(data.processed);
-
-                        alert(`Đã xử lý thành công ${data.processed} mục. Lỗi: ${data.failed}`);
-                        loadContentData(); // Reload content data
-                        if (bulkGenerateModal) {
-                            bulkGenerateModal.hide();
-                        }
+                        // Store job ID in session storage for tracking
+                        sessionStorage.setItem('current_ai_job_id', data.job_id);
+                        
+                        // Show job created message
+                        $("#bulk-progress-container").html(`
+                            <div class="alert alert-success">
+                                <strong>Công việc đã được xếp hàng thành công!</strong><br>
+                                ID: ${data.batch_id}<br>
+                                Tổng số mục: ${data.total_items}<br>
+                                <a href="${apiBaseUrl}/admin/ai-dashboard/jobs" class="alert-link">
+                                    Xem trạng thái công việc
+                                </a>
+                            </div>
+                        `);
+                        
+                        // Change button text
+                        $("#bulk-generate-start-btn").text('Đã xếp hàng thành công');
+                        
+                        // Close modal after a delay
+                        setTimeout(() => {
+                            if (bulkGenerateModal) {
+                                bulkGenerateModal.hide();
+                            }
+                        }, 5000);
                     } else {
-                        alert('Lỗi: ' + (data.error || 'Không thể xử lý các mục'));
+                        alert('Lỗi: ' + (data.error || 'Không thể xếp hàng các mục'));
                         $("#bulk-generate-start-btn").prop('disabled', false);
                         $("#bulk-generate-start-btn").text('Bắt Đầu Tạo');
                     }
@@ -1389,6 +1396,91 @@
             }
         }
     }
+
+    // Function to check job status periodically
+    function startJobStatusCheck(jobId) {
+        return setInterval(() => {
+            $.ajax({
+                url: `${apiBaseUrl}/admin/ai-dashboard/jobs/${jobId}`,
+                type: 'GET',
+                success: function(data) {
+                    if (data.success) {
+                        // Update notification if visible
+                        if ($("#job-notification").length > 0) {
+                            const statusText = {
+                                'pending': 'đang chờ',
+                                'processing': 'đang xử lý',
+                                'completed': 'hoàn thành',
+                                'failed': 'thất bại'
+                            }[data.status] || data.status;
+                            
+                            $("#job-status-text").text(statusText);
+                            $("#job-progress-text").text(`${data.processed_items}/${data.total_items} (${data.progress_percentage}%)`);
+                        }
+                        
+                        // If job is completed or failed, stop checking
+                        if (data.status === 'completed' || data.status === 'failed') {
+                            sessionStorage.removeItem('current_ai_job_id');
+                            if (window.jobStatusInterval) {
+                                clearInterval(window.jobStatusInterval);
+                            }
+                        }
+                    }
+                },
+                error: function(error) {
+                    console.error('Error checking job status:', error);
+                }
+            });
+        }, 5000); // Check every 5 seconds
+    }
+    
+    // Add notification when returning to page with active job
+    $(document).ready(function() {
+        const activeJobId = sessionStorage.getItem('current_ai_job_id');
+        if (activeJobId) {
+            // Check job status once
+            $.ajax({
+                url: `${apiBaseUrl}/admin/ai-dashboard/jobs/${activeJobId}`,
+                type: 'GET',
+                success: function(data) {
+                    if (data.success) {
+                        // Show notification if job is still in progress
+                        if (data.status === 'pending' || data.status === 'processing') {
+                            const statusText = data.status === 'pending' ? 'đang chờ' : 'đang xử lý';
+                            
+                            // Add notification if not already there
+                            if ($("#job-notification").length === 0) {
+                                $('body').append(`
+                                    <div id="job-notification" class="fixed bottom-4 right-4 w-80 bg-white rounded-lg shadow-lg border-l-4 border-indigo-500 p-4 z-50">
+                                        <div class="flex justify-between">
+                                            <div>
+                                                <h5 class="font-medium">Công việc <span id="job-status-text">${statusText}</span></h5>
+                                                <p class="text-sm text-gray-600">ID: ${data.batch_id || activeJobId}</p>
+                                                <p class="text-sm text-gray-600">Tiến độ: <span id="job-progress-text">${data.processed_items}/${data.total_items} (${data.progress_percentage}%)</span></p>
+                                                <a href="${apiBaseUrl}/admin/ai-dashboard/jobs" class="text-sm text-indigo-600 hover:underline">
+                                                    Xem chi tiết
+                                                </a>
+                                            </div>
+                                            <button class="text-gray-400 hover:text-gray-600" onclick="document.getElementById('job-notification').remove()">
+                                                <span class="iconify" data-icon="mdi-close"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                `);
+                            }
+                            
+                            // Start checking job status
+                            window.jobStatusInterval = startJobStatusCheck(activeJobId);
+                        } 
+                        // Clean up if job is complete
+                        else if (data.status === 'completed' || data.status === 'failed') {
+                            sessionStorage.removeItem('current_ai_job_id');
+                        }
+                    }
+                }
+            });
+        }
+    });
 
     // Initialize when document is ready
     $(document).ready(init);

@@ -103,40 +103,111 @@ class AIService
         }
     }
 
+    /**
+     * Process and format prompt to guide AI model's response format
+     *
+     * @param string $prompt The original prompt
+     * @param string $contentType Type of content (posts, chapters, books, book_groups)
+     * @param bool $useHtmlMeta Whether to use HTML formatting
+     * @return string The enhanced prompt with formatting instructions
+     */
     private function processPrompt($prompt, $contentType, $useHtmlMeta = false)
     {
-        // Base system messages with common instructions
-        $baseMessages = [
-            'posts' => "You are an SEO specialist for educational content. Format your response EXACTLY as follows:
-Meta Title: [Your title here - maximum 60 characters]
-Meta Description: [Your description here]
+        // Temporary: We disable $useHtmlMeta because there are issues with the response formatter
+        $useHtmlMeta = false;
 
-Do not include any other text, explanations, or formatting. Just provide the Meta Title and Meta Description with these exact labels.",
+        // Define the role and intention clearly based on content type
+        $roleInstruction = match($contentType) {
+            'posts' => "Bạn là chuyên gia viết nội dung giáo dục với kinh nghiệm trong việc tạo bài giới thiệu chi tiết cho các bài học.",
+            'chapters' => "Bạn là chuyên gia giáo dục với kinh nghiệm viết tổng quan về các chương sách giáo khoa.",
+            'books' => "Bạn là chuyên gia biên soạn sách giáo dục, có khả năng tạo nội dung giới thiệu sách học tập.",
+            'book_groups' => "Bạn là chuyên gia phân tích chương trình giảng dạy với khả năng tạo nội dung giới thiệu bộ sách giáo dục.",
+            default => "Bạn là chuyên gia tạo nội dung giáo dục chất lượng cao với hiểu biết sâu sắc về chủ đề.",
+        };
 
-            'chapters' => "You are an educational content writer.",
-            'books' => "You are an educational content specialist.",
-            'book_groups' => "You are a curriculum specialist.",
-            'generic' => "Format your response clearly and consistently. If providing metadata, use explicit labels like 'Meta Title:' and 'Meta Description:'."
-        ];
+        // Create structure guidelines based on content type
+        $contentStructure = match($contentType) {
+            'posts' => "Hãy viết một bài giới thiệu chi tiết (khoảng 800-1000 từ) về bài học này bao gồm các phần sau:
 
-        $outputSystemMessage = $baseMessages[$contentType] ?? $baseMessages['generic'];
+1. **Tổng quan về bài học**: Giới thiệu chủ đề và mục tiêu chính
+2. **Kiến thức và kỹ năng**: Những gì học sinh sẽ học được 
+3. **Phương pháp tiếp cận**: Cách thức bài học được tổ chức
+4. **Ứng dụng thực tế**: Cách áp dụng kiến thức vào thực tế
+5. **Kết nối với chương trình học**: Mối liên hệ với các bài học khác
+6. **Hướng dẫn học tập**: Gợi ý phương pháp học hiệu quả",
 
-        $prompt .= $outputSystemMessage . "\n\n WRITE EVERYTHING IN VIETNAMESE, IN EXACT OUTPUT LENGTH AS REQUESTED. DO NOT CUT THE LENGTH
-OR SHORTEN THE OUTPUT RESPONSE, OR DO ANYTHING OTHER THAN REQUESTED!!! REMEMBER TO DO EXACTLY WHATEVER I REQUEST, NO MATER WHAT'S YOUR LIMIT WHATSOEVER.\n\n";
+            'chapters' => "Hãy viết một bài giới thiệu tổng quan (khoảng 800-1000 từ) về chương sách này bao gồm các phần sau:
 
-        // Add HTML formatting instructions for posts when requested
-        if ($useHtmlMeta) {
-            $prompt .= "Remember to use basic HTML formatting:
-- Use <p> tags for paragraphs
-- Use <strong> for important terms or emphasis
-- Use <em> for light emphasis
-- Use <ul> and <li> for lists
-- Keep the HTML clean and simple
+1. **Giới thiệu chương**: Nội dung và mục tiêu chính
+2. **Các bài học chính**: Tổng quan về các bài học trong chương
+3. **Kỹ năng phát triển**: Những kỹ năng học sinh sẽ đạt được
+4. **Khó khăn thường gặp**: Những thách thức học sinh có thể gặp phải
+5. **Phương pháp tiếp cận**: Gợi ý cách tiếp cận học tập hiệu quả
+6. **Liên kết kiến thức**: Mối liên hệ với các chương khác",
 
-Do not include any other text, explanations, or formatting.";
-        }
+            'books' => "Hãy viết một bài giới thiệu chi tiết (khoảng 800-1000 từ) về cuốn sách này bao gồm các phần sau:
 
-        return $prompt;
+1. **Tổng quan sách**: Mục đích và đối tượng sử dụng
+2. **Cấu trúc nội dung**: Các phần và chương chính
+3. **Phương pháp giảng dạy**: Cách tiếp cận giáo dục của sách
+4. **Đặc điểm nổi bật**: Điểm mạnh và tính năng đặc biệt
+5. **Hỗ trợ học tập**: Các công cụ và tài nguyên đi kèm
+6. **Hướng dẫn sử dụng**: Cách sử dụng sách hiệu quả nhất",
+
+            'book_groups' => "Hãy viết một bài giới thiệu tổng quan (khoảng 800-1000 từ) về bộ sách này bao gồm các phần sau:
+
+1. **Giới thiệu bộ sách**: Mục đích và tầm nhìn giáo dục
+2. **Đối tượng học sinh**: Phù hợp với những học sinh nào
+3. **Cấu trúc chương trình**: Các sách và mối liên hệ giữa chúng
+4. **Phương pháp giáo dục**: Cách tiếp cận dạy và học
+5. **Lợi ích chính**: Giá trị mang lại cho học sinh và giáo viên
+6. **Cách sử dụng hiệu quả**: Hướng dẫn tận dụng tối đa bộ sách",
+
+            default => "Hãy viết một bài nội dung chi tiết (khoảng 800-1000 từ) với cấu trúc rõ ràng, bố cục mạch lạc và thông tin đầy đủ.",
+        };
+
+        // HTML formatting instructions when needed
+        $formattingInstructions = $useHtmlMeta ? 
+"ĐỊNH DẠNG HTML: Bài viết cần được định dạng bằng các thẻ HTML cơ bản để hiển thị trên website:
+
+1. Sử dụng thẻ `<h2>` cho các tiêu đề chính 
+2. Sử dụng thẻ `<h3>` cho các tiêu đề phụ
+3. Sử dụng thẻ `<p>` cho mỗi đoạn văn
+4. Sử dụng thẻ `<strong>` cho văn bản quan trọng cần nhấn mạnh
+5. Sử dụng thẻ `<em>` cho văn bản cần in nghiêng
+6. Sử dụng thẻ `<ul>` và `<li>` cho danh sách không có thứ tự
+7. Sử dụng thẻ `<ol>` và `<li>` cho danh sách có thứ tự
+
+Đảm bảo mỗi thẻ đều được đóng đúng cách. Không sử dụng các thẻ HTML phức tạp khác. Không thêm các thuộc tính CSS hoặc JavaScript." : 
+
+"ĐỊNH DẠNG VĂN BẢN: Hãy viết với cấu trúc rõ ràng, sử dụng tiêu đề, đoạn văn và danh sách để tạo bố cục mạch lạc.";
+
+        // Strict output format requirements to avoid JSON artifacts
+        $preciseOutputInstructions = "
+HƯỚNG DẪN QUAN TRỌNG VỀ KẾT QUẢ ĐẦU RA:
+
+1. KHÔNG thêm bất kỳ phần mở đầu thừa nào như 'Dưới đây là bài viết' hoặc 'Tôi sẽ viết'.
+2. KHÔNG thêm bất kỳ phần kết thúc thừa nào như 'Tôi hy vọng bài viết này hữu ích'.
+3. KHÔNG bao gồm bất kỳ dấu ngoặc JSON, ký hiệu đặc biệt, hay chuỗi như 'refusal:null' trong nội dung.
+4. BẮT ĐẦU và KẾT THÚC phản hồi của bạn chính xác với nội dung bài viết, không có văn bản thừa.
+5. Viết hoàn toàn bằng tiếng Việt với ngữ pháp và chính tả chuẩn mực.
+
+<START_CONTENT>
+
+[Đặt nội dung bài viết chính xác ở đây, không có văn bản thừa]
+
+<END_CONTENT>
+
+BẠN CHỈ ĐƯỢC TRẢ VỀ NỘI DUNG GIỮA CÁC THẺ START_CONTENT VÀ END_CONTENT, KHÔNG ĐƯỢC BAO GỒM CÁC THẺ NÀY!";
+
+        // Combine everything into the final prompt
+        $enhancedPrompt = $roleInstruction . "\n\n" . 
+                         $contentStructure . "\n\n" . 
+                         $formattingInstructions . "\n\n" . 
+                         $preciseOutputInstructions . "\n\n" . 
+                         $prompt;
+
+        return $enhancedPrompt;
     }
 
     /**
@@ -174,12 +245,117 @@ Do not include any other text, explanations, or formatting.";
     }
 
     /**
+     * Clean up response artifacts from AI model output
+     *
+     * @param string $content The raw content from the AI model
+     * @return string Cleaned content
+     */
+    private function cleanResponseArtifacts($content)
+    {
+        if (!is_string($content)) {
+            return $content;
+        }
+        
+        // Remove JSON artifacts like ","refusal":null}}
+        $content = preg_replace('/",\s*"refusal"\s*:\s*null\s*\}\s*\}.*$/s', '', $content);
+        $content = preg_replace('/"\s*,\s*".*?\}\s*\}.*$/s', '', $content);
+        
+        // Remove any trailing JSON that might be included
+        $content = preg_replace('/\}\s*\}.*$/s', '', $content);
+        
+        // Remove any other JSON-like artifacts
+        $content = preg_replace('/"?\s*\}\s*\]?\s*"?\s*$/s', '', $content);
+        
+        // Remove any opening JSON structure that might be included
+        $content = preg_replace('/^\s*\{\s*"[^"]+"\s*:\s*\{/s', '', $content);
+        
+        // Remove any escaped quotes at the beginning or end
+        $content = preg_replace('/^"(.*)"$/s', '$1', $content);
+        
+        // Replace escaped newlines with actual newlines
+        $content = str_replace('\\n', "\n", $content);
+        
+        // Unescape characters
+        $content = stripcslashes($content);
+        
+        return $content;
+    }
+
+    /**
+     * Ensure HTML is valid and properly formatted
+     *
+     * @param string $content The HTML content to validate
+     * @return string Valid HTML content
+     */
+    private function ensureValidHtml($content)
+    {
+        // If content doesn't have HTML tags, add basic paragraph tags
+        if (strpos($content, '<') === false) {
+            return '<p>' . str_replace("\n\n", '</p><p>', $content) . '</p>';
+        }
+        
+        // Check for common HTML issues
+        
+        // 1. Missing paragraph tags around text
+        if (!preg_match('/<p>/i', $content)) {
+            $parts = preg_split('/(<h[1-6].*?>.*?<\/h[1-6]>|<ul>.*?<\/ul>|<ol>.*?<\/ol>)/is', $content, -1, PREG_SPLIT_DELIM_CAPTURE);
+            $result = '';
+            
+            foreach ($parts as $part) {
+                if (preg_match('/^<h[1-6]|^<ul|^<ol/i', $part)) {
+                    // This is already a heading or list, keep as is
+                    $result .= $part;
+                } elseif (trim($part) != '') {
+                    // This is text that needs paragraph tags
+                    $paragraphs = preg_split('/\n\n+/', trim($part));
+                    foreach ($paragraphs as $paragraph) {
+                        if (trim($paragraph) != '') {
+                            $result .= '<p>' . trim($paragraph) . '</p>';
+                        }
+                    }
+                }
+            }
+            
+            $content = $result;
+        }
+        
+        // 2. Ensure all tags are properly closed
+        $openingTags = [
+            '<p>' => '</p>',
+            '<h2>' => '</h2>',
+            '<h3>' => '</h3>',
+            '<strong>' => '</strong>',
+            '<em>' => '</em>',
+            '<ul>' => '</ul>',
+            '<ol>' => '</ol>',
+            '<li>' => '</li>'
+        ];
+        
+        foreach ($openingTags as $openTag => $closeTag) {
+            $openCount = substr_count(strtolower($content), strtolower($openTag));
+            $closeCount = substr_count(strtolower($content), strtolower($closeTag));
+            
+            // Add missing closing tags if needed
+            if ($openCount > $closeCount) {
+                $content .= str_repeat($closeTag, $openCount - $closeCount);
+            }
+        }
+        
+        return $content;
+    }
+
+    /**
      * Process and format response based on content type
+     *
+     * @param mixed $response The response from OpenRouter
+     * @param string $contentType Type of content
+     * @param array $options Additional options
+     * @return string|array The formatted and processed content
      */
     private function processResponse($response, $contentType, $options = [])
     {
         try {
-            // Extract response content from OpenRouter response structure
+            // Extract content from different possible response formats
             $content = '';
 
             // Check if response is in the expected format
@@ -194,38 +370,32 @@ Do not include any other text, explanations, or formatting.";
                 }
             } else {
                 Log::warning('Choices not found in response', [
-                    'response_keys' => array_keys((array)$response)
+                    'response_keys' => is_object($response) ? array_keys((array)$response) : 'not_object'
                 ]);
+                
                 // Try to extract content from the first level if choices is missing
                 $content = $response->content ?? json_encode($response);
             }
 
+            // Clean up any JSON artifacts or unwanted parts
+            $content = $this->cleanResponseArtifacts($content);
+
             switch ($contentType) {
                 case 'posts':
-                    // For posts, extract meta title and description
-                    Log::debug('Processing posts response', ['content_preview' => substr($content, 0, 100)]);
-
-                    // Try to parse JSON if it's a JSON response
-                    if ($this->isJson($content)) {
-                        $jsonContent = json_decode($content, true);
-                        return [
-                            'meta_title' => $jsonContent['Meta Title'] ?? $jsonContent['meta_title'] ?? $this->extractMetaTitle($content),
-                            'meta_description' => $jsonContent['Meta Description'] ?? $jsonContent['meta_description'] ?? $this->extractMetaDescription($content, $options['use_html_meta'] ?? false)
-                        ];
+                    // For articles, we should already have the full HTML content
+                    if ($options['use_html_meta'] ?? false) {
+                        // Ensure the HTML is properly formatted
+                        $content = $this->ensureValidHtml($content);
                     }
-
-                    // Otherwise use regex extraction
-                    return [
-                        'meta_title' => $this->extractMetaTitle($content),
-                        'meta_description' => $this->extractMetaDescription($content, $options['use_html_meta'] ?? false)
-                    ];
+                    
+                    return $content;
 
                 case 'chapters':
                 case 'books':
                 case 'book_groups':
-                    // For these types, the entire response is the description
-                    Log::debug('Processing description response', ['content_preview' => substr($content, 0, 100)]);
-                    return $this->cleanupDescription($content);
+                    // For these types, clean any remaining artifacts
+                    $content = $this->cleanupDescription($content);
+                    return $content;
 
                 default:
                     return $content;
@@ -237,96 +407,6 @@ Do not include any other text, explanations, or formatting.";
             ]);
             return $content ?? 'Error processing response';
         }
-    }
-
-    /**
-     * Check if a string is valid JSON
-     */
-    private function isJson($string) {
-        json_decode($string);
-        return json_last_error() === JSON_ERROR_NONE;
-    }
-
-    /**
-     * Extract meta title from response
-     */
-    private function extractMetaTitle($content)
-    {
-        // First try to extract using markdown or specific formatting
-        if (preg_match('/(?:meta title|tiêu đề meta):?\s*([^\n]+)/i', $content, $matches)) {
-            return trim($matches[1]);
-        }
-
-        if (preg_match('/(?:title|tiêu đề):?\s*([^\n]+)/i', $content, $matches)) {
-            return trim($matches[1]);
-        }
-
-        // Try to extract from structured patterns
-        if (preg_match('/1\.\s*([^\n]+)/i', $content, $matches)) {
-            return trim($matches[1]);
-        }
-
-        // Fallback: take first line or first 60 chars
-        $lines = preg_split('/\r\n|\r|\n/', $content);
-        $firstLine = trim($lines[0] ?? '');
-
-        if (strlen($firstLine) > 0 && strlen($firstLine) <= 70) {
-            return $firstLine;
-        }
-
-        return substr($content, 0, 60);
-    }
-
-    /**
-     * Extract meta description from response
-     */
-    private function extractMetaDescription($content, $useHtmlMeta = false)
-    {
-        // First try to extract using markdown or specific formatting
-        if (preg_match('/(?:meta description|mô tả meta):?\s*([^\n]+(?:\n[^#\n][^\n]*)*)/i', $content, $matches)) {
-            $description = trim($matches[1]);
-        } elseif (preg_match('/(?:description|mô tả):?\s*([^\n]+(?:\n[^#\n][^\n]*)*)/i', $content, $matches)) {
-            $description = trim($matches[1]);
-        } elseif (preg_match('/2\.\s*([^\n]+(?:\n[^#\n][^\n]*)*)/i', $content, $matches)) {
-            // Try to extract from structured patterns
-            $description = trim($matches[1]);
-        } else {
-            // Fallback: take second paragraph or portion of content
-            $paragraphs = preg_split('/\r\n\r\n|\r\r|\n\n/', $content);
-
-            if (isset($paragraphs[1])) {
-                $description = trim($paragraphs[1]);
-            } else {
-                // Last resort: just take a portion of the content
-                $description = $content;
-            }
-        }
-
-        // If HTML formatting is requested, format the description with HTML tags
-        if ($useHtmlMeta) {
-            // Convert plain text to HTML with paragraphs
-            $paragraphs = preg_split('/\r\n\r\n|\r\r|\n\n/', $description);
-            $htmlParagraphs = array_map(function($para) {
-                $para = trim($para);
-                if (!empty($para)) {
-                    return "<p>$para</p>";
-                }
-                return '';
-            }, $paragraphs);
-
-            $description = implode('', $htmlParagraphs);
-
-            // Convert simple markdown-like formatting to HTML
-            $description = preg_replace('/\*\*(.*?)\*\*/s', '<strong>$1</strong>', $description); // Bold
-            $description = preg_replace('/\*(.*?)\*/s', '<em>$1</em>', $description); // Italic
-            $description = preg_replace('/_(.*?)_/s', '<em>$1</em>', $description); // Italic
-
-            // Convert bullet points
-            $description = preg_replace('/^- (.*?)$/m', '<li>$1</li>', $description);
-            $description = preg_replace('/(<li>.*?<\/li>)+/s', '<ul>$0</ul>', $description);
-        }
-
-        return $description;
     }
 
     /**
