@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use Illuminate\Support\Facades\Log;
+
 class OpenRouterResponseFormatter
 {
     /**
@@ -24,6 +26,13 @@ class OpenRouterResponseFormatter
         if (is_array($response) && isset($response['message']['content'])) {
             // Standard JSON array format
             $content = $response['message']['content'];
+        } elseif (is_array($response) && isset($response['choices']) && !empty($response['choices'])) {
+            // OpenAI-like format as array
+            if (isset($response['choices'][0]['message']['content'])) {
+                $content = $response['choices'][0]['message']['content'];
+            } elseif (isset($response['choices'][0]['text'])) {
+                $content = $response['choices'][0]['text'];
+            }
         } elseif (is_object($response)) {
             if (isset($response->message) && isset($response->message->content)) {
                 // Object format with nested message
@@ -31,6 +40,9 @@ class OpenRouterResponseFormatter
             } elseif (isset($response->choices) && !empty($response->choices)) {
                 // OpenAI-like format
                 if (isset($response->choices[0]->message->content)) {
+                    $content = $response->choices[0]->message->content;
+                } elseif (isset($response->choices[0]->message) && isset($response->choices[0]->message->content)) {
+                    // Alternative nesting structure
                     $content = $response->choices[0]->message->content;
                 } elseif (isset($response->choices[0]->text)) {
                     $content = $response->choices[0]->text;
@@ -44,8 +56,27 @@ class OpenRouterResponseFormatter
             $content = $response;
         }
 
-        // If no content was found, return empty string or error message
+        // If no content was found yet, try to convert the whole response to string and extract content
+        if (empty($content) && (is_object($response) || is_array($response))) {
+            // Convert to JSON string for deeper inspection
+            $jsonStr = json_encode($response);
+            
+            // Try to extract content using regex patterns that might match the response
+            if (preg_match('/"content"\s*:\s*"((?:\\\\"|[^"])*)"/', $jsonStr, $matches)) {
+                $content = str_replace('\\"', '"', $matches[1]);
+                Log::debug("Content extracted using regex pattern", ['content_preview' => substr($content, 0, 50)]);
+            } elseif (preg_match('/"text"\s*:\s*"((?:\\\\"|[^"])*)"/', $jsonStr, $matches)) {
+                $content = str_replace('\\"', '"', $matches[1]);
+            }
+        }
+
+        // If still no content was found, log detailed info and return error message
         if (empty($content)) {
+            $debugInfo = is_string($response) ? $response : json_encode($response);
+            Log::warning('Unable to extract content from response', [
+                'response_type' => gettype($response),
+                'response_preview' => substr($debugInfo, 0, 200) . '...'
+            ]);
             return "No content found in response.";
         }
 
