@@ -234,6 +234,13 @@ BẠN CHỈ ĐƯỢC TRẢ VỀ NỘI DUNG GIỮA CÁC THẺ START_CONTENT VÀ E
             
             // Google models
             'google/gemini-2.0-flash-thinking-exp:free' => 'google/gemini-2.0-flash-thinking-exp:free',
+            'google/gemma-3-1b-it:free' => 'google/gemma-3-1b-it:free',
+            'google/gemma-3-27b-it:free' => 'google/gemma-3-27b-it:free',
+
+            // Other models
+            'qwen/qwq-32b:free' => 'qwen/qwq-32b:free',
+            'meta-llama/llama-3.2-1b-instruct:free' => 'meta-llama/llama-3.2-1b-instruct:free',
+            'mistralai/mistral-small-3.1-24b-instruct:free' => 'mistralai/mistral-small-3.1-24b-instruct:free',
         ];
 
         // If the model is already in the correct format (contains a slash), use it directly
