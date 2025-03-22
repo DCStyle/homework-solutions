@@ -160,6 +160,9 @@ Do not include any other text, explanations, or formatting.";
             // Grok models - vision
             'grok-2-vision' => 'x-ai/grok-2-vision-1212',
             'grok-2-vision-latest' => 'x-ai/grok-2-vision-1212',
+            
+            // Google models
+            'google/gemini-2.0-flash-thinking-exp:free' => 'google/gemini-2.0-flash-thinking-exp:free',
         ];
 
         // If the model is already in the correct format (contains a slash), use it directly

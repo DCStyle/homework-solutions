@@ -253,6 +253,9 @@
                                 <optgroup label="Mô Hình DeepSeek">
                                     <option value="deepseek-v3">DeepSeek Chat</option>
                                 </optgroup>
+                                <optgroup label="Google Models">
+                                    <option value="google/gemini-2.0-flash-thinking-exp:free">Gemini 2.0 Flash Free</option>
+                                </optgroup>
                             </select>
                         </div>
                     </div>
@@ -386,6 +389,9 @@
                                 </optgroup>
                                 <optgroup label="Mô Hình DeepSeek">
                                     <option value="deepseek-v3">DeepSeek Chat</option>
+                                </optgroup>
+                                <optgroup label="Google Models">
+                                    <option value="google/gemini-2.0-flash-thinking-exp:free">Gemini 2.0 Flash Free</option>
                                 </optgroup>
                             </select>
                         </div>

@@ -247,6 +247,9 @@
                                                 <option value="deepseek-v3">DeepSeek Chat</option>
                                                 <option value="deepseek-r1">DeepSeek R1</option>
                                             </optgroup>
+                                            <optgroup label="Google Models">
+                                                <option value="google/gemini-2.0-flash-thinking-exp:free">Gemini 2.0 Flash Free</option>
+                                            </optgroup>
                                         </select>
                                         <span class="absolute top-1/2 right-4 z-10 -translate-y-1/2">
                                             <span class="iconify" data-icon="mdi-chevron-down"></span>
