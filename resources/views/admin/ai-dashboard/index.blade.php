@@ -426,5 +426,5 @@
 @endpush
 
 @push('scripts')
-    <script defer src="{{ asset('resources/js/admin/ai-dashboard/index_main.js') }}"></script>
+    @vite('resources/js/admin/ai-dashboard/index_main.js')
 @endpush
