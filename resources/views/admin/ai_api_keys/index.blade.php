@@ -214,7 +214,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="createApiKeyModalLabel">
+                <h5 class="modal-title inline-flex items-center" id="createApiKeyModalLabel">
                     <span class="iconify mr-2" data-icon="mdi-key-plus"></span>
                     Thêm Khóa API Mới
                 </h5>
@@ -232,15 +232,15 @@
                             @endforeach
                         </select>
                         <div class="provider-help mt-2 text-sm text-gray-500">
-                            <div id="help-google-gemini" class="hidden">
+                            <div id="help-google-gemini flex items-center" class="hidden">
                                 <span class="iconify mr-1" data-icon="mdi-information-outline"></span>
                                 <strong>Google Gemini:</strong> Bạn có thể lấy khóa API từ <a href="https://ai.google.dev/" target="_blank" class="text-blue-600 hover:underline">Google AI Studio</a>.
                             </div>
-                            <div id="help-xai-grok" class="hidden">
+                            <div id="help-xai-grok flex items-center" class="hidden">
                                 <span class="iconify mr-1" data-icon="mdi-information-outline"></span>
                                 <strong>xAI Grok:</strong> Hiện đang trong giai đoạn beta giới hạn. Truy cập <a href="https://x.ai/" target="_blank" class="text-green-600 hover:underline">x.ai</a> để được cấp quyền truy cập.
                             </div>
-                            <div id="help-openrouter" class="hidden">
+                            <div id="help-openrouter flex items-center" class="hidden">
                                 <span class="iconify mr-1" data-icon="mdi-information-outline"></span>
                                 <strong>OpenRouter:</strong> Đăng ký tại <a href="https://openrouter.ai/" target="_blank" class="text-purple-600 hover:underline">OpenRouter.ai</a> để lấy khóa API.
                             </div>
@@ -291,8 +291,8 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editApiKeyModalLabel">
-                    <span class="iconify mr-2" data-icon="mdi-key-edit"></span>
+                <h5 class="modal-title inline-flex items-center" id="editApiKeyModalLabel">
+                    <span class="iconify mr-2" data-icon="mdi-key-change"></span>
                     Chỉnh Sửa Khóa API
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -310,15 +310,15 @@
                             @endforeach
                         </select>
                         <div class="provider-help mt-2 text-sm text-gray-500">
-                            <div id="edit-help-google-gemini" class="hidden">
+                            <div id="edit-help-google-gemini flex items-center" class="hidden">
                                 <span class="iconify mr-1" data-icon="mdi-information-outline"></span>
                                 <strong>Google Gemini:</strong> Bạn có thể lấy khóa API từ <a href="https://ai.google.dev/" target="_blank" class="text-blue-600 hover:underline">Google AI Studio</a>.
                             </div>
-                            <div id="edit-help-xai-grok" class="hidden">
+                            <div id="edit-help-xai-grok flex items-center" class="hidden">
                                 <span class="iconify mr-1" data-icon="mdi-information-outline"></span>
                                 <strong>xAI Grok:</strong> Hiện đang trong giai đoạn beta giới hạn. Truy cập <a href="https://x.ai/" target="_blank" class="text-green-600 hover:underline">x.ai</a> để được cấp quyền truy cập.
                             </div>
-                            <div id="edit-help-openrouter" class="hidden">
+                            <div id="edit-help-openrouter flex items-center" class="hidden">
                                 <span class="iconify mr-1" data-icon="mdi-information-outline"></span>
                                 <strong>OpenRouter:</strong> Đăng ký tại <a href="https://openrouter.ai/" target="_blank" class="text-purple-600 hover:underline">OpenRouter.ai</a> để lấy khóa API.
                             </div>
@@ -369,7 +369,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="testConnectionModalLabel">
+                <h5 class="modal-title inline-flex items-center" id="testConnectionModalLabel">
                     <span class="iconify mr-2" data-icon="mdi-connection"></span>
                     Kiểm Tra Kết Nối Khóa API
                 </h5>
@@ -384,7 +384,7 @@
                 </div>
                 
                 <div id="test-success" class="hidden">
-                    <div class="text-center mb-4">
+                    <div class="text-center mb-4 flex items-center">
                         <span class="iconify text-green-500 text-4xl" data-icon="mdi-check-circle"></span>
                         <h4 class="text-lg font-medium text-gray-800 mt-2">Kết Nối Thành Công!</h4>
                     </div>
@@ -399,7 +399,7 @@
                 </div>
                 
                 <div id="test-error" class="hidden">
-                    <div class="text-center mb-4">
+                    <div class="text-center mb-4 flex items-center">
                         <span class="iconify text-red-500 text-4xl" data-icon="mdi-alert-circle"></span>
                         <h4 class="text-lg font-medium text-gray-800 mt-2">Kết Nối Thất Bại</h4>
                     </div>
@@ -425,148 +425,6 @@
 
 @endsection
 
-@section('scripts')
-<script>
-$(document).ready(function() {
-    // Toggle API key visibility
-    $('.toggle-key-visibility').on('click', function() {
-        const maskedSpan = $(this).siblings('.api-key-masked');
-        const fullSpan = $(this).siblings('.api-key-full');
-        const icon = $(this).find('span.iconify');
-        
-        if (maskedSpan.hasClass('hidden')) {
-            maskedSpan.removeClass('hidden');
-            fullSpan.addClass('hidden');
-            icon.attr('data-icon', 'mdi-eye');
-        } else {
-            maskedSpan.addClass('hidden');
-            fullSpan.removeClass('hidden');
-            icon.attr('data-icon', 'mdi-eye-off');
-        }
-    });
-    
-    // Copy API key to clipboard
-    $('.copy-key').on('click', function() {
-        const key = $(this).data('key');
-        navigator.clipboard.writeText(key).then(function() {
-            // Show a temporary tooltip or notification
-            alert('API key copied to clipboard!');
-        });
-    });
-    
-    // Show provider-specific help text in create modal
-    $('#provider').on('change', function() {
-        // Hide all help divs first
-        $('.provider-help > div').addClass('hidden');
-        
-        // Show the selected provider's help
-        const provider = $(this).val();
-        if (provider) {
-            $(`#help-${provider}`).removeClass('hidden');
-        }
-    });
-    
-    // Show provider-specific help text in edit modal
-    $('#edit_provider').on('change', function() {
-        // Hide all help divs first
-        $('.provider-help > div').addClass('hidden');
-        
-        // Show the selected provider's help
-        const provider = $(this).val();
-        if (provider) {
-            $(`#edit-help-${provider}`).removeClass('hidden');
-        }
-    });
-    
-    // Delete confirmation
-    $('.delete-key-form').on('submit', function(e) {
-        if (!confirm('Are you sure you want to delete this API key? This action cannot be undone.')) {
-            e.preventDefault();
-        }
-    });
-    
-    // Open edit modal with data
-    $('.edit-api-key').on('click', function() {
-        const id = $(this).data('id');
-        const provider = $(this).data('provider');
-        const email = $(this).data('email');
-        const key = $(this).data('key');
-        const isActive = $(this).data('active') == 1;
-        
-        // Set form action URL
-        $('#editApiKeyForm').attr('action', `/admin/ai-api-keys/${id}`);
-        
-        // Populate form fields
-        $('#edit_provider').val(provider).trigger('change');
-        $('#edit_email').val(email);
-        $('#edit_api_key').val(key);
-        $('#edit_is_active').prop('checked', isActive);
-        
-        // Show the modal
-        const editModal = new bootstrap.Modal(document.getElementById('editApiKeyModal'));
-        editModal.show();
-    });
-
-    // Test API key connection
-    $('.text-amber-500').on('click', function(e) {
-        e.preventDefault();
-        
-        // Get the API key ID from the URL
-        const href = $(this).attr('href');
-        const id = href.split('/').pop();
-        
-        // Show the modal with loading indicator
-        $('#test-loading').removeClass('hidden').show();
-        $('#test-success, #test-error').addClass('hidden');
-        
-        const testModal = new bootstrap.Modal(document.getElementById('testConnectionModal'));
-        testModal.show();
-        
-        // Make AJAX request to test the connection
-        $.ajax({
-            url: href,
-            type: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                // Hide loading indicator
-                $('#test-loading').hide();
-                
-                // Show success message
-                $('#test-success').removeClass('hidden');
-                
-                // Format and display the response
-                let formattedResponse = '';
-                if (typeof response.result === 'object') {
-                    formattedResponse = JSON.stringify(response.result, null, 2);
-                } else {
-                    formattedResponse = response.result || "Request successful";
-                }
-                
-                $('#test-response').text(formattedResponse);
-            },
-            error: function(xhr) {
-                // Hide loading indicator
-                $('#test-loading').hide();
-                
-                // Show error message
-                $('#test-error').removeClass('hidden');
-                
-                // Display error details
-                let errorMessage = 'Unknown error';
-                
-                try {
-                    const response = JSON.parse(xhr.responseText);
-                    errorMessage = response.message || response.error || xhr.statusText;
-                } catch (e) {
-                    errorMessage = xhr.statusText || 'Connection failed';
-                }
-                
-                $('#test-error-message').text(errorMessage);
-            }
-        });
-    });
-});
-</script>
-@endsection
+@push('scripts')
+    @vite('resources/js/admin/ai-api-keys/index_main.js')
+@endpush

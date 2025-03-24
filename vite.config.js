@@ -24,7 +24,10 @@ export default defineConfig({
                 'resources/js/admin/ai-dashboard/stats_main.js',
                 'resources/js/admin/ai-dashboard/jobs_main.js',
                 'resources/js/admin/ai-dashboard/vision_analysis_main.js',
-                'resources/js/admin/ai-dashboard/vision_results_main.js'
+                'resources/js/admin/ai-dashboard/vision_results_main.js',
+
+                // JS - admin - AI API keys
+                'resources/js/admin/ai-api-keys/index_main.js'
             ],
             refresh: true,
         }),
