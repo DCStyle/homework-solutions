@@ -60,35 +60,39 @@ class AIDashboardController extends Controller
      */
     private function getMissingSEODataAndProgress()
     {
-        // Get Posts stats with a single query
+        // Get Posts stats with a single query - UPDATED for length requirements
         $postsStats = DB::select("
-            SELECT
+        SELECT
                 COUNT(*) as total,
-                SUM(CASE WHEN meta_title IS NULL OR meta_title = '' OR meta_description IS NULL OR meta_description = '' THEN 1 ELSE 0 END) as missing
+                SUM(CASE WHEN
+                    meta_title IS NULL OR meta_title = '' OR
+                    meta_description IS NULL OR meta_description = '' OR
+                    LENGTH(meta_title) < 60 OR LENGTH(meta_description) < 350
+                    THEN 1 ELSE 0 END) as missing
             FROM posts
         ")[0];
 
-        // Get Chapters stats with a single query
-        $chaptersStats = DB::select("
+            // Get Chapters stats with a single query - UPDATED for length requirements
+            $chaptersStats = DB::select("
             SELECT
                 COUNT(*) as total,
-                SUM(CASE WHEN description IS NULL OR description = '' THEN 1 ELSE 0 END) as missing
+                SUM(CASE WHEN description IS NULL OR description = '' OR LENGTH(description) < 350 THEN 1 ELSE 0 END) as missing
             FROM book_chapters
         ")[0];
 
-        // Get Books stats with a single query
-        $booksStats = DB::select("
+            // Get Books stats with a single query - UPDATED for length requirements
+            $booksStats = DB::select("
             SELECT
                 COUNT(*) as total,
-                SUM(CASE WHEN description IS NULL OR description = '' THEN 1 ELSE 0 END) as missing
+                SUM(CASE WHEN description IS NULL OR description = '' OR LENGTH(description) < 350 THEN 1 ELSE 0 END) as missing
             FROM books
         ")[0];
 
-        // Get Book Groups stats with a single query
-        $groupsStats = DB::select("
+            // Get Book Groups stats with a single query - UPDATED for length requirements
+            $groupsStats = DB::select("
             SELECT
                 COUNT(*) as total,
-                SUM(CASE WHEN description IS NULL OR description = '' THEN 1 ELSE 0 END) as missing
+                SUM(CASE WHEN description IS NULL OR description = '' OR LENGTH(description) < 350 THEN 1 ELSE 0 END) as missing
             FROM book_groups
         ")[0];
 
@@ -505,7 +509,10 @@ class AIDashboardController extends Controller
     }
 
     /**
-     * Apply a prompt to multiple content items
+     * Apply a prompt to multiple content items or apply pre-generated content
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function applyPrompt(Request $request)
     {
@@ -513,17 +520,41 @@ class AIDashboardController extends Controller
             $contentType = $request->input('content_type');
             $filterType = $request->input('filter_type');
             $filterId = $request->input('filter_id');
-            $provider = $request->input('provider', 'openrouter');
-            $model = $request->input('model');
-            $promptText = $request->input('prompt');
-            $promptId = $request->input('prompt_id');
             $useHtmlMeta = (bool)$request->input('use_html_meta', false);
 
-            // Use prompt from database if ID provided
-            if ($promptId) {
-                $promptObj = Prompt::find($promptId);
-                if ($promptObj) {
-                    $promptText = $promptObj->prompt_text;
+            // Check if we're using pre-generated content
+            $useGeneratedContent = (bool)$request->input('use_generated_content', false);
+            $generatedContent = null;
+
+            if ($useGeneratedContent) {
+                // Get the pre-generated content directly from the request
+                $generatedContentInput = $request->input('generated_content');
+
+                // Handle JSON string (for object data like meta title/description)
+                if (is_string($generatedContentInput) && $this->isJson($generatedContentInput)) {
+                    $generatedContent = json_decode($generatedContentInput, true);
+                } else {
+                    $generatedContent = $generatedContentInput;
+                }
+
+                // Log that we're using pre-generated content
+                Log::info('Using pre-generated content', [
+                    'content_type' => $contentType,
+                    'content_preview' => is_string($generatedContent) ? substr($generatedContent, 0, 100) . '...' : 'object'
+                ]);
+            } else {
+                // Using standard prompt-based generation
+                $provider = $request->input('provider', 'openrouter');
+                $model = $request->input('model');
+                $promptText = $request->input('prompt');
+                $promptId = $request->input('prompt_id');
+
+                // Use prompt from database if ID provided
+                if ($promptId) {
+                    $promptObj = Prompt::find($promptId);
+                    if ($promptObj) {
+                        $promptText = $promptObj->prompt_text;
+                    }
                 }
             }
 
@@ -544,41 +575,51 @@ class AIDashboardController extends Controller
             // Process each item
             foreach ($items as $item) {
                 try {
-                    $prompt = $this->preparePrompt($promptText, $item, $contentType);
+                    $result = null;
 
-                    // Prepare options based on model
-                    $options = [
-                        'content_type' => $contentType,
-                        'max_tokens' => (int)$request->input('max_tokens', 4000),
-                        'temperature' => (float)$request->input('temperature', 0.7),
-                        'provider' => $provider,
-                    ];
+                    if ($useGeneratedContent) {
+                        // Use the pre-generated content directly
+                        $result = $generatedContent;
+                    } else {
+                        // Generate new content with AI
+                        $prompt = $this->preparePrompt($promptText, $item, $contentType);
 
-                    // Add system message for DeepSeek
-                    if (strpos($model, 'deepseek') === 0) {
-                        $systemMessage = $request->input('system_message');
-                        if (empty($systemMessage)) {
-                            $systemMessage = $this->getSystemMessage($contentType);
+                        // Prepare options based on model
+                        $options = [
+                            'content_type' => $contentType,
+                            'max_tokens' => (int)$request->input('max_tokens', 4000),
+                            'temperature' => (float)$request->input('temperature', 0.7),
+                            'provider' => $provider,
+                        ];
+
+                        // Add system message for DeepSeek
+                        if (strpos($model, 'deepseek') === 0) {
+                            $systemMessage = $request->input('system_message');
+                            if (empty($systemMessage)) {
+                                $systemMessage = $this->getSystemMessage($contentType);
+                            }
+
+                            $options['system_message'] = $systemMessage;
+                            $options['model_variant'] = $request->input('deepseek_model', 'deepseek-chat');
                         }
 
-                        $options['system_message'] = $systemMessage;
-                        $options['model_variant'] = $request->input('deepseek_model', 'deepseek-chat');
+                        $result = $this->aiService->generate($model, $prompt, $options, $useHtmlMeta);
                     }
 
-                    $result = $this->aiService->generate($model, $prompt, $options, $useHtmlMeta);
-
-                    // Format the result with our helper
-                    if ($contentType === 'posts' && is_array($result)) {
-                        // For posts with meta title and description
-                        if (isset($result['meta_title'])) {
-                            $result['meta_title'] = \App\Helpers\OpenRouterResponseFormatter::formatResponse($result['meta_title'], false);
+                    // Format the result with our helper if not pre-generated
+                    if (!$useGeneratedContent) {
+                        if ($contentType === 'posts' && is_array($result)) {
+                            // For posts with meta title and description
+                            if (isset($result['meta_title'])) {
+                                $result['meta_title'] = \App\Helpers\OpenRouterResponseFormatter::formatResponse($result['meta_title'], false);
+                            }
+                            if (isset($result['meta_description'])) {
+                                $result['meta_description'] = \App\Helpers\OpenRouterResponseFormatter::formatResponse($result['meta_description'], true);
+                            }
+                        } else {
+                            // For other content types
+                            $result = \App\Helpers\OpenRouterResponseFormatter::formatResponse($result, true);
                         }
-                        if (isset($result['meta_description'])) {
-                            $result['meta_description'] = \App\Helpers\OpenRouterResponseFormatter::formatResponse($result['meta_description'], true);
-                        }
-                    } else {
-                        // For other content types
-                        $result = \App\Helpers\OpenRouterResponseFormatter::formatResponse($result, true);
                     }
 
                     if ($result && $this->updateContentSEO($item, $contentType, $result)) {
@@ -622,6 +663,21 @@ class AIDashboardController extends Controller
                 'error' => 'Error processing request: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Check if a string is valid JSON
+     *
+     * @param string $string The string to check
+     * @return bool Whether the string is valid JSON
+     */
+    private function isJson($string) {
+        if (!is_string($string)) {
+            return false;
+        }
+
+        json_decode($string);
+        return json_last_error() === JSON_ERROR_NONE;
     }
 
     /**
@@ -754,21 +810,26 @@ class AIDashboardController extends Controller
                     ->whereNotNull('meta_description')
                     ->where('meta_title', '!=', '')
                     ->where('meta_description', '!=', '')
+                    ->whereRaw('LENGTH(meta_title) >= 60')
+                    ->whereRaw('LENGTH(meta_description) >= 350')
                     ->with(['chapter.book.group.category']);
 
             case 'chapters':
                 return BookChapter::whereNotNull('description')
                     ->where('description', '!=', '')
+                    ->whereRaw('LENGTH(description) >= 350')
                     ->with(['book.group.category']);
 
             case 'books':
                 return Book::whereNotNull('description')
                     ->where('description', '!=', '')
+                    ->whereRaw('LENGTH(description) >= 350')
                     ->with(['group.category']);
 
             case 'book_groups':
                 return BookGroup::whereNotNull('description')
                     ->where('description', '!=', '')
+                    ->whereRaw('LENGTH(description) >= 350')
                     ->with(['category']);
 
             default:
@@ -895,23 +956,62 @@ class AIDashboardController extends Controller
     }
 
     /**
-     * Update content SEO data
+     * Update content SEO data with the formatted result
+     *
+     * @param object $content The content object to update
+     * @param string $contentType The type of content (posts, chapters, books, book_groups)
+     * @param mixed $result The content result to update with
+     * @return bool Whether the update was successful
      */
     private function updateContentSEO($content, $contentType, $result)
     {
         try {
             switch ($contentType) {
                 case 'posts':
-                    // Use a more efficient direct update to reduce memory usage
-                    DB::table('posts')->where('id', $content->id)->update([
-                        'meta_title' => $result['meta_title'] ?? null,
-                        'meta_description' => $result['meta_description'] ?? null
-                    ]);
+                    // For posts, check if we have an array with meta title and description
+                    if (is_array($result)) {
+                        // Use a more efficient direct update to reduce memory usage
+                        $updateData = [];
+
+                        if (isset($result['meta_title'])) {
+                            $updateData['meta_title'] = $result['meta_title'];
+                        }
+
+                        if (isset($result['meta_description'])) {
+                            $updateData['meta_description'] = $result['meta_description'];
+                        }
+
+                        if (!empty($updateData)) {
+                            Log::error('Error updating content SEO', [
+                                'content_type' => $contentType,
+                                'content_id' => $content->id,
+                                'error' => 'Content not found',
+                            ]);
+                            return false;
+                        }
+
+                        // Only update fields that are not null
+                        $updateData = array_filter($updateData, function($value) {
+                            return $value !== null;
+                        });
+
+                        if (!empty($updateData)) {
+                            \Illuminate\Support\Facades\DB::table('posts')
+                                ->where('id', $content->id)
+                                ->update($updateData);
+                        }
+                    } else {
+                        // If it's a string, just update the meta_description
+                        \Illuminate\Support\Facades\DB::table('posts')
+                            ->where('id', $content->id)
+                            ->update(['meta_description' => $result]);
+                    }
                     break;
 
                 case 'chapters':
                 case 'books':
                 case 'book_groups':
+                    // For other content types, update the description field
                     $content->description = $result;
                     $content->save();
                     break;
@@ -922,7 +1022,8 @@ class AIDashboardController extends Controller
             Log::error('Error updating content SEO', [
                 'content_type' => $contentType,
                 'content_id' => $content->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             return false;
         }
@@ -939,25 +1040,30 @@ class AIDashboardController extends Controller
                     $q->whereNull('meta_title')
                         ->orWhereNull('meta_description')
                         ->orWhere('meta_title', '')
-                        ->orWhere('meta_description', '');
+                        ->orWhere('meta_description', '')
+                        ->orWhereRaw('LENGTH(meta_title) < 60')
+                        ->orWhereRaw('LENGTH(meta_description) < 350');
                 })->with(['chapter.book.group.category']);
 
             case 'chapters':
                 return BookChapter::where(function ($q) {
                     $q->whereNull('description')
-                        ->orWhere('description', '');
+                        ->orWhere('description', '')
+                        ->orWhereRaw('LENGTH(description) < 350');
                 })->with(['book.group.category']);
 
             case 'books':
                 return Book::where(function ($q) {
                     $q->whereNull('description')
-                        ->orWhere('description', '');
+                        ->orWhere('description', '')
+                        ->orWhereRaw('LENGTH(description) < 350');
                 })->with(['group.category']);
 
             case 'book_groups':
                 return BookGroup::where(function ($q) {
                     $q->whereNull('description')
-                        ->orWhere('description', '');
+                        ->orWhere('description', '')
+                        ->orWhereRaw('LENGTH(description) < 350');
                 })->with(['category']);
 
             default:
@@ -1226,7 +1332,7 @@ class AIDashboardController extends Controller
             $promptText = $request->input('prompt');
             $promptId = $request->input('prompt_id');
             $useHtmlMeta = (bool)$request->input('use_html_meta', false);
-            
+
             // Use prompt from database if ID provided
             if ($promptId) {
                 $promptObj = Prompt::find($promptId);
@@ -1234,20 +1340,20 @@ class AIDashboardController extends Controller
                     $promptText = $promptObj->prompt_text;
                 }
             }
-            
+
             // Get content items based on filter
             $items = $this->getContentByFilter($contentType, $filterType, $filterId);
-            
+
             if (count($items) === 0) {
                 return response()->json([
                     'success' => false,
                     'error' => 'No content items found matching the filter criteria'
                 ], 404);
             }
-            
+
             // Extract item IDs
             $itemIds = $items->pluck('id')->toArray();
-            
+
             // Prepare settings array
             $settings = [
                 'provider' => $provider,
@@ -1257,18 +1363,18 @@ class AIDashboardController extends Controller
                 'temperature' => (float)$request->input('temperature', 0.7),
                 'use_html_meta' => $useHtmlMeta,
             ];
-            
+
             // Add model-specific parameters
             if (str_starts_with($model, 'deepseek')) {
                 $systemMessage = $request->input('system_message');
                 if (empty($systemMessage)) {
                     $systemMessage = $this->getSystemMessage($contentType);
                 }
-                
+
                 $settings['system_message'] = $systemMessage;
                 $settings['model_variant'] = $request->input('deepseek_model', 'deepseek-chat');
             }
-            
+
             // Create a new job record
             $job = new \App\Models\AIContentJob([
                 'batch_id' => uniqid('batch_', true),
@@ -1279,12 +1385,12 @@ class AIDashboardController extends Controller
                 'settings' => $settings,
                 'item_ids' => $itemIds,
             ]);
-            
+
             $job->save();
-            
+
             // Dispatch background job
             \App\Jobs\ProcessAIContentBatch::dispatch($job->id);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Bulk generation job has been queued',
@@ -1297,7 +1403,7 @@ class AIDashboardController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => 'Error processing request: ' . $e->getMessage()
@@ -1312,7 +1418,7 @@ class AIDashboardController extends Controller
     {
         try {
             $job = \App\Models\AIContentJob::findOrFail($jobId);
-            
+
             // Get detailed information about each content item
             $contentDetails = [];
             if (!empty($job->item_ids)) {
@@ -1323,7 +1429,7 @@ class AIDashboardController extends Controller
                     }
                 }
             }
-            
+
             return response()->json([
                 'success' => true,
                 'id' => $job->id,
@@ -1347,7 +1453,7 @@ class AIDashboardController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => 'Error checking job status: ' . $e->getMessage()
@@ -1362,7 +1468,7 @@ class AIDashboardController extends Controller
     {
         try {
             $baseUrl = url('/');
-            
+
             switch ($contentType) {
                 case 'posts':
                     $item = \App\Models\Post::find($itemId);
@@ -1378,7 +1484,7 @@ class AIDashboardController extends Controller
                         ];
                     }
                     break;
-                    
+
                 case 'chapters':
                     $item = \App\Models\BookChapter::find($itemId);
                     if ($item) {
@@ -1392,7 +1498,7 @@ class AIDashboardController extends Controller
                         ];
                     }
                     break;
-                    
+
                 case 'books':
                     $item = \App\Models\Book::find($itemId);
                     if ($item) {
@@ -1405,7 +1511,7 @@ class AIDashboardController extends Controller
                         ];
                     }
                     break;
-                    
+
                 case 'book_groups':
                     $item = \App\Models\BookGroup::find($itemId);
                     if ($item) {
@@ -1419,7 +1525,7 @@ class AIDashboardController extends Controller
                     }
                     break;
             }
-            
+
             return null;
         } catch (\Exception $e) {
             Log::error('Error getting content item detail', [
@@ -1427,7 +1533,7 @@ class AIDashboardController extends Controller
                 'item_id' => $itemId,
                 'error' => $e->getMessage()
             ]);
-            
+
             return null;
         }
     }
@@ -1439,23 +1545,23 @@ class AIDashboardController extends Controller
     {
         try {
             $originalJob = \App\Models\AIContentJob::findOrFail($jobId);
-            
+
             // Create a copy of the original settings
             $newSettings = $originalJob->settings;
-            
+
             // Update settings with new values if provided
             if ($request->filled('provider')) {
                 $newSettings['provider'] = $request->input('provider');
             }
-            
+
             if ($request->filled('model')) {
                 $newSettings['model'] = $request->input('model');
             }
-            
+
             if ($request->filled('temperature')) {
                 $newSettings['temperature'] = (float)$request->input('temperature');
             }
-            
+
             // Create a new job with updated settings
             $newJob = new \App\Models\AIContentJob([
                 'batch_id' => uniqid('batch_', true),
@@ -1469,19 +1575,19 @@ class AIDashboardController extends Controller
                 'settings' => $newSettings,
                 'item_ids' => $originalJob->item_ids,
             ]);
-            
+
             $newJob->save();
-            
+
             // Mark original job as obsolete (we can create a new status for this)
             $originalJob->status = 'replaced';
             $originalJob->save();
-            
+
             // Dispatch the new job
             \App\Jobs\ProcessAIContentBatch::dispatch($newJob->id);
-            
+
             // Redirect back with success message
             return redirect()->route('admin.ai-dashboard.jobs')
-                ->with('success', "Đã tạo công việc mới #{$newJob->id} để chạy lại" . 
+                ->with('success', "Đã tạo công việc mới #{$newJob->id} để chạy lại" .
                        ($request->filled('provider') ? " với " . $this->getProviderName($request->input('provider')) : ""));
         } catch (\Exception $e) {
             Log::error('Error rerunning job', [
@@ -1489,12 +1595,12 @@ class AIDashboardController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return redirect()->back()
                 ->with('error', 'Lỗi khi chạy lại công việc: ' . $e->getMessage());
         }
     }
-    
+
     /**
      * Get the display name for a provider
      */
@@ -1505,7 +1611,7 @@ class AIDashboardController extends Controller
             'google-gemini' => 'Google Gemini',
             'xai-grok' => 'xAI Grok',
         ];
-        
+
         return $providers[$providerCode] ?? $providerCode;
     }
 
@@ -1518,7 +1624,7 @@ class AIDashboardController extends Controller
             $jobs = \App\Models\AIContentJob::where('user_id', Auth::id())
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
-            
+
             return response()->json([
                 'success' => true,
                 'jobs' => $jobs
@@ -1539,7 +1645,7 @@ class AIDashboardController extends Controller
         $jobs = \App\Models\AIContentJob::where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
             ->paginate(10);
-        
+
         return view('admin.ai-dashboard.jobs', compact('jobs'));
     }
 
@@ -1550,15 +1656,15 @@ class AIDashboardController extends Controller
     {
         try {
             $job = \App\Models\AIContentJob::findOrFail($jobId);
-            
+
             // Check if job belongs to current user
             if ($job->user_id !== Auth::id()) {
                 return redirect()->back()->with('error', 'Bạn không có quyền thử lại công việc này');
             }
-            
+
             // Retry failed items
             $newJobId = $job->retryFailedItems();
-            
+
             if ($newJobId) {
                 return redirect()->route('admin.ai-dashboard.jobs')
                     ->with('success', "Đã tạo công việc mới #{$newJobId} để thử lại các mục lỗi");
@@ -1570,21 +1676,21 @@ class AIDashboardController extends Controller
                 'job_id' => $jobId,
                 'error' => $e->getMessage()
             ]);
-            
+
             return redirect()->back()->with('error', 'Lỗi khi thử lại: ' . $e->getMessage());
         }
     }
 
     /**
      * Get all available AI providers
-     * 
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function getProviders()
     {
         try {
             $providers = AIServiceFactory::getAvailableProviders();
-            
+
             return response()->json([
                 'success' => true,
                 'providers' => $providers
@@ -1593,7 +1699,7 @@ class AIDashboardController extends Controller
             Log::error('Error getting AI providers', [
                 'error' => $e->getMessage()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Lỗi khi lấy danh sách nhà cung cấp AI: ' . $e->getMessage()
@@ -1603,7 +1709,7 @@ class AIDashboardController extends Controller
 
     /**
      * Get available models for a specific provider
-     * 
+     *
      * @param string $provider
      * @return \Illuminate\Http\JsonResponse
      */
@@ -1614,7 +1720,7 @@ class AIDashboardController extends Controller
             // Create a new service for the specified provider
             $service = AIServiceFactory::createService($provider);
             $models = $service->getAvailableModels();
-            
+
             return response()->json([
                 'success' => true,
                 'models' => $models
@@ -1624,7 +1730,7 @@ class AIDashboardController extends Controller
                 'provider' => $provider,
                 'error' => $e->getMessage()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Lỗi khi lấy danh sách mô hình: ' . $e->getMessage()

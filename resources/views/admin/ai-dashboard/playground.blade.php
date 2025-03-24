@@ -352,6 +352,10 @@
                         </div>
 
                         <div id="results" class="rounded-lg border border-stroke bg-gray-50 p-4">
+                            <div id="generating-status"></div>
+                            <div id="prompt-response"></div>
+                            <div id="response-container"></div>
+
                             <!-- For posts with meta title and description -->
                             <template id="posts-template">
                                 <div class="ai-response">

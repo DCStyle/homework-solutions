@@ -35,8 +35,6 @@
     const $bookSelectorContainer = $('#book-selector-container');
     const $chapterSelectorContainer = $('#chapter-selector-container');
 
-    // Modal instances
-    let generateSingleModal;
     let bulkGenerateModal;
 
     // Track current state
@@ -66,11 +64,7 @@
         // Highlight the active content type button
         highlightActiveContentType();
 
-        // Initialize Bootstrap modals
-        if (document.getElementById('generate-single-modal')) {
-            generateSingleModal = new bootstrap.Modal(document.getElementById('generate-single-modal'));
-        }
-
+        // Initialize Bootstrap modal
         if (document.getElementById('bulk-generate-modal')) {
             bulkGenerateModal = new bootstrap.Modal(document.getElementById('bulk-generate-modal'));
         }
@@ -292,39 +286,6 @@
             $("#select-all").prop('indeterminate', !allChecked && someChecked);
         });
 
-        // Generate Single button click (delegated)
-        $(document).on('click', '.generate-single', function() {
-            const id = $(this).data('id');
-            const type = $(this).data('type');
-            const title = $(this).data('title');
-
-            $("#modal-content-id").val(id);
-            $("#modal-content-type").val(type);
-            $("#modal-content-title").text(title);
-
-            // Reset form state
-            $("#modal-prompt-source").val('default');
-            $("#modal-saved-prompts-container").addClass('d-none');
-            $("#modal-prompt-editor").addClass('d-none');
-            $("#modal-system-message-container").addClass('d-none');
-            $("#modal-results-container").addClass('d-none');
-            $("#modal-apply-btn").addClass('d-none');
-
-            // Set default prompt and system message
-            setDefaultPrompt(type);
-
-            // Reset parameters
-            $("#modal-temperature").val(0.7);
-            $("#modal-temperature-value").text('0.7');
-            $("#modal-max-tokens").val(1000);
-            $("#modal-max-tokens-value").text('1000');
-
-            // Show modal
-            if (generateSingleModal) {
-                generateSingleModal.show();
-            }
-        });
-
         // Pagination click handler (delegated)
         $(document).on('click', '.page-link', function(e) {
             e.preventDefault();
@@ -342,7 +303,7 @@
             $("#modal-temperature-value").text($(this).val());
         });
 
-        // Bulk temperature slider only 
+        // Bulk temperature slider only
         $("#bulk-temperature").on('input', function() {
             $("#bulk-temperature-value").text($(this).val());
         });
@@ -462,159 +423,6 @@
             }
         });
 
-        // Generate button in single modal
-        $("#modal-generate-btn").on('click', function() {
-            const contentId = $("#modal-content-id").val();
-            const contentType = $("#modal-content-type").val();
-            const model = $("#modal-model").val();
-            const prompt = $("#modal-prompt").val();
-            const temperature = $("#modal-temperature").val();
-            const maxTokens = 4096; // Always use maximum token value
-            const systemMessage = $("#modal-system-message").val();
-            const useHtmlMeta = $("#modal-use-html-meta").is(':checked');
-
-            if (!contentId || !contentType || !prompt) {
-                alert('Thiếu các trường bắt buộc');
-                return;
-            }
-
-            // Show loading
-            $("#modal-loading").removeClass('d-none');
-            $("#modal-results-container").removeClass('d-none');
-            $("#modal-results").html('<p class="text-gray-500">Đang tạo nội dung...</p>');
-
-            // Create form data
-            const formData = new FormData();
-            formData.append('content_id', contentId);
-            formData.append('content_type', contentType);
-            formData.append('model', model);
-            formData.append('prompt', prompt);
-            formData.append('temperature', temperature);
-            formData.append('max_tokens', maxTokens);
-            formData.append('use_html_meta', useHtmlMeta ? '1' : '0');
-
-            if (model.startsWith('deepseek') && systemMessage) {
-                formData.append('system_message', systemMessage);
-            }
-
-            // Send AJAX request
-            $.ajax({
-                url: `${apiBaseUrl}/admin/ai-dashboard/generate-sample`,
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(data) {
-                    // Hide loading
-                    $("#modal-loading").addClass('d-none');
-
-                    if (data.success) {
-                        // Display results
-                        if (contentType === 'posts') {
-                            $("#modal-results").html(`
-                                <div class="mb-4">
-                                    <h6 class="mb-2 font-semibold">Tiêu Đề Meta</h6>
-                                    <div class="rounded border border-gray-300 p-3">
-                                        ${data.result.meta_title}
-                                    </div>
-                                </div>
-                                <div>
-                                    <h6 class="mb-2 font-semibold">Mô Tả Meta</h6>
-                                    <div class="rounded border border-gray-300 p-3">
-                                        ${data.result.meta_description}
-                                    </div>
-                                </div>
-                            `);
-                        } else {
-                            $("#modal-results").html(`
-                                <div>
-                                    <h6 class="mb-2 font-semibold">Mô Tả</h6>
-                                    <div class="rounded border border-gray-300 p-3">
-                                        ${data.result.split("\n").join("<br>")}
-                                    </div>
-                                </div>
-                            `);
-                        }
-
-                        // Show apply button
-                        $("#modal-apply-btn").removeClass('d-none');
-                    } else {
-                        $("#modal-results").html(`<p class="text-danger">${data.error || 'Đã xảy ra lỗi'}</p>`);
-                    }
-                },
-                error: function(error) {
-                    console.error('Error:', error);
-                    $("#modal-loading").addClass('d-none');
-                    $("#modal-results").html('<p class="text-danger">Đã xảy ra lỗi. Vui lòng thử lại.</p>');
-                }
-            });
-        });
-
-        // Apply button
-        $("#modal-apply-btn").on('click', function() {
-            const contentId = $("#modal-content-id").val();
-            const contentType = $("#modal-content-type").val();
-            const model = $("#modal-model").val();
-            const prompt = $("#modal-prompt").val();
-            const temperature = $("#modal-temperature").val();
-            const maxTokens = 4096; // Always use maximum token value
-            const systemMessage = $("#modal-system-message").val();
-            const useHtmlMeta = $("#modal-use-html-meta").is(':checked');
-
-            // Show loading
-            $(this).prop('disabled', true);
-            $(this).text('Đang áp dụng...');
-
-            // Create form data
-            const formData = new FormData();
-            formData.append('content_type', contentType);
-            formData.append('filter_type', 'ids');
-            formData.append('filter_id', contentId);
-            formData.append('model', model);
-            formData.append('prompt', prompt);
-            formData.append('temperature', temperature);
-            formData.append('max_tokens', maxTokens);
-            formData.append('use_html_meta', useHtmlMeta ? '1' : '0');
-
-            if (model.startsWith('deepseek') && systemMessage) {
-                formData.append('system_message', systemMessage);
-            }
-
-            // Send AJAX request
-            $.ajax({
-                url: `${apiBaseUrl}/admin/ai-dashboard/apply-prompt`,
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(data) {
-                    if (data.success) {
-                        alert('Áp dụng thay đổi thành công!');
-                        loadContentData(); // Reload content data
-                        if (generateSingleModal) {
-                            generateSingleModal.hide();
-                        }
-                    } else {
-                        alert('Lỗi: ' + (data.error || 'Không thể áp dụng thay đổi'));
-                        $("#modal-apply-btn").prop('disabled', false);
-                        $("#modal-apply-btn").text('Áp Dụng Thay Đổi');
-                    }
-                },
-                error: function(error) {
-                    console.error('Error:', error);
-                    alert('Đã xảy ra lỗi. Vui lòng thử lại.');
-                    $("#modal-apply-btn").prop('disabled', false);
-                    $("#modal-apply-btn").text('Áp Dụng Thay Đổi');
-                }
-            });
-        });
-
         // Bulk generate start button
         $("#bulk-generate-start-btn").on('click', function() {
             const selectedItems = $(".item-checkbox:checked");
@@ -660,7 +468,7 @@
             if (model.startsWith('deepseek') && systemMessage) {
                 formData.append('system_message', systemMessage);
             }
-            
+
             // Use the new queue endpoint instead of the direct apply-prompt endpoint
             $.ajax({
                 url: `${apiBaseUrl}/admin/ai-dashboard/queue-generation`,
@@ -675,7 +483,7 @@
                     if (data.success) {
                         // Store job ID in session storage for tracking
                         sessionStorage.setItem('current_ai_job_id', data.job_id);
-                        
+
                         // Show job created message
                         $("#bulk-progress-container").html(`
                             <div class="alert alert-success">
@@ -687,10 +495,10 @@
                                 </a>
                             </div>
                         `);
-                        
+
                         // Change button text
                         $("#bulk-generate-start-btn").text('Đã xếp hàng thành công');
-                        
+
                         // Close modal after a delay
                         setTimeout(() => {
                             if (bulkGenerateModal) {
@@ -1091,7 +899,9 @@
         });
     }
 
-    // Render a content row
+    /**
+     * Render a content row
+     */
     function renderContentRow(item) {
         let title = item.title || item.name || 'N/A';
         let parentInfo = '';
@@ -1101,90 +911,114 @@
         switch (currentContentType) {
             case 'posts':
                 parentInfo = `<p class="text-gray-800">${item.chapter?.name || 'N/A'}</p>
-                              <p class="text-xs text-gray-600">${item.chapter?.book?.name || 'N/A'}</p>`;
+                          <p class="text-xs text-gray-600">${item.chapter?.book?.name || 'N/A'}</p>`;
 
-                statusHtml = `<div class="flex flex-col">
-                                <div class="flex items-center">
-                                    <span class="mr-2 inline-block h-2.5 w-2.5 rounded-full ${item.meta_title ? 'bg-green-500' : 'bg-red-500'}"></span>
-                                    <p class="text-sm ${item.meta_title ? 'text-green-600' : 'text-red-600'}">Tiêu Đề Meta</p>
-                                </div>
-                                <div class="flex items-center mt-1">
-                                    <span class="mr-2 inline-block h-2.5 w-2.5 rounded-full ${item.meta_description ? 'bg-green-500' : 'bg-red-500'}"></span>
-                                    <p class="text-sm ${item.meta_description ? 'text-green-600' : 'text-red-600'}">Mô Tả Meta</p>
-                                </div>
-                            </div>`;
+                // New status display with detailed indicators
+                statusHtml = `
+                <div class="space-y-2">
+                    <div>
+                        <div class="flex items-center mb-1">
+                            <span class="font-medium text-sm">Title:</span>
+                            <span class="ml-2 text-xs text-gray-500">(${item.meta_title ? item.meta_title.length : 0}/60 chars)</span>
+                        </div>
+                        <div class="flex items-center">
+                            ${getStatusIndicator('title', item.meta_title, 60)}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex items-center mb-1">
+                            <span class="font-medium text-sm">Description:</span>
+                            <span class="ml-2 text-xs text-gray-500">(${item.meta_description ? item.meta_description.length : 0}/350 chars)</span>
+                        </div>
+                        <div class="flex items-center">
+                            ${getStatusIndicator('description', item.meta_description, 350)}
+                        </div>
+                    </div>
+                </div>`;
                 break;
 
             case 'chapters':
                 parentInfo = `<p class="text-gray-800">${item.book?.name || 'N/A'}</p>
-                              <p class="text-xs text-gray-600">${item.book?.group?.name || 'N/A'}</p>`;
+                          <p class="text-xs text-gray-600">${item.book?.group?.name || 'N/A'}</p>`;
 
-                statusHtml = `<div class="flex items-center">
-                                <span class="mr-2 inline-block h-2.5 w-2.5 rounded-full ${item.description ? 'bg-green-500' : 'bg-red-500'}"></span>
-                                <p class="text-sm ${item.description ? 'text-green-600' : 'text-red-600'}">
-                                    ${item.description ? 'Có Mô Tả' : 'Thiếu Mô Tả'}
-                                </p>
-                            </div>`;
+                // New status display with detailed indicators for description
+                statusHtml = `
+                <div>
+                    <div class="flex items-center mb-1">
+                        <span class="font-medium text-sm">Description:</span>
+                        <span class="ml-2 text-xs text-gray-500">(${item.description ? item.description.length : 0}/350 chars)</span>
+                    </div>
+                    <div class="flex items-center">
+                        ${getStatusIndicator('description', item.description, 350)}
+                    </div>
+                </div>`;
                 break;
 
             case 'books':
                 parentInfo = `<p class="text-gray-800">${item.group?.name || 'N/A'}</p>
-                              <p class="text-xs text-gray-600">${item.group?.category?.name || 'N/A'}</p>`;
+                          <p class="text-xs text-gray-600">${item.group?.category?.name || 'N/A'}</p>`;
 
-                statusHtml = `<div class="flex items-center">
-                                <span class="mr-2 inline-block h-2.5 w-2.5 rounded-full ${item.description ? 'bg-green-500' : 'bg-red-500'}"></span>
-                                <p class="text-sm ${item.description ? 'text-green-600' : 'text-red-600'}">
-                                    ${item.description ? 'Có Mô Tả' : 'Thiếu Mô Tả'}
-                                </p>
-                            </div>`;
+                // New status display with detailed indicators for description
+                statusHtml = `
+                <div>
+                    <div class="flex items-center mb-1">
+                        <span class="font-medium text-sm">Description:</span>
+                        <span class="ml-2 text-xs text-gray-500">(${item.description ? item.description.length : 0}/350 chars)</span>
+                    </div>
+                    <div class="flex items-center">
+                        ${getStatusIndicator('description', item.description, 350)}
+                    </div>
+                </div>`;
                 break;
 
             case 'book_groups':
                 parentInfo = `<p class="text-gray-800">${item.category?.name || 'N/A'}</p>`;
 
-                statusHtml = `<div class="flex items-center">
-                                <span class="mr-2 inline-block h-2.5 w-2.5 rounded-full ${item.description ? 'bg-green-500' : 'bg-red-500'}"></span>
-                                <p class="text-sm ${item.description ? 'text-green-600' : 'text-red-600'}">
-                                    ${item.description ? 'Có Mô Tả' : 'Thiếu Mô Tả'}
-                                </p>
-                            </div>`;
+                // New status display with detailed indicators for description
+                statusHtml = `
+                <div>
+                    <div class="flex items-center mb-1">
+                        <span class="font-medium text-sm">Description:</span>
+                        <span class="ml-2 text-xs text-gray-500">(${item.description ? item.description.length : 0}/350 chars)</span>
+                    </div>
+                    <div class="flex items-center">
+                        ${getStatusIndicator('description', item.description, 350)}
+                    </div>
+                </div>`;
                 break;
         }
 
-        // Create row HTML
+        // Create row HTML with improved styling
         const rowHtml = `
-            <tr class="hover:bg-gray-50">
-                <td class="border-b border-gray-200 py-5 px-4">
+            <tr class="hover:bg-gray-50 border-b border-gray-200 last:border.n-0">
+                <td class="py-4 px-4">
                     <div class="flex h-5 items-center">
                         <input type="checkbox" data-id="${item.id}" class="item-checkbox h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600">
                     </div>
                 </td>
-                <td class="border-b border-gray-200 py-5 px-4">
+                <td class="py-4 px-4">
                     <div class="flex flex-col">
                         <h5 class="font-medium text-gray-800">${title}</h5>
-                        <p class="text-xs">ID: ${item.id}</p>
+                        <p class="text-xs text-gray-500">ID: ${item.id}</p>
                     </div>
                 </td>
-                <td class="border-b border-gray-200 py-5 px-4">
+                <td class="py-4 px-4">
                     ${parentInfo}
                 </td>
-                <td class="border-b border-gray-200 py-5 px-4">
+                <td class="py-4 px-4">
                     ${statusHtml}
                 </td>
-                <td class="border-b border-gray-200 py-5 px-4">
-                    <div class="flex items-center space-x-3.5">
-                        <button
-                            class="text-indigo-600 hover:text-indigo-800 generate-single"
-                            data-id="${item.id}"
-                            data-type="${currentContentType}"
-                            data-title="${title.replace(/"/g, '&quot;')}"
-                        >
-                            <span class="iconify text-xl" data-icon="mdi-cog"></span>
-                        </button>
-                        <a href="${apiBaseUrl}/admin/ai-dashboard/playground?content_type=${currentContentType}&content_id=${item.id}" class="text-blue-600 hover:text-blue-800">
-                            <span class="iconify text-xl" data-icon="mdi-link-variant"></span>
+                <td class="py-4 px-4">
+                    <div class="flex items-center space-x-2">
+                        <a href="${apiBaseUrl}/admin/ai-dashboard/playground?content_type=${currentContentType}&content_id=${item.id}"
+                           class="text-blue-600 hover:text-blue-800 p-1.5 rounded-full hover:bg-blue-50"
+                           title="Open in playground">
+                            <span class="iconify text-xl" data-icon="mdi-flask-outline"></span>
                         </a>
-                        <a href="${getEditUrl(item.id)}" class="text-green-600 hover:text-green-800">
+
+                        <a href="${getEditUrl(item.id)}"
+                           class="text-green-600 hover:text-green-800 p-1.5 rounded-full hover:bg-green-50"
+                           title="Edit content">
                             <span class="iconify text-xl" data-icon="mdi-pencil"></span>
                         </a>
                     </div>
@@ -1194,6 +1028,48 @@
 
         // Append row to table
         $contentTbody.append(rowHtml);
+    }
+
+    /**
+     * Get status indicator based on field type, content and required length
+     *
+     * @param {string} type - Field type ('title' or 'description')
+     * @param {string} content - The content to check
+     * @param {number} requiredLength - Required minimum length
+     * @returns {string} - HTML for status indicator
+     */
+    function getStatusIndicator(type, content, requiredLength) {
+        if (!content) {
+            // Missing content
+            return `
+            <span class="mr-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-red-600">
+                <span class="iconify" data-icon="mdi-close-circle"></span>
+            </span>
+            <span class="text-red-600">Thiếu</span>
+        `;
+        } else if (content.length < requiredLength) {
+            // Content exists but too short
+            return `
+            <span class="mr-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-yellow-100 text-yellow-600">
+                <span class="iconify" data-icon="mdi-alert"></span>
+            </span>
+            <span class="text-yellow-600">Quá Ngắn</span>
+            <div class="ml-2 w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-yellow-500 rounded-full" style="width: ${Math.min(100, Math.round(content.length / requiredLength * 100))}%"></div>
+            </div>
+        `;
+        } else {
+            // Content exists and meets minimum length
+            return `
+            <span class="mr-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-green-600">
+                <span class="iconify" data-icon="mdi-check-circle"></span>
+            </span>
+            <span class="text-green-600">Hoàn Thành</span>
+            <div class="ml-2 w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-green-500 rounded-full" style="width: 100%"></div>
+            </div>
+        `;
+        }
     }
 
     // Build pagination links
@@ -1410,11 +1286,11 @@
                                 'completed': 'hoàn thành',
                                 'failed': 'thất bại'
                             }[data.status] || data.status;
-                            
+
                             $("#job-status-text").text(statusText);
                             $("#job-progress-text").text(`${data.processed_items}/${data.total_items} (${data.progress_percentage}%)`);
                         }
-                        
+
                         // If job is completed or failed, stop checking
                         if (data.status === 'completed' || data.status === 'failed') {
                             sessionStorage.removeItem('current_ai_job_id');
@@ -1430,7 +1306,7 @@
             });
         }, 5000); // Check every 5 seconds
     }
-    
+
     // Add notification when returning to page with active job
     $(document).ready(function() {
         const activeJobId = sessionStorage.getItem('current_ai_job_id');
@@ -1444,7 +1320,7 @@
                         // Show notification if job is still in progress
                         if (data.status === 'pending' || data.status === 'processing') {
                             const statusText = data.status === 'pending' ? 'đang chờ' : 'đang xử lý';
-                            
+
                             // Add notification if not already there
                             if ($("#job-notification").length === 0) {
                                 $('body').append(`
@@ -1465,10 +1341,10 @@
                                     </div>
                                 `);
                             }
-                            
+
                             // Start checking job status
                             window.jobStatusInterval = startJobStatusCheck(activeJobId);
-                        } 
+                        }
                         // Clean up if job is complete
                         else if (data.status === 'completed' || data.status === 'failed') {
                             sessionStorage.removeItem('current_ai_job_id');
@@ -1483,261 +1359,12 @@
     $(document).ready(init);
 
     /**
-     * Modal Handlers for Content Generation
-     */
-    function setupModals() {
-        // Initialize the single generation modal
-        generateSingleModal = new bootstrap.Modal(document.getElementById('generate-single-modal'));
-        bulkGenerateModal = new bootstrap.Modal(document.getElementById('bulk-generate-modal'));
-
-        // Initialize provider selector in the modal
-        initProviderSelector();
-        
-        // Initialize bulk provider selector
-        initBulkProviderSelector();
-        
-        // Set initial models to be loaded on provider selection
-        initModalModelSelector();
-
-        // Generate Single Modal handlers
-        $('#generate-single-modal').on('show.bs.modal', function(event) {
-            const button = $(event.relatedTarget);
-            const contentId = button.data('id');
-            const contentType = button.data('type');
-            const contentTitle = button.data('title');
-
-            // Populate modal fields
-            $('#modal-content-id').val(contentId);
-            $('#modal-content-type').val(contentType);
-            $('#modal-content-title').text(contentTitle);
-
-            // Set default prompt for the content type
-            setDefaultPrompt(contentType);
-        });
-
-        // Generate button click handler
-        $('#modal-generate-btn').on('click', function() {
-            generateSingleContent();
-        });
-
-        // Apply button click handler
-        $('#modal-apply-btn').on('click', function() {
-            applySingleContent();
-        });
-    }
-
-    /**
-     * Initialize provider selector in modals
-     */
-    function initProviderSelector() {
-        const $modalProvider = $('#modal-provider');
-        
-        // Fetch available providers
-        fetch(`${apiBaseUrl}/admin/ai-dashboard/providers`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Clear existing options
-                    $modalProvider.empty().append('<option value="">Chọn nhà cung cấp AI</option>');
-                    
-                    // Add provider options
-                    Object.entries(data.providers).forEach(([code, name]) => {
-                        $modalProvider.append(`<option value="${code}">${name}</option>`);
-                    });
-                    
-                    // Check for stored provider preference
-                    const savedProvider = localStorage.getItem('selectedProvider');
-                    if (savedProvider && $modalProvider.find(`option[value="${savedProvider}"]`).length > 0) {
-                        $modalProvider.val(savedProvider).trigger('change');
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error loading providers:', error);
-            });
-            
-        // Handle provider change
-        $modalProvider.on('change', function() {
-            const provider = $(this).val();
-            if (provider) {
-                localStorage.setItem('selectedProvider', provider);
-                loadModelsForProvider(provider);
-            } else {
-                // Clear model select if no provider
-                $('#modal-model').empty().append('<option value="">Chọn mô hình AI</option>');
-                $('#modal-model').prop('disabled', true);
-            }
-        });
-    }
-
-    /**
-     * Initialize model selector in modals
-     */
-    function initModalModelSelector() {
-        const $modalModel = $('#modal-model');
-        
-        // Initially disable model selector until provider is selected
-        $modalModel.prop('disabled', true);
-        
-        // Handle model change
-        $modalModel.on('change', function() {
-            const model = $(this).val();
-            if (model) {
-                localStorage.setItem('selectedModel', model);
-                
-                // Show system message container for specific models if needed
-                if (model.includes('deepseek') || model.includes('mistral') || model.includes('llama')) {
-                    $('#modal-system-message-container').removeClass('hidden');
-                } else {
-                    $('#modal-system-message-container').addClass('hidden');
-                }
-            }
-        });
-    }
-
-    /**
-     * Load models for the selected provider
-     */
-    function loadModelsForProvider(provider) {
-        const $modalModel = $('#modal-model');
-        
-        // Show loading state
-        $modalModel.empty().append('<option value="">Đang tải mô hình...</option>');
-        $modalModel.prop('disabled', true);
-        
-        // Fetch models for the selected provider
-        fetch(`${apiBaseUrl}/admin/ai-dashboard/providers/${provider}/models`)
-            .then(response => response.json())
-            .then(data => {
-                // Clear existing options
-                $modalModel.empty().append('<option value="">Chọn mô hình AI</option>');
-                
-                if (data.success && data.models) {
-                    // Add model options
-                    Object.entries(data.models).forEach(([id, name]) => {
-                        $modalModel.append(`<option value="${id}">${name}</option>`);
-                    });
-                    
-                    // Enable model selector
-                    $modalModel.prop('disabled', false);
-                    
-                    // Check for saved model preference
-                    const savedModel = localStorage.getItem('selectedModel');
-                    if (savedModel && $modalModel.find(`option[value="${savedModel}"]`).length > 0) {
-                        $modalModel.val(savedModel).trigger('change');
-                    }
-                } else {
-                    $modalModel.append('<option value="">Không có mô hình nào</option>');
-                }
-            })
-            .catch(error => {
-                console.error('Error loading models:', error);
-                $modalModel.empty().append('<option value="">Lỗi tải mô hình</option>');
-            })
-            .finally(() => {
-                $modalModel.prop('disabled', false);
-            });
-    }
-
-    /**
-     * Generate single content
-     */
-    function generateSingleContent() {
-        const $modalGenerateBtn = $('#modal-generate-btn');
-        const $modalApplyBtn = $('#modal-apply-btn');
-        const $modalResults = $('#modal-results');
-        const $modalSpinner = $('#modal-spinner');
-        
-        // Validate selections
-        if (!$('#modal-provider').val()) {
-            alert('Vui lòng chọn nhà cung cấp AI');
-            return;
-        }
-        if (!$('#modal-model').val()) {
-            alert('Vui lòng chọn mô hình AI');
-            return;
-        }
-        if (!$('#modal-prompt').val().trim()) {
-            alert('Vui lòng nhập prompt');
-            return;
-        }
-        
-        // Get form values
-        const contentId = $('#modal-content-id').val();
-        const contentType = $('#modal-content-type').val();
-        const provider = $('#modal-provider').val();
-        const model = $('#modal-model').val();
-        const prompt = $('#modal-prompt').val();
-        const temperature = $("#modal-temperature").val();
-        const maxTokens = $("#modal-max-tokens").val();
-        const systemMessage = $("#modal-system-message").val();
-        const useHtmlMeta = $("#modal-use-html-meta").is(':checked');
-        
-        // Show loading
-        $modalSpinner.removeClass('hidden');
-        $modalResults.html('<p class="text-gray-500">Đang tạo nội dung...</p>');
-        $modalGenerateBtn.prop('disabled', true);
-        $modalApplyBtn.addClass('hidden');
-        
-        // API call
-        $.ajax({
-            type: 'POST',
-            url: `${apiBaseUrl}/admin/ai-dashboard/generate-sample`,
-            data: {
-                content_id: contentId,
-                content_type: contentType,
-                provider: provider,
-                model: model,
-                prompt: prompt,
-                temperature: temperature,
-                max_tokens: maxTokens,
-                system_message: systemMessage,
-                use_html_meta: useHtmlMeta ? 1 : 0
-            },
-            success: function(response) {
-                // Hide loading
-                $modalSpinner.addClass('hidden');
-                $modalGenerateBtn.prop('disabled', false);
-                
-                if (response.success) {
-                    // Display results
-                    displayModalResults(response);
-                    
-                    // Show apply button
-                    $modalApplyBtn.removeClass('hidden');
-                } else {
-                    $modalResults.html(`<div class="text-red-500">${response.error || 'Lỗi không xác định'}</div>`);
-                }
-            },
-            error: function(xhr, status, error) {
-                // Hide loading
-                $modalSpinner.addClass('hidden');
-                $modalGenerateBtn.prop('disabled', false);
-                
-                // Display error
-                $modalResults.html(`
-                    <div class="rounded-sm border border-red-300 bg-red-50 p-4">
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0">
-                                <span class="iconify text-red-500" data-icon="mdi-alert-circle"></span>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm text-red-800">Lỗi khi tạo nội dung: ${xhr.responseJSON?.message || error || 'Không xác định'}</p>
-                            </div>
-                        </div>
-                    </div>
-                `);
-            }
-        });
-    }
-
-    /**
      * Initialize bulk provider selector functionality
      */
     function initBulkProviderSelector() {
         const $bulkProvider = $('#bulk-provider');
         const $bulkModel = $('#bulk-model');
-        
+
         // Fetch available providers
         fetch(`${apiBaseUrl}/admin/ai-dashboard/providers`)
             .then(response => response.json())
@@ -1745,12 +1372,12 @@
                 if (data.success) {
                     // Clear existing options
                     $bulkProvider.empty().append('<option value="">Chọn nhà cung cấp AI</option>');
-                    
+
                     // Add provider options
                     Object.entries(data.providers).forEach(([code, name]) => {
                         $bulkProvider.append(`<option value="${code}">${name}</option>`);
                     });
-                    
+
                     // Check for stored provider preference
                     const savedProvider = localStorage.getItem('selectedProvider');
                     if (savedProvider && $bulkProvider.find(`option[value="${savedProvider}"]`).length > 0) {
@@ -1761,7 +1388,7 @@
             .catch(error => {
                 console.error('Error loading providers:', error);
             });
-            
+
         // Handle provider change
         $bulkProvider.on('change', function() {
             const provider = $(this).val();
@@ -1781,27 +1408,27 @@
      */
     function loadBulkModelsForProvider(provider) {
         const $bulkModel = $('#bulk-model');
-        
+
         // Show loading state
         $bulkModel.empty().append('<option value="">Đang tải mô hình...</option>');
         $bulkModel.prop('disabled', true);
-        
+
         // Fetch models for the selected provider
         fetch(`${apiBaseUrl}/admin/ai-dashboard/providers/${provider}/models`)
             .then(response => response.json())
             .then(data => {
                 // Clear existing options
                 $bulkModel.empty().append('<option value="">Chọn mô hình AI</option>');
-                
+
                 if (data.success && data.models) {
                     // Add model options
                     Object.entries(data.models).forEach(([id, name]) => {
                         $bulkModel.append(`<option value="${id}">${name}</option>`);
                     });
-                    
+
                     // Enable model selector
                     $bulkModel.prop('disabled', false);
-                    
+
                     // Check for saved model preference
                     const savedModel = localStorage.getItem('selectedModel');
                     if (savedModel && $bulkModel.find(`option[value="${savedModel}"]`).length > 0) {

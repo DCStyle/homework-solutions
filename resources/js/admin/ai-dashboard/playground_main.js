@@ -1,3 +1,9 @@
+/**
+ * AI Content Playground
+ * This module provides functionality for testing and applying AI-generated content
+ * to different content types (posts, chapters, books, book groups).
+ */
+
 // Hierarchical content selection system with AJAX loading
 const hierarchicalSelector = (function() {
     // DOM elements
@@ -41,7 +47,9 @@ const hierarchicalSelector = (function() {
     let currentBookId = '';
     let currentChapterId = '';
 
-    // Initialize function
+    /**
+     * Initialize the content selector
+     */
     function init() {
         // Set initial content type based on the hidden select
         currentContentType = $contentTypeSelect.val();
@@ -56,7 +64,9 @@ const hierarchicalSelector = (function() {
         bindEvents();
     }
 
-    // Bind all event handlers
+    /**
+     * Bind all event handlers
+     */
     function bindEvents() {
         // Content type selection
         $contentTypeButtons.on('click', function() {
@@ -225,7 +235,9 @@ const hierarchicalSelector = (function() {
         });
     }
 
-    // Update selector configuration based on content type
+    /**
+     * Update selector configuration based on content type
+     */
     function updateSelectorConfiguration() {
         // Reset all selectors
         resetHierarchicalSelectors();
@@ -251,7 +263,9 @@ const hierarchicalSelector = (function() {
         }
     }
 
-    // Reset all hierarchical selectors
+    /**
+     * Reset all hierarchical selectors
+     */
     function resetHierarchicalSelectors() {
         // Reset all selectors
         $categorySelector.empty().append($('<option>', {
@@ -303,7 +317,10 @@ const hierarchicalSelector = (function() {
         showContentPlaceholder();
     }
 
-    // Reset selectors from a specific level down
+    /**
+     * Reset selectors from a specific level down
+     * @param {string} fromLevel - The level to start resetting from ('group', 'book', 'chapter', 'content')
+     */
     function resetSelectors(fromLevel) {
         // Reset selectors from the specified level down
         switch (fromLevel) {
@@ -339,15 +356,17 @@ const hierarchicalSelector = (function() {
         }
     }
 
-    // Show content placeholder
+    /**
+     * Show the content placeholder
+     */
     function showContentPlaceholder() {
         $contentDetailsPlaceholder.removeClass('hidden');
         $contentDetails.addClass('hidden');
     }
 
-    // AJAX Functions for Loading Data
-
-    // Load categories via AJAX
+    /**
+     * Load categories via AJAX
+     */
     function loadCategories() {
         // Show spinner
         $contentSelectorSpinner.show();
@@ -388,7 +407,10 @@ const hierarchicalSelector = (function() {
         });
     }
 
-    // Load book groups via AJAX
+    /**
+     * Load book groups via AJAX
+     * @param {string|number} categoryId - The category ID to load book groups for
+     */
     function loadBookGroups(categoryId) {
         // Show spinner
         $contentSelectorSpinner.show();
@@ -429,7 +451,10 @@ const hierarchicalSelector = (function() {
         });
     }
 
-    // Load books via AJAX
+    /**
+     * Load books via AJAX
+     * @param {string|number} groupId - The group ID to load books for
+     */
     function loadBooks(groupId) {
         // Show spinner
         $contentSelectorSpinner.show();
@@ -470,7 +495,10 @@ const hierarchicalSelector = (function() {
         });
     }
 
-    // Load chapters via AJAX
+    /**
+     * Load chapters via AJAX
+     * @param {string|number} bookId - The book ID to load chapters for
+     */
     function loadChapters(bookId) {
         // Show spinner
         $contentSelectorSpinner.show();
@@ -511,7 +539,9 @@ const hierarchicalSelector = (function() {
         });
     }
 
-    // Load final content via AJAX
+    /**
+     * Load final content via AJAX
+     */
     function loadFinalContent() {
         // Show spinner
         $contentSelectorSpinner.show();
@@ -603,7 +633,11 @@ const hierarchicalSelector = (function() {
         });
     }
 
-    // Update content details via AJAX
+    /**
+     * Update content details via AJAX
+     * @param {string|number} contentId - The content ID to update details for
+     * @param {boolean} suppressUrlUpdate - Whether to suppress URL update
+     */
     function updateContentDetails(contentId, suppressUrlUpdate) {
         if (!contentId) {
             showContentPlaceholder();
@@ -687,7 +721,6 @@ const hierarchicalSelector = (function() {
                         break;
 
                     case 'chapters':
-                        // Similar updates for chapters...
                         $contentTitle.text(content.name || 'Không có tên');
 
                         // Update path/breadcrumb
@@ -722,7 +755,6 @@ const hierarchicalSelector = (function() {
                         break;
 
                     case 'books':
-                        // Update for books...
                         $contentTitle.text(content.name || 'Không có tên');
 
                         // Update path/breadcrumb
@@ -754,7 +786,6 @@ const hierarchicalSelector = (function() {
                         break;
 
                     case 'book_groups':
-                        // Update for book groups...
                         $contentTitle.text(content.name || 'Không có tên');
 
                         // Update path/breadcrumb
@@ -803,7 +834,9 @@ const hierarchicalSelector = (function() {
         });
     }
 
-    // Update the content count display
+    /**
+     * Update the content count display
+     */
     function updateContentCount() {
         let countText = '';
 
@@ -830,7 +863,9 @@ const hierarchicalSelector = (function() {
         $contentCount.text(countText);
     }
 
-    // Refresh the current view
+    /**
+     * Refresh the current view
+     */
     function refreshCurrentView() {
         // Reload the current level based on what's visible
         if ($contentFinalSelector.is(':visible')) {
@@ -856,15 +891,23 @@ const hierarchicalSelector = (function() {
     };
 })();
 
-// Add function to load content from URL parameters
+/**
+ * Get URL parameter by name
+ * @param {string} name - The parameter name
+ * @returns {string} The parameter value or empty string if not found
+ */
 function getUrlParameter(name) {
     name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-    var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-    var results = regex.exec(location.search);
+    const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+    const results = regex.exec(location.search);
     return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
 }
 
-// Function to handle URL-based content loading
+/**
+ * Handle URL parameters for content loading
+ * @param {Object} hierarchicalSelector - The hierarchical selector object
+ * @returns {boolean} Whether URL parameters were handled
+ */
 function handleUrlParameters(hierarchicalSelector) {
     const contentType = getUrlParameter('content_type');
     const contentId = getUrlParameter('content_id');
@@ -897,8 +940,12 @@ function handleUrlParameters(hierarchicalSelector) {
     return false; // No URL parameters to handle
 }
 
-// Function to select hierarchical content path from content details
-function selectContentHierarchy(contentType, content, hierarchicalSelector) {
+/**
+ * Select hierarchical content path from content details
+ * @param {string} contentType - The content type
+ * @param {Object} content - The content object
+ */
+function selectContentHierarchy(contentType, content) {
     let categoryId, groupId, bookId, chapterId;
 
     // Extract IDs based on content type
@@ -937,7 +984,9 @@ function selectContentHierarchy(contentType, content, hierarchicalSelector) {
     }
 }
 
-// Helper functions to handle the async selection process
+/**
+ * Helper function to select category and wait for loading
+ */
 function selectCategoryAndWait(categoryId, groupId, bookId, chapterId, contentId, contentType) {
     // Wait for categories to load first (they should be loading during init)
     const checkCategoriesLoaded = setInterval(() => {
@@ -955,6 +1004,9 @@ function selectCategoryAndWait(categoryId, groupId, bookId, chapterId, contentId
     }, 100);
 }
 
+/**
+ * Helper function to select group and wait for loading
+ */
 function selectGroupAndWait(groupId, bookId, chapterId, contentId, contentType) {
     const checkGroupsLoaded = setInterval(() => {
         if ($('#group-selector option').length > 1) {
@@ -971,6 +1023,9 @@ function selectGroupAndWait(groupId, bookId, chapterId, contentId, contentType) 
     }, 100);
 }
 
+/**
+ * Helper function to select book and wait for loading
+ */
 function selectBookAndWait(bookId, chapterId, contentId, contentType) {
     const checkBooksLoaded = setInterval(() => {
         if ($('#book-selector option').length > 1) {
@@ -987,6 +1042,9 @@ function selectBookAndWait(bookId, chapterId, contentId, contentType) {
     }, 100);
 }
 
+/**
+ * Helper function to select chapter and wait for loading
+ */
 function selectChapterAndWait(chapterId, contentId, contentType) {
     const checkChaptersLoaded = setInterval(() => {
         if ($('#chapter-selector option').length > 1) {
@@ -1003,6 +1061,9 @@ function selectChapterAndWait(chapterId, contentId, contentType) {
     }, 100);
 }
 
+/**
+ * Helper function to select final content and wait for loading
+ */
 function selectFinalContentAndWait(contentId) {
     const checkContentLoaded = setInterval(() => {
         if ($('#content-final-selector option').length > 1) {
@@ -1014,7 +1075,12 @@ function selectFinalContentAndWait(contentId) {
     }, 100);
 }
 
-// Content generation functionality
+// Store the generated content for applying later
+let generatedContent = null;
+
+/**
+ * Content generation functionality
+ */
 function initializeContentGeneration() {
     const $providerSelect = $('#provider');
     const $modelSelect = $('#model');
@@ -1024,23 +1090,21 @@ function initializeContentGeneration() {
     const $promptTextarea = $('#prompt');
     const $systemMessage = $('#system-message');
     const $systemMessageContainer = $('#system-message-container');
-    const $promptResponse = $('#prompt-response');
-    const $generatingSpinner = $('#generating-spinner');
+    const $generatingSpinner = $('#loading-indicator');
     const $generatingStatus = $('#generating-status');
     const $responseContainer = $('#response-container');
-    const $resultContainer = $('#result-container');
     const $contentFinalSelector = $('#content-final-selector');
     const $useHtmlMeta = $('#use-html-meta');
-    
+
     // Initialize provider selector
     initProviderSelector();
-    
+
     // Initialize model selector to be populated after provider selection
     initModelSelector();
-    
+
     // Initialize UI controls (sliders, etc.)
     initializeUIControls();
-    
+
     function initProviderSelector() {
         // Fetch available providers
         fetch('/admin/ai-dashboard/providers')
@@ -1049,12 +1113,12 @@ function initializeContentGeneration() {
                 if (data.success) {
                     // Clear existing options
                     $providerSelect.empty().append('<option value="">Chọn nhà cung cấp AI</option>');
-                    
+
                     // Add provider options
                     Object.entries(data.providers).forEach(([code, name]) => {
                         $providerSelect.append(`<option value="${code}">${name}</option>`);
                     });
-                    
+
                     // Check for stored provider preference
                     const savedProvider = localStorage.getItem('selectedProvider');
                     if (savedProvider && $providerSelect.find(`option[value="${savedProvider}"]`).length > 0) {
@@ -1065,7 +1129,7 @@ function initializeContentGeneration() {
             .catch(error => {
                 console.error('Error loading providers:', error);
             });
-            
+
         // Handle provider change
         $providerSelect.on('change', function() {
             const provider = $(this).val();
@@ -1079,17 +1143,17 @@ function initializeContentGeneration() {
             }
         });
     }
-    
+
     function initModelSelector() {
         // Initially disable model selector until provider is selected
         $modelSelect.prop('disabled', true);
-        
+
         // Handle model change
         $modelSelect.on('change', function() {
             const model = $(this).val();
             if (model) {
                 localStorage.setItem('selectedModel', model);
-                
+
                 // Show system message container for specific models if needed
                 if (model.includes('deepseek') || model.includes('mistral') || model.includes('llama')) {
                     $systemMessageContainer.removeClass('hidden');
@@ -1099,28 +1163,28 @@ function initializeContentGeneration() {
             }
         });
     }
-    
+
     function loadModelsForProvider(provider) {
         // Show loading state
         $modelSelect.empty().append('<option value="">Đang tải mô hình...</option>');
         $modelSelect.prop('disabled', true);
-        
+
         // Fetch models for the selected provider
         fetch(`/admin/ai-dashboard/providers/${provider}/models`)
             .then(response => response.json())
             .then(data => {
                 // Clear existing options
                 $modelSelect.empty().append('<option value="">Chọn mô hình AI</option>');
-                
+
                 if (data.success && data.models) {
                     // Add model options
                     Object.entries(data.models).forEach(([id, name]) => {
                         $modelSelect.append(`<option value="${id}">${name}</option>`);
                     });
-                    
+
                     // Enable model selector
                     $modelSelect.prop('disabled', false);
-                    
+
                     // Check for saved model preference
                     const savedModel = localStorage.getItem('selectedModel');
                     if (savedModel && $modelSelect.find(`option[value="${savedModel}"]`).length > 0) {
@@ -1158,7 +1222,7 @@ function initializeContentGeneration() {
 
         // Apply changes button
         $applyBtn.on('click', function() {
-            applyChanges();
+            applyGeneratedContent();
         });
     }
 
@@ -1179,6 +1243,9 @@ function initializeContentGeneration() {
             return;
         }
 
+        // Reset generated content
+        generatedContent = null;
+
         // Get form values
         const model = $modelSelect.val();
         const temperature = $('#temperature').val();
@@ -1190,7 +1257,7 @@ function initializeContentGeneration() {
         // Show loading
         $generatingSpinner.removeClass('hidden');
         $responseContainer.removeClass('hidden');
-        $promptResponse.html('<p class="text-gray-500">Đang tạo nội dung...</p>');
+        $('#results').html('<p class="text-gray-500">Đang tạo nội dung...</p>');
         $generateBtn.prop('disabled', true);
         $applyBtn.addClass('hidden');
 
@@ -1210,6 +1277,15 @@ function initializeContentGeneration() {
             formData.append('system_message', systemMessage);
         }
 
+        // Make sure response container and results container are visible
+        $responseContainer.removeClass('hidden');
+        $('#results-container').removeClass('hidden');
+
+        // Show loading state
+        $generatingSpinner.removeClass('hidden');
+        $generatingStatus.text('Đang tạo nội dung...');
+        $generateBtn.prop('disabled', true);
+
         // Make AJAX request
         $.ajax({
             url: '/admin/ai-dashboard/generate-sample',
@@ -1225,25 +1301,20 @@ function initializeContentGeneration() {
                 $generatingSpinner.addClass('hidden');
                 $generateBtn.prop('disabled', false);
 
-                console.log('API Response:', response);
-                console.log('Response Container:', $responseContainer);
-                console.log('Prompt Response Element:', $promptResponse);
-
                 if (response.success) {
-                    // Make sure response container and results container are visible
-                    $responseContainer.removeClass('hidden');
-                    $('#results-container').removeClass('hidden');
-                    
+                    // Store the generated content for later use
+                    generatedContent = response.result;
+
                     // Display results based on content type
                     // Update loading state
-                $('#loading-indicator').addClass('hidden');
-                $('#generate-btn').prop('disabled', false);
+                    $('#loading-indicator').addClass('hidden');
+                    $('#generate-btn').prop('disabled', false);
 
-                // Display results
-                                    // Update results container
+                    // Display results
+                    // Update results container
                     $('#results-container').removeClass('hidden');
                     $('#loading-indicator').addClass('hidden');
-                    
+
                     if (contentType === 'posts' && typeof response.result === 'object') {
                         // Handle meta information for posts
                         const metaResult = response.result;
@@ -1271,13 +1342,11 @@ function initializeContentGeneration() {
                             </div>
                         `);
                     }
-                    
-                    // Show apply button
-                    $('#apply-btn').removeClass('hidden');
+
                     // Show apply button
                     $applyBtn.removeClass('hidden');
                 } else {
-                    $promptResponse.html(`<div class="text-red-500">${response.error || 'Lỗi không xác định'}</div>`);
+                    $('#results').html(`<div class="text-red-500">${response.error || 'Lỗi không xác định'}</div>`);
                 }
             },
             error: function(xhr, status, error) {
@@ -1286,7 +1355,7 @@ function initializeContentGeneration() {
                 $generateBtn.prop('disabled', false);
 
                 // Display error
-                $promptResponse.html(`
+                $('#results').html(`
                 <div class="rounded-sm border border-red-300 bg-red-50 p-4">
                     <div class="flex items-start">
                         <span class="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-red-100">
@@ -1307,124 +1376,91 @@ function initializeContentGeneration() {
         });
     }
 
-    // Display results based on content type
-    function displayResults(response, contentType) {
-        console.log('Displaying results for content type:', contentType);
-        console.log('Response data:', response);
-        
-        let resultHtml = '';
-
-        if (contentType === 'posts') {
-            // For posts, show meta title and description
-            const metaResult = response.result;
-            
-            // Check if result is already an object, or a string that needs to be displayed
-            if (typeof metaResult === 'string') {
-                resultHtml = `
-                <div class="ai-response space-y-4">
-                    <div>
-                        <h5 class="text-lg font-semibold mb-2">Kết quả</h5>
-                        <div class="p-3 bg-white border border-gray-300 rounded-lg">
-                            ${metaResult}
-                        </div>
-                    </div>
-                </div>
-                `;
-            } else {
-                // The backend should have already decoded the Unicode for us
-                const metaTitle = metaResult.meta_title || '';
-                const metaDesc = metaResult.meta_description || '';
-
-                resultHtml = `
-                <div class="ai-response space-y-4">
-                    <div>
-                        <h5 class="text-lg font-semibold mb-2">Tiêu Đề Meta</h5>
-                        <div class="meta-title p-3 bg-white border border-gray-300 rounded-lg">
-                            ${metaTitle}
-                        </div>
-                        <div class="mt-1 text-xs text-gray-500 flex items-center">
-                            <span>${metaTitle.length} ký tự</span>
-                            <span class="mx-2">•</span>
-                            <span class="${metaTitle.length > 60 ? 'text-red-500' : 'text-green-500'}">
-                                ${metaTitle.length > 60 ? 'Quá dài' : 'Độ dài tốt'}
-                            </span>
-                        </div>
-                    </div>
-                    <div>
-                        <h5 class="text-lg font-semibold mb-2">Mô Tả Meta</h5>
-                        <div class="meta-description p-3 bg-white border border-gray-300 rounded-lg">
-                            ${metaDesc}
-                        </div>
-                        <div class="mt-1 text-xs text-gray-500 flex items-center">
-                            <span>${metaDesc.length} ký tự</span>
-                            <span class="mx-2">•</span>
-                            <span class="${metaDesc.length > 160 ? 'text-red-500' : (metaDesc.length < 120 ? 'text-yellow-500' : 'text-green-500')}">
-                                ${metaDesc.length > 160 ? 'Quá dài' : (metaDesc.length < 120 ? 'Có thể dài hơn' : 'Độ dài tốt')}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                `;
-            }
-        } else {
-            // For other content types or fallback if result is string
-            const result = typeof response.result === 'string' 
-                ? response.result 
-                : JSON.stringify(response.result);
-                
-            resultHtml = `
-            <div class="ai-response">
-                ${result}
-            </div>
-            `;
-        }
-
-        $promptResponse.html(resultHtml);
-
-        // Highlight SEO keywords if present
-        if ($promptResponse.find('*:contains("Từ khóa SEO:")').length) {
-            // Find and style keywords section
-            const keywordsText = $promptResponse.find('*:contains("Từ khóa SEO:")').last();
-            keywordsText.addClass('keywords');
-        }
-    }
-
-    // Apply changes to content
-    function applyChanges() {
+    // Apply the generated content directly (without regenerating)
+    function applyGeneratedContent() {
         // Get content info
         const contentId = $contentFinalSelector.val();
         const contentType = getActiveContentType();
 
-        // Get form values
-        const model = $modelSelect.val();
-        const temperature = $('#temperature').val();
-        const maxTokens = 4096; // Always use maximum token value
-        const promptText = $promptTextarea.val();
-        const systemMessage = $systemMessage.val();
-        const useHtmlMeta = $('#use-html-meta').is(':checked');
+        // Validate we have generated content
+        if (!generatedContent) {
+            alert('Không có nội dung đã tạo để áp dụng.');
+            return;
+        }
 
         // Show loading
         $applyBtn.prop('disabled', true);
         $applyBtn.html('<span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span> Đang áp dụng...');
 
-        // Create form data
+        // Update the content directly
+        let updateData;
+
+        // Prepare update data based on content type
+        if (contentType === 'posts' && typeof generatedContent === 'object') {
+            updateData = {
+                meta_title: generatedContent.meta_title,
+                meta_description: generatedContent.meta_description
+            };
+        } else {
+            updateData = {
+                description: generatedContent
+            };
+        }
+
+        // Add CSRF token
+        updateData._token = $('meta[name="csrf-token"]').attr('content');
+
+        $.ajax({
+            url: `/admin/${contentType === 'book_groups' ? 'book-groups' : contentType}/${contentId}`,
+            type: 'PUT',
+            data: updateData,
+            success: function(response) {
+                // Show success message
+                $('#results').prepend(`
+                    <div class="mb-4 rounded-lg bg-green-50 border border-green-200 p-4">
+                        <div class="flex items-center">
+                            <span class="iconify text-green-500 mr-2" data-icon="mdi-check-circle"></span>
+                            <p class="text-green-700">Nội dung đã được áp dụng thành công!</p>
+                        </div>
+                    </div>
+                `);
+
+                // Reload content details to show updated info
+                window.updateContentDetails(contentId);
+
+                // Reset button
+                $applyBtn.prop('disabled', false);
+                $applyBtn.html('Áp Dụng Thay Đổi');
+            },
+            error: function(xhr) {
+                // Handle error - display fallback method if direct update failed
+                console.error('Direct update failed, using fallback method', xhr);
+                applyUsingFallbackMethod();
+            }
+        });
+    }
+
+    // Fallback method to use the existing API if direct update fails
+    function applyUsingFallbackMethod() {
+        // Get content info
+        const contentId = $contentFinalSelector.val();
+        const contentType = getActiveContentType();
+
+        // Create form data for the fallback API
         const formData = new FormData();
         formData.append('content_type', contentType);
         formData.append('filter_type', 'ids');
         formData.append('filter_id', contentId);
-        formData.append('provider', $providerSelect.val());
-        formData.append('model', model);
-        formData.append('prompt', promptText);
-        formData.append('temperature', temperature);
-        formData.append('max_tokens', maxTokens);
-        formData.append('use_html_meta', useHtmlMeta ? '1' : '0');
+        formData.append('use_generated_content', 'true');
 
-        // Add system message for DeepSeek models
-        if (model.startsWith('deepseek') && systemMessage) {
-            formData.append('system_message', systemMessage);
+        // Add the generated content
+        if (typeof generatedContent === 'object') {
+            formData.append('generated_content', JSON.stringify(generatedContent));
+        } else {
+            formData.append('generated_content', generatedContent);
         }
 
-        // Make AJAX request
+        // Make AJAX request to the fallback endpoint
         $.ajax({
             url: '/admin/ai-dashboard/apply-prompt',
             type: 'POST',
@@ -1437,7 +1473,7 @@ function initializeContentGeneration() {
             success: function(response) {
                 if (response.success) {
                     // Show success message
-                    $promptResponse.prepend(`
+                    $('#results').prepend(`
                         <div class="mb-4 rounded-lg bg-green-50 border border-green-200 p-4">
                             <div class="flex items-center">
                                 <span class="iconify text-green-500 mr-2" data-icon="mdi-check-circle"></span>
@@ -1448,12 +1484,8 @@ function initializeContentGeneration() {
 
                     // Reload content details to show updated info
                     window.updateContentDetails(contentId);
-
-                    // Reset button
-                    $applyBtn.prop('disabled', false);
-                    $applyBtn.html('Áp Dụng Thay Đổi');
                 } else {
-                    $promptResponse.prepend(`
+                    $('#results').prepend(`
                         <div class="mb-4 rounded-lg bg-red-50 border border-red-200 p-4">
                             <div class="flex items-center">
                                 <span class="iconify text-red-500 mr-2" data-icon="mdi-alert-circle"></span>
@@ -1461,15 +1493,15 @@ function initializeContentGeneration() {
                             </div>
                         </div>
                     `);
-
-                    // Reset button
-                    $applyBtn.prop('disabled', false);
-                    $applyBtn.html('Áp Dụng Thay Đổi');
                 }
+
+                // Reset button
+                $applyBtn.prop('disabled', false);
+                $applyBtn.html('Áp Dụng Thay Đổi');
             },
-            error: function(xhr, status, error) {
+            error: function(xhr) {
                 // Display error
-                $promptResponse.prepend(`
+                $('#results').prepend(`
                     <div class="mb-4 rounded-lg bg-red-50 border border-red-200 p-4">
                         <div class="flex items-center">
                             <span class="iconify text-red-500 mr-2" data-icon="mdi-alert-circle"></span>
@@ -1495,8 +1527,12 @@ function initializeContentGeneration() {
         $systemMessage.val('');
         $useHtmlMeta.prop('checked', false);
 
-        // Reset content details
-        showContentPlaceholder();
+        // Reset generated content
+        generatedContent = null;
+
+        // Hide results and button
+        $('#results-container').addClass('hidden');
+        $applyBtn.addClass('hidden');
     }
 
     // Initialize content generation
@@ -1535,7 +1571,7 @@ $(document).ready(function() {
 function initializeUIControls() {
     // Define the system message container
     const $systemMessageContainer = $('#system-message-container');
-    
+
     // Model-related UI
     $('#model').on('change', function() {
         const model = $(this).val();

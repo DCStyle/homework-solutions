@@ -4,22 +4,21 @@ namespace App\Services\AI\Adapters;
 
 use App\Services\AI\AIServiceInterface;
 use Illuminate\Support\Facades\Log;
+use MoeMizrak\LaravelOpenrouter\DTO\ChatData;
+use MoeMizrak\LaravelOpenrouter\DTO\ImageContentPartData;
+use MoeMizrak\LaravelOpenrouter\DTO\ImageUrlData;
+use MoeMizrak\LaravelOpenrouter\DTO\MessageData;
+use MoeMizrak\LaravelOpenrouter\DTO\ProviderPreferencesData;
+use MoeMizrak\LaravelOpenrouter\DTO\ResponseFormatData;
+use MoeMizrak\LaravelOpenrouter\DTO\TextContentData;
 use MoeMizrak\LaravelOpenRouter\Facades\LaravelOpenRouter;
-use MoeMizrak\LaravelOpenRouter\Data\ChatData;
-use MoeMizrak\LaravelOpenRouter\Data\MessageData;
-use MoeMizrak\LaravelOpenRouter\Data\ResponseFormatData;
-use MoeMizrak\LaravelOpenRouter\Data\ProviderPreferencesData;
-use MoeMizrak\LaravelOpenRouter\Enums\RoleType;
-use MoeMizrak\LaravelOpenRouter\Exceptions\OpenRouterException;
-use MoeMizrak\LaravelOpenRouter\Data\TextContentData;
-use MoeMizrak\LaravelOpenRouter\Data\ImageContentPartData;
-use MoeMizrak\LaravelOpenRouter\Data\ImageUrlData;
 use Illuminate\Support\Arr;
+use MoeMizrak\LaravelOpenrouter\Types\RoleType;
 
 class OpenRouterAdapter implements AIServiceInterface
 {
     private $apiKey;
-    
+
     /**
      * Constructor
      *
@@ -31,7 +30,7 @@ class OpenRouterAdapter implements AIServiceInterface
         // Configure OpenRouter with API key
         config(['openrouter.api_key' => $apiKey]);
     }
-    
+
     /**
      * Generate content using OpenRouter
      *
@@ -46,21 +45,21 @@ class OpenRouterAdapter implements AIServiceInterface
         try {
             // Prepare messages array
             $messages = [];
-            
+
             // Add system message if provided
             if (!empty($options['system_message'])) {
                 $messages[] = new MessageData(
-                    role: RoleType::SYSTEM,
-                    content: $options['system_message']
+                    content: $options['system_message'],
+                    role: RoleType::SYSTEM
                 );
             }
-            
+
             // Add user message
             $messages[] = new MessageData(
-                role: RoleType::USER,
-                content: is_string($prompt) ? $prompt : json_encode($prompt)
+                content: is_string($prompt) ? $prompt : json_encode($prompt),
+                role: RoleType::USER
             );
-            
+
             // Create response format for structured output if needed
             $responseFormat = $useHtmlMeta ? new ResponseFormatData(
                 type: 'json_schema',
@@ -84,19 +83,19 @@ class OpenRouterAdapter implements AIServiceInterface
                     ]
                 ]
             ) : null;
-            
+
             // Create chat data
             $chatData = new ChatData(
                 messages: $messages,
                 model: $this->mapModelName($model),
+                response_format: $responseFormat,
+                stop: $options['stop'] ?? null,
+                stream: $options['stream'] ?? false,
                 max_tokens: $options['max_tokens'] ?? 1024,
                 temperature: $options['temperature'] ?? 0.7,
                 top_p: $options['top_p'] ?? null,
                 frequency_penalty: $options['frequency_penalty'] ?? null,
                 presence_penalty: $options['presence_penalty'] ?? null,
-                stop: $options['stop'] ?? null,
-                stream: $options['stream'] ?? false,
-                response_format: $responseFormat,
                 provider: new ProviderPreferencesData(
                     require_parameters: true
                 )
@@ -126,7 +125,7 @@ class OpenRouterAdapter implements AIServiceInterface
             if (!empty($response->id)) {
                 LaravelOpenRouter::costRequest($response->id);
             }
-            
+
             // Process the response
             if ($useHtmlMeta) {
                 // Extract meta information from structured response
@@ -136,7 +135,7 @@ class OpenRouterAdapter implements AIServiceInterface
                     'meta_description' => $content['meta_description'] ?? ''
                 ];
             }
-            
+
             // Return standard format
             return [
                 'choices' => [
@@ -147,15 +146,6 @@ class OpenRouterAdapter implements AIServiceInterface
                     ]
                 ]
             ];
-        } catch (OpenRouterException $e) {
-            Log::error('OpenRouter generation error', [
-                'model' => $model,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'error_code' => $e->getCode()
-            ]);
-            
-            throw $e;
         } catch (\Exception $e) {
             Log::error('OpenRouter generation error', [
                 'model' => $model,
@@ -166,7 +156,7 @@ class OpenRouterAdapter implements AIServiceInterface
             throw $e;
         }
     }
-    
+
     /**
      * Analyze an image using OpenRouter
      *
@@ -180,7 +170,6 @@ class OpenRouterAdapter implements AIServiceInterface
         try {
             // Create message for image analysis
             $message = new MessageData(
-                role: RoleType::USER,
                 content: [
                     new TextContentData(
                         type: TextContentData::ALLOWED_TYPE,
@@ -192,9 +181,10 @@ class OpenRouterAdapter implements AIServiceInterface
                             url: $imageUrl
                         )
                     )
-                ]
+                ],
+                role: RoleType::USER
             );
-            
+
             // Create chat data for vision analysis
             $chatData = new ChatData(
                 messages: [$message],
@@ -202,7 +192,7 @@ class OpenRouterAdapter implements AIServiceInterface
                 max_tokens: $options['max_tokens'] ?? 1024,
                 temperature: $options['temperature'] ?? 0.7
             );
-            
+
             // Check rate limits before making request
             $limits = $this->checkLimits();
             if ($limits && $limits->credits <= 0) {
@@ -227,7 +217,7 @@ class OpenRouterAdapter implements AIServiceInterface
             if (!empty($response->id)) {
                 LaravelOpenRouter::costRequest($response->id);
             }
-            
+
             // Track cost if needed
             if (!empty($response->id)) {
                 $cost = LaravelOpenRouter::costRequest($response->id);
@@ -236,7 +226,7 @@ class OpenRouterAdapter implements AIServiceInterface
                     'cost' => $cost
                 ]);
             }
-            
+
             // Return in standard format
             return [
                 'choices' => [
@@ -256,7 +246,7 @@ class OpenRouterAdapter implements AIServiceInterface
             throw $e;
         }
     }
-    
+
     /**
      * Get available models for OpenRouter
      *
@@ -277,7 +267,7 @@ class OpenRouterAdapter implements AIServiceInterface
             'mistralai/mistral-small-3.1-24b-instruct:free' => 'Mistral 3.1',
         ];
     }
-    
+
     /**
      * Map model name to OpenRouter format
      *
@@ -293,7 +283,7 @@ class OpenRouterAdapter implements AIServiceInterface
     {
         try {
             return LaravelOpenRouter::limitRequest();
-        } catch (OpenRouterException $e) {
+        } catch (\Exception $e) {
             Log::warning('Failed to check OpenRouter limits', [
                 'error' => $e->getMessage()
             ]);
@@ -348,7 +338,7 @@ class OpenRouterAdapter implements AIServiceInterface
             // Grok models - vision
             'grok-2-vision' => 'x-ai/grok-2-vision-1212',
             'grok-2-vision-latest' => 'x-ai/grok-2-vision-1212',
-            
+
             // Google models
             'google/gemini-2.0-flash-thinking-exp:free' => 'google/gemini-2.0-flash-thinking-exp:free',
             'google/gemma-3-1b-it:free' => 'google/gemma-3-1b-it:free',
