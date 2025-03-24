@@ -164,17 +164,15 @@
                                         </button>
                                         
                                         @if($job->status !== 'pending' && $job->status !== 'replaced')
-                                            <form action="{{ route('admin.ai-dashboard.rerun-job', $job->id) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                <button 
-                                                    type="submit" 
-                                                    class="rerun-job inline-flex items-center text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50"
-                                                    title="{{ $job->status === 'processing' ? 'Công việc có thể bị treo, tạo bản sao để chạy lại' : 'Tạo bản sao và chạy lại công việc này' }}"
-                                                >
-                                                    <span class="iconify mr-1" data-icon="mdi-play-circle-outline"></span>
-                                                    Chạy lại
-                                                </button>
-                                            </form>
+                                            <button 
+                                                type="button" 
+                                                class="rerun-job inline-flex items-center text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50"
+                                                title="{{ $job->status === 'processing' ? 'Công việc có thể bị treo, tạo bản sao để chạy lại' : 'Tạo bản sao và chạy lại công việc này' }}"
+                                                data-job-id="{{ $job->id }}"
+                                            >
+                                                <span class="iconify mr-1" data-icon="mdi-play-circle-outline"></span>
+                                                Chạy lại
+                                            </button>
                                         @endif
                                         
                                         @if($job->status === 'completed' && $job->failed_count > 0)
@@ -214,6 +212,54 @@
                 {{ $jobs->links() }}
             </div>
         @endif
+    </div>
+</div>
+
+<!-- Rerun Job Modal -->
+<div class="modal fade" id="rerunJobModal" tabindex="-1" aria-labelledby="rerunJobModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rerunJobModalLabel">Chạy lại công việc</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="rerunJobForm" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <p class="text-gray-600 mb-4">Bạn có thể chọn nhà cung cấp AI và mô hình khác để tạo nội dung.</p>
+                    
+                    <div class="mb-3">
+                        <label for="rerun-provider" class="form-label font-medium text-gray-700">Nhà Cung Cấp AI</label>
+                        <select id="rerun-provider" name="provider" class="form-select w-full rounded border border-gray-300 py-2 px-3">
+                            <option value="">Đang tải...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="rerun-model" class="form-label font-medium text-gray-700">Mô Hình AI</label>
+                        <select id="rerun-model" name="model" class="form-select w-full rounded border border-gray-300 py-2 px-3" disabled>
+                            <option value="">Chọn nhà cung cấp trước</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="rerun-temperature" class="form-label font-medium text-gray-700">
+                            Độ sáng tạo (Temperature): <span id="rerun-temperature-value">0.7</span>
+                        </label>
+                        <input type="range" class="form-range w-full" id="rerun-temperature" name="temperature" 
+                               min="0" max="1" step="0.1" value="0.7">
+                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>Chính xác</span>
+                            <span>Sáng tạo</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Chạy lại</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 @endsection

@@ -29,6 +29,172 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Rerun Job Modal
+    const rerunJobModal = new bootstrap.Modal(document.getElementById('rerunJobModal'));
+    const rerunJobForm = document.getElementById('rerunJobForm');
+    let currentJobId = null;
+
+    // Initialize providers/models selectors
+    initProviderModelSelectors();
+
+    // Handle Rerun Job button clicks
+    document.querySelectorAll('.rerun-job').forEach(button => {
+        button.addEventListener('click', function() {
+            const jobId = this.getAttribute('data-job-id');
+            currentJobId = jobId;
+            
+            // Set the form action
+            rerunJobForm.setAttribute('action', `/admin/ai-dashboard/jobs/${jobId}/rerun`);
+            
+            // Reset form values
+            document.getElementById('rerun-temperature').value = 0.7;
+            document.getElementById('rerun-temperature-value').textContent = '0.7';
+            
+            // Load providers if needed
+            fetchProviders();
+            
+            // Show the modal
+            rerunJobModal.show();
+        });
+    });
+
+    // Temperature slider input handler
+    document.getElementById('rerun-temperature').addEventListener('input', function() {
+        document.getElementById('rerun-temperature-value').textContent = this.value;
+    });
+
+    // Provider change event - load appropriate models
+    document.getElementById('rerun-provider').addEventListener('change', function() {
+        const provider = this.value;
+        if (provider) {
+            fetchModelsForProvider(provider);
+        } else {
+            // Clear and disable model selector if no provider is selected
+            const modelSelect = document.getElementById('rerun-model');
+            modelSelect.innerHTML = '<option value="">Chọn nhà cung cấp trước</option>';
+            modelSelect.disabled = true;
+        }
+    });
+
+    /**
+     * Initialize provider and model selectors
+     */
+    function initProviderModelSelectors() {
+        // Check for saved preferences in localStorage
+        const savedProvider = localStorage.getItem('selectedProvider');
+        const savedModel = localStorage.getItem('selectedModel');
+        
+        // Fetch initial providers list
+        fetchProviders(savedProvider, savedModel);
+    }
+
+    /**
+     * Fetch available AI providers
+     */
+    function fetchProviders(selectedProvider = null, selectedModel = null) {
+        const providerSelect = document.getElementById('rerun-provider');
+        
+        // Show loading state
+        providerSelect.innerHTML = '<option value="">Đang tải nhà cung cấp...</option>';
+        
+        // Fetch providers from API
+        fetch('/admin/ai-dashboard/providers')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Clear loading option
+                    providerSelect.innerHTML = '<option value="">Chọn nhà cung cấp AI</option>';
+                    
+                    // Add provider options
+                    Object.entries(data.providers).forEach(([code, name]) => {
+                        const option = document.createElement('option');
+                        option.value = code;
+                        option.textContent = name;
+                        providerSelect.appendChild(option);
+                    });
+                    
+                    // Select saved provider if available
+                    if (selectedProvider && providerSelect.querySelector(`option[value="${selectedProvider}"]`)) {
+                        providerSelect.value = selectedProvider;
+                        
+                        // Trigger change event to load models
+                        const event = new Event('change');
+                        providerSelect.dispatchEvent(event);
+                        
+                        // Load models for this provider
+                        fetchModelsForProvider(selectedProvider, selectedModel);
+                    }
+                } else {
+                    providerSelect.innerHTML = '<option value="">Không thể tải nhà cung cấp</option>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading providers:', error);
+                providerSelect.innerHTML = '<option value="">Lỗi: Không thể tải nhà cung cấp</option>';
+            });
+    }
+
+    /**
+     * Fetch models for selected provider
+     */
+    function fetchModelsForProvider(provider, selectedModel = null) {
+        const modelSelect = document.getElementById('rerun-model');
+        
+        // Show loading state
+        modelSelect.innerHTML = '<option value="">Đang tải mô hình...</option>';
+        modelSelect.disabled = true;
+        
+        // Fetch models for the selected provider
+        fetch(`/admin/ai-dashboard/providers/${provider}/models`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.models) {
+                    // Clear loading option
+                    modelSelect.innerHTML = '<option value="">Chọn mô hình AI</option>';
+                    
+                    // Add model options
+                    Object.entries(data.models).forEach(([id, name]) => {
+                        const option = document.createElement('option');
+                        option.value = id;
+                        option.textContent = name;
+                        modelSelect.appendChild(option);
+                    });
+                    
+                    // Enable selection
+                    modelSelect.disabled = false;
+                    
+                    // Select saved model if available
+                    if (selectedModel && modelSelect.querySelector(`option[value="${selectedModel}"]`)) {
+                        modelSelect.value = selectedModel;
+                    }
+                } else {
+                    modelSelect.innerHTML = '<option value="">Không có mô hình nào</option>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading models:', error);
+                modelSelect.innerHTML = '<option value="">Lỗi: Không thể tải mô hình</option>';
+            })
+            .finally(() => {
+                modelSelect.disabled = false;
+            });
+    }
+
+    // Handle form submission - save preferences
+    rerunJobForm.addEventListener('submit', function(e) {
+        // Store selected provider and model in localStorage
+        const provider = document.getElementById('rerun-provider').value;
+        const model = document.getElementById('rerun-model').value;
+        
+        if (provider) {
+            localStorage.setItem('selectedProvider', provider);
+        }
+        
+        if (model) {
+            localStorage.setItem('selectedModel', model);
+        }
+    });
+
     // Function to load job details
     function loadJobDetails(jobId, container) {
         // Show loading state
