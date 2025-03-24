@@ -2,97 +2,62 @@
 
 namespace App\Services;
 
-use MoeMizrak\LaravelOpenrouter\DTO\ChatData;
-use MoeMizrak\LaravelOpenrouter\DTO\ImageContentPartData;
-use MoeMizrak\LaravelOpenrouter\DTO\ImageUrlData;
-use MoeMizrak\LaravelOpenrouter\DTO\MessageData;
-use MoeMizrak\LaravelOpenrouter\DTO\ProviderPreferencesData;
-use MoeMizrak\LaravelOpenrouter\DTO\ResponseFormatData;
-use MoeMizrak\LaravelOpenrouter\DTO\TextContentData;
+use App\Services\AI\AIServiceFactory;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Arr;
-use MoeMizrak\LaravelOpenrouter\Facades\LaravelOpenRouter;
-use MoeMizrak\LaravelOpenrouter\Types\RoleType;
 
 class AIService
 {
+    private $defaultProvider = 'openrouter';
+
     /**
      * Call AI model to generate content
      *
      * @param string $model The model to use
      * @param string $prompt The prompt to send to the model
      * @param array $options Additional options for the API call
+     * @param bool $useHtmlMeta Whether to include HTML metadata
      *
      * @return string|array The generated content
      */
     public function generate($model, $prompt, $options = [], $useHtmlMeta = false)
     {
         try {
-            // Map model names to OpenRouter format
-            $openRouterModel = $this->mapModelName($model);
+            // Get provider from options or use default
+            $provider = $options['provider'] ?? $this->defaultProvider;
 
-            // Prepare system message if provided
-            $messages = [];
-            if (!empty($options['system_message'])) {
-                $messages[] = new MessageData(
-                    content: $options['system_message'],
-                    role: RoleType::SYSTEM
-                );
+            Log::debug('AI generation started', [
+                'model' => $model,
+                'provider' => $provider,
+                'prompt_preview' => substr(is_string($prompt) ? $prompt : json_encode($prompt), 0, 100)
+            ]);
+
+            // Get the appropriate service adapter through factory
+            $service = AIServiceFactory::createService($provider);
+
+            // Check if we should skip prompt processing (for bulk jobs that already replaced variables)
+            $skipPromptProcessing = $options['skip_prompt_processing'] ?? false;
+            
+            if ($skipPromptProcessing) {
+                $processedPrompt = $prompt; // Use the prompt as-is
+                Log::debug('Skipping prompt processing, using pre-processed prompt', [
+                    'model' => $model,
+                    'provider' => $provider
+                ]);
+            } else {
+                // Process the prompt with our existing processor
+                $processedPrompt = $this->processPrompt($prompt, $options['content_type'] ?? 'generic', $useHtmlMeta);
             }
 
-            $prompt = $this->processPrompt($prompt, $options['content_type'] ?? 'generic', $useHtmlMeta);
+            // Pass the request to the specific provider adapter
+            $response = $service->generate($model, $processedPrompt, $options, $useHtmlMeta);
 
-            // Add user message
-            $messages[] = new MessageData(
-                content: $prompt,
-                role: RoleType::USER
-            );
-
-            // Prepare parameters for ChatData with ONLY the required fields
-            $chatDataParams = [
-                'messages' => $messages,
-                'model' => $openRouterModel
-            ];
-
-            // Add optional parameters EXCEPT ones that conflict with XOR validation
-            $allowedParams = [
-                'temperature', 'top_p', 'frequency_penalty',
-                'presence_penalty', 'stop', 'max_tokens'
-            ];
-
-            foreach ($allowedParams as $param) {
-                if (isset($options[$param]) && !empty($options[$param])) {
-                    $chatDataParams[$param] = $options[$param];
-                }
-            }
-
-            // IMPORTANT: Use fromArray to avoid DTO validation issues with properties
-            // that aren't explicitly set in the constructor
-            $chatData = ChatData::from($chatDataParams);
-
-            // Handle structured output if requested
-            if (!empty($options['use_html_meta'])) {
-                $chatData->response_format = new ResponseFormatData(
-                    type: 'json_object'
-                );
-
-                $chatData->provider = new ProviderPreferencesData(
-                    require_parameters: true
-                );
-
-                Log::debug('Added structured output format for HTML meta');
-            }
-
-            // Make the request
-            $response = LaravelOpenRouter::chatRequest($chatData);
-
-            // Process the response
-            $processedResponse = $this->processResponse($response, $options['content_type'] ?? 'generic', $options);
-
-            return $processedResponse;
+            // Process the response with our existing formatter
+            return $this->processResponse($response, $options['content_type'] ?? 'generic', $options);
         } catch (\Exception $e) {
             Log::error('AI generation error', [
                 'model' => $model,
+                'provider' => $options['provider'] ?? $this->defaultProvider,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'file' => $e->getFile(),
@@ -104,6 +69,106 @@ class AIService
     }
 
     /**
+     * For image analysis
+     *
+     * @param string $imageUrl
+     * @param string $prompt
+     * @param array $options
+     * @return string|array
+     */
+    public function analyzeImage($imageUrl, $prompt, $options = [])
+    {
+        try {
+            // Get provider from options or use default
+            $provider = $options['provider'] ?? $this->defaultProvider;
+
+            Log::debug('Starting image analysis', [
+                'prompt_preview' => substr($prompt, 0, 100),
+                'image_url' => $imageUrl,
+                'provider' => $provider
+            ]);
+
+            // Get the appropriate service adapter through factory
+            $service = AIServiceFactory::createService($provider);
+
+            // Delegate to the specific provider adapter
+            return $service->analyzeImage($imageUrl, $prompt, $options);
+        } catch (\Exception $e) {
+            Log::error('Vision API error', [
+                'provider' => $options['provider'] ?? $this->defaultProvider,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            return "Unable to analyze image: " . $e->getMessage();
+        }
+    }
+
+    /**
+     * Get all available models across all active providers
+     *
+     * @return array
+     */
+    public function getAvailableModels()
+    {
+        $allModels = [];
+
+        try {
+            // Get all active providers with API keys
+            $activeProviders = AIServiceFactory::getActiveProviders();
+
+            // For each provider, get available models
+            foreach ($activeProviders as $providerCode => $providerName) {
+                $service = AIServiceFactory::createService($providerCode);
+                $models = $service->getAvailableModels();
+
+                // Add provider name to model names
+                $modelsWithProvider = [];
+                foreach ($models as $modelCode => $modelName) {
+                    $modelsWithProvider[$modelCode] = "{$modelName} ({$providerName})";
+                }
+
+                // Merge with all models
+                $allModels = array_merge($allModels, $modelsWithProvider);
+            }
+
+            return $allModels;
+        } catch (\Exception $e) {
+            Log::error('Error getting available models', [
+                'error' => $e->getMessage()
+            ]);
+
+            return [];
+        }
+    }
+
+    /**
+     * Get available models for a specific provider
+     *
+     * @param string $provider
+     * @return array
+     */
+    public function getModelsForProvider($provider)
+    {
+        try {
+            // Create service for the specified provider
+            $service = AIServiceFactory::createService($provider);
+            $models = $service->getAvailableModels();
+
+            return $models;
+        } catch (\Exception $e) {
+            Log::error('Error getting models for provider', [
+                'provider' => $provider,
+                'error' => $e->getMessage()
+            ]);
+
+            return [];
+        }
+    }
+
+    /**
      * Process and format prompt to guide AI model's response format
      *
      * @param string $prompt The original prompt
@@ -111,7 +176,7 @@ class AIService
      * @param bool $useHtmlMeta Whether to use HTML formatting
      * @return string The enhanced prompt with formatting instructions
      */
-    private function processPrompt($prompt, $contentType, $useHtmlMeta = false)
+    public function processPrompt($prompt, $contentType, $useHtmlMeta = false)
     {
         // Temporary: We disable $useHtmlMeta because there are issues with the response formatter
         $useHtmlMeta = false;
@@ -128,260 +193,103 @@ class AIService
         // Create structure guidelines based on content type
         $contentStructure = match($contentType) {
             'posts' => "Hãy viết một bài giới thiệu chi tiết (khoảng 800-1000 từ) về bài học này bao gồm các phần sau:
-
 1. **Tổng quan về bài học**: Giới thiệu chủ đề và mục tiêu chính
-2. **Kiến thức và kỹ năng**: Những gì học sinh sẽ học được 
+2. **Kiến thức và kỹ năng**: Những gì học sinh sẽ học được
 3. **Phương pháp tiếp cận**: Cách thức bài học được tổ chức
 4. **Ứng dụng thực tế**: Cách áp dụng kiến thức vào thực tế
 5. **Kết nối với chương trình học**: Mối liên hệ với các bài học khác
 6. **Hướng dẫn học tập**: Gợi ý phương pháp học hiệu quả",
-
             'chapters' => "Hãy viết một bài giới thiệu tổng quan (khoảng 800-1000 từ) về chương sách này bao gồm các phần sau:
-
 1. **Giới thiệu chương**: Nội dung và mục tiêu chính
 2. **Các bài học chính**: Tổng quan về các bài học trong chương
 3. **Kỹ năng phát triển**: Những kỹ năng học sinh sẽ đạt được
 4. **Khó khăn thường gặp**: Những thách thức học sinh có thể gặp phải
 5. **Phương pháp tiếp cận**: Gợi ý cách tiếp cận học tập hiệu quả
 6. **Liên kết kiến thức**: Mối liên hệ với các chương khác",
-
             'books' => "Hãy viết một bài giới thiệu chi tiết (khoảng 800-1000 từ) về cuốn sách này bao gồm các phần sau:
-
 1. **Tổng quan sách**: Mục đích và đối tượng sử dụng
 2. **Cấu trúc nội dung**: Các phần và chương chính
 3. **Phương pháp giảng dạy**: Cách tiếp cận giáo dục của sách
 4. **Đặc điểm nổi bật**: Điểm mạnh và tính năng đặc biệt
 5. **Hỗ trợ học tập**: Các công cụ và tài nguyên đi kèm
 6. **Hướng dẫn sử dụng**: Cách sử dụng sách hiệu quả nhất",
-
             'book_groups' => "Hãy viết một bài giới thiệu tổng quan (khoảng 800-1000 từ) về bộ sách này bao gồm các phần sau:
-
 1. **Giới thiệu bộ sách**: Mục đích và tầm nhìn giáo dục
 2. **Đối tượng học sinh**: Phù hợp với những học sinh nào
 3. **Cấu trúc chương trình**: Các sách và mối liên hệ giữa chúng
 4. **Phương pháp giáo dục**: Cách tiếp cận dạy và học
 5. **Lợi ích chính**: Giá trị mang lại cho học sinh và giáo viên
 6. **Cách sử dụng hiệu quả**: Hướng dẫn tận dụng tối đa bộ sách",
-
             default => "Hãy viết một bài nội dung chi tiết (khoảng 800-1000 từ) với cấu trúc rõ ràng, bố cục mạch lạc và thông tin đầy đủ.",
         };
 
         // HTML formatting instructions when needed
-        $formattingInstructions = $useHtmlMeta ? 
+        $formattingInstructions = $useHtmlMeta ?
 "ĐỊNH DẠNG HTML: Bài viết cần được định dạng bằng các thẻ HTML cơ bản để hiển thị trên website:
-
-1. Sử dụng thẻ `<h2>` cho các tiêu đề chính 
+1. Sử dụng thẻ `<h2>` cho các tiêu đề chính
 2. Sử dụng thẻ `<h3>` cho các tiêu đề phụ
 3. Sử dụng thẻ `<p>` cho mỗi đoạn văn
 4. Sử dụng thẻ `<strong>` cho văn bản quan trọng cần nhấn mạnh
 5. Sử dụng thẻ `<em>` cho văn bản cần in nghiêng
 6. Sử dụng thẻ `<ul>` và `<li>` cho danh sách không có thứ tự
 7. Sử dụng thẻ `<ol>` và `<li>` cho danh sách có thứ tự
-
-Đảm bảo mỗi thẻ đều được đóng đúng cách. Không sử dụng các thẻ HTML phức tạp khác. Không thêm các thuộc tính CSS hoặc JavaScript." : 
-
+Đảm bảo mỗi thẻ đều được đóng đúng cách. Không sử dụng các thẻ HTML phức tạp khác. Không thêm các thuộc tính CSS hoặc JavaScript." :
 "ĐỊNH DẠNG VĂN BẢN: Hãy viết với cấu trúc rõ ràng, sử dụng tiêu đề, đoạn văn và danh sách để tạo bố cục mạch lạc.";
 
         // Strict output format requirements to avoid JSON artifacts
         $preciseOutputInstructions = "
 HƯỚNG DẪN QUAN TRỌNG VỀ KẾT QUẢ ĐẦU RA:
-
 1. KHÔNG thêm bất kỳ phần mở đầu thừa nào như 'Dưới đây là bài viết' hoặc 'Tôi sẽ viết'.
 2. KHÔNG thêm bất kỳ phần kết thúc thừa nào như 'Tôi hy vọng bài viết này hữu ích'.
 3. KHÔNG bao gồm bất kỳ dấu ngoặc JSON, ký hiệu đặc biệt, hay chuỗi như 'refusal:null' trong nội dung.
 4. BẮT ĐẦU và KẾT THÚC phản hồi của bạn chính xác với nội dung bài viết, không có văn bản thừa.
 5. Viết hoàn toàn bằng tiếng Việt với ngữ pháp và chính tả chuẩn mực.
-
 <START_CONTENT>
-
 [Đặt nội dung bài viết chính xác ở đây, không có văn bản thừa]
-
 <END_CONTENT>
-
 BẠN CHỈ ĐƯỢC TRẢ VỀ NỘI DUNG GIỮA CÁC THẺ START_CONTENT VÀ END_CONTENT, KHÔNG ĐƯỢC BAO GỒM CÁC THẺ NÀY!";
 
         // Combine everything into the final prompt
-        $enhancedPrompt = $roleInstruction . "\n\n" . 
-                         $contentStructure . "\n\n" . 
-                         $formattingInstructions . "\n\n" . 
-                         $preciseOutputInstructions . "\n\n" . 
+        $enhancedPrompt = $roleInstruction . "\n\n" .
+                         $contentStructure . "\n\n" .
+                         $formattingInstructions . "\n\n" .
+                         $preciseOutputInstructions . "\n\n" .
                          $prompt;
 
         return $enhancedPrompt;
     }
 
     /**
-     * Map old model names to OpenRouter model IDs
-     */
-    private function mapModelName($model)
-    {
-        // Map model names from old format to OpenRouter format
-        $modelMap = [
-            // DeepSeek models
-            'deepseek-v3' => 'deepseek/deepseek-chat:free',
-            'deepseek-chat' => 'deepseek/deepseek-chat:free',
-            'deepseek-r1' => 'deepseek/deepseek-r1:free',
-
-            // Grok models - text
-            'grok-2' => 'x-ai/grok-2',
-            'grok-2-latest' => 'x-ai/grok-2',
-            'grok-2-1212' => 'x-ai/grok-2-1212',
-            'grok-2-mini' => 'x-ai/grok-2-mini',
-
-            // Grok models - vision
-            'grok-2-vision' => 'x-ai/grok-2-vision-1212',
-            'grok-2-vision-latest' => 'x-ai/grok-2-vision-1212',
-            
-            // Google models
-            'google/gemini-2.0-flash-thinking-exp:free' => 'google/gemini-2.0-flash-thinking-exp:free',
-            'google/gemma-3-1b-it:free' => 'google/gemma-3-1b-it:free',
-            'google/gemma-3-27b-it:free' => 'google/gemma-3-27b-it:free',
-
-            // Other models
-            'qwen/qwq-32b:free' => 'qwen/qwq-32b:free',
-            'meta-llama/llama-3.2-1b-instruct:free' => 'meta-llama/llama-3.2-1b-instruct:free',
-            'mistralai/mistral-small-3.1-24b-instruct:free' => 'mistralai/mistral-small-3.1-24b-instruct:free',
-        ];
-
-        // If the model is already in the correct format (contains a slash), use it directly
-        if (str_contains($model, '/')) {
-            return $model;
-        }
-
-        return $modelMap[$model] ?? 'x-ai/grok-2';  // Default to Grok-2 if unknown
-    }
-
-    /**
-     * Clean up response artifacts from AI model output
-     *
-     * @param string $content The raw content from the AI model
-     * @return string Cleaned content
-     */
-    private function cleanResponseArtifacts($content)
-    {
-        if (!is_string($content)) {
-            return $content;
-        }
-        
-        // Remove JSON artifacts like ","refusal":null}}
-        $content = preg_replace('/",\s*"refusal"\s*:\s*null\s*\}\s*\}.*$/s', '', $content);
-        $content = preg_replace('/"\s*,\s*".*?\}\s*\}.*$/s', '', $content);
-        
-        // Remove any trailing JSON that might be included
-        $content = preg_replace('/\}\s*\}.*$/s', '', $content);
-        
-        // Remove any other JSON-like artifacts
-        $content = preg_replace('/"?\s*\}\s*\]?\s*"?\s*$/s', '', $content);
-        
-        // Remove any opening JSON structure that might be included
-        $content = preg_replace('/^\s*\{\s*"[^"]+"\s*:\s*\{/s', '', $content);
-        
-        // Remove any escaped quotes at the beginning or end
-        $content = preg_replace('/^"(.*)"$/s', '$1', $content);
-        
-        // Replace escaped newlines with actual newlines
-        $content = str_replace('\\n', "\n", $content);
-        
-        // Unescape characters
-        $content = stripcslashes($content);
-        
-        return $content;
-    }
-
-    /**
-     * Ensure HTML is valid and properly formatted
-     *
-     * @param string $content The HTML content to validate
-     * @return string Valid HTML content
-     */
-    private function ensureValidHtml($content)
-    {
-        // If content doesn't have HTML tags, add basic paragraph tags
-        if (strpos($content, '<') === false) {
-            return '<p>' . str_replace("\n\n", '</p><p>', $content) . '</p>';
-        }
-        
-        // Check for common HTML issues
-        
-        // 1. Missing paragraph tags around text
-        if (!preg_match('/<p>/i', $content)) {
-            $parts = preg_split('/(<h[1-6].*?>.*?<\/h[1-6]>|<ul>.*?<\/ul>|<ol>.*?<\/ol>)/is', $content, -1, PREG_SPLIT_DELIM_CAPTURE);
-            $result = '';
-            
-            foreach ($parts as $part) {
-                if (preg_match('/^<h[1-6]|^<ul|^<ol/i', $part)) {
-                    // This is already a heading or list, keep as is
-                    $result .= $part;
-                } elseif (trim($part) != '') {
-                    // This is text that needs paragraph tags
-                    $paragraphs = preg_split('/\n\n+/', trim($part));
-                    foreach ($paragraphs as $paragraph) {
-                        if (trim($paragraph) != '') {
-                            $result .= '<p>' . trim($paragraph) . '</p>';
-                        }
-                    }
-                }
-            }
-            
-            $content = $result;
-        }
-        
-        // 2. Ensure all tags are properly closed
-        $openingTags = [
-            '<p>' => '</p>',
-            '<h2>' => '</h2>',
-            '<h3>' => '</h3>',
-            '<strong>' => '</strong>',
-            '<em>' => '</em>',
-            '<ul>' => '</ul>',
-            '<ol>' => '</ol>',
-            '<li>' => '</li>'
-        ];
-        
-        foreach ($openingTags as $openTag => $closeTag) {
-            $openCount = substr_count(strtolower($content), strtolower($openTag));
-            $closeCount = substr_count(strtolower($content), strtolower($closeTag));
-            
-            // Add missing closing tags if needed
-            if ($openCount > $closeCount) {
-                $content .= str_repeat($closeTag, $openCount - $closeCount);
-            }
-        }
-        
-        return $content;
-    }
-
-    /**
      * Process and format response based on content type
      *
-     * @param mixed $response The response from OpenRouter
+     * @param mixed $response The response from AI provider
      * @param string $contentType Type of content
      * @param array $options Additional options
      * @return string|array The formatted and processed content
      */
-    private function processResponse($response, $contentType, $options = [])
+    public function processResponse($response, $contentType, $options = [])
     {
         try {
             // Extract content from different possible response formats
             $content = '';
 
             // Check if response is in the expected format
-            if (isset($response->choices) && !empty($response->choices)) {
-                if (isset($response->choices[0]->message) && isset($response->choices[0]->message->content)) {
-                    $content = $response->choices[0]->message->content;
+            if (isset($response['choices']) && !empty($response['choices'])) {
+                if (isset($response['choices'][0]['message']) && isset($response['choices'][0]['message']['content'])) {
+                    $content = $response['choices'][0]['message']['content'];
                 } else {
                     Log::warning('Unexpected response structure', [
-                        'response' => json_encode(Arr::except((array)$response, ['usage']))
+                        'response' => json_encode(Arr::except($response, ['usage']))
                     ]);
-                    $content = json_encode($response->choices[0]);
+                    $content = json_encode($response['choices'][0]);
                 }
             } else {
                 Log::warning('Choices not found in response', [
-                    'response_keys' => is_object($response) ? array_keys((array)$response) : 'not_object'
+                    'response_keys' => is_array($response) ? array_keys($response) : 'not_array'
                 ]);
-                
+
                 // Try to extract content from the first level if choices is missing
-                $content = $response->content ?? json_encode($response);
+                $content = $response['content'] ?? json_encode($response);
             }
 
             // Clean up any JSON artifacts or unwanted parts
@@ -394,7 +302,7 @@ BẠN CHỈ ĐƯỢC TRẢ VỀ NỘI DUNG GIỮA CÁC THẺ START_CONTENT VÀ E
                         // Ensure the HTML is properly formatted
                         $content = $this->ensureValidHtml($content);
                     }
-                    
+
                     return $content;
 
                 case 'chapters':
@@ -412,6 +320,7 @@ BẠN CHỈ ĐƯỢC TRẢ VỀ NỘI DUNG GIỮA CÁC THẺ START_CONTENT VÀ E
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
+
             return $content ?? 'Error processing response';
         }
     }
@@ -437,9 +346,109 @@ BẠN CHỈ ĐƯỢC TRẢ VỀ NỘI DUNG GIỮA CÁC THẺ START_CONTENT VÀ E
     }
 
     /**
+     * Clean up response artifacts from AI model output
+     *
+     * @param string $content The raw content from the AI model
+     * @return string Cleaned content
+     */
+    private function cleanResponseArtifacts($content)
+    {
+        if (!is_string($content)) {
+            return $content;
+        }
+
+        // Remove JSON artifacts like ","refusal":null}}
+        $content = preg_replace('/",\s*"refusal"\s*:\s*null\s*\}\s*\}.*$/s', '', $content);
+        $content = preg_replace('/"\s*,\s*".*?\}\s*\}.*$/s', '', $content);
+
+        // Remove any trailing JSON that might be included
+        $content = preg_replace('/\}\s*\}.*$/s', '', $content);
+
+        // Remove any other JSON-like artifacts
+        $content = preg_replace('/"?\s*\}\s*\]?\s*"?\s*$/s', '', $content);
+
+        // Remove any opening JSON structure that might be included
+        $content = preg_replace('/^\s*\{\s*"[^"]+"\s*:\s*\{/s', '', $content);
+
+        // Remove any escaped quotes at the beginning or end
+        $content = preg_replace('/^"(.*)"$/s', '$1', $content);
+
+        // Replace escaped newlines with actual newlines
+        $content = str_replace('\\n', "\n", $content);
+
+        // Unescape characters
+        $content = stripcslashes($content);
+
+        return $content;
+    }
+
+    /**
+     * Ensure HTML is valid and properly formatted
+     *
+     * @param string $content The HTML content to validate
+     * @return string Valid HTML content
+     */
+    private function ensureValidHtml($content)
+    {
+        // If content doesn't have HTML tags, add basic paragraph tags
+        if (strpos($content, '<') === false) {
+            return '<p>' . str_replace("\n\n", '</p><p>', $content) . '</p>';
+        }
+
+        // Check for common HTML issues
+
+        // 1. Missing paragraph tags around text
+        if (!preg_match('/<p>/i', $content)) {
+            $parts = preg_split('/(<h[1-6].*?>.*?<\/h[1-6]>|<ul>.*?<\/ul>|<ol>.*?<\/ol>)/is', $content, -1, PREG_SPLIT_DELIM_CAPTURE);
+            $result = '';
+
+            foreach ($parts as $part) {
+                if (preg_match('/^<h[1-6]|^<ul|^<ol/i', $part)) {
+                    // This is already a heading or list, keep as is
+                    $result .= $part;
+                } elseif (trim($part) != '') {
+                    // This is text that needs paragraph tags
+                    $paragraphs = preg_split('/\n\n+/', trim($part));
+                    foreach ($paragraphs as $paragraph) {
+                        if (trim($paragraph) != '') {
+                            $result .= '<p>' . trim($paragraph) . '</p>';
+                        }
+                    }
+                }
+            }
+
+            $content = $result;
+        }
+
+        // 2. Ensure all tags are properly closed
+        $openingTags = [
+            '<p>' => '</p>',
+            '<h2>' => '</h2>',
+            '<h3>' => '</h3>',
+            '<strong>' => '</strong>',
+            '<em>' => '</em>',
+            '<ul>' => '</ul>',
+            '<ol>' => '</ol>',
+            '<li>' => '</li>'
+        ];
+
+        foreach ($openingTags as $openTag => $closeTag) {
+            $openCount = substr_count(strtolower($content), strtolower($openTag));
+            $closeCount = substr_count(strtolower($content), strtolower($closeTag));
+
+            // Add missing closing tags if needed
+            if ($openCount > $closeCount) {
+                $content .= str_repeat($closeTag, $openCount - $closeCount);
+            }
+        }
+
+        return $content;
+    }
+
+    /**
      * Get fallback response for demonstration or when API fails
      */
-    private function getFallbackResponse($contentType)
+    public function getFallbackResponse($contentType)
     {
         // Sample responses for demonstration
         $responses = [
@@ -454,105 +463,5 @@ BẠN CHỈ ĐƯỢC TRẢ VỀ NỘI DUNG GIỮA CÁC THẺ START_CONTENT VÀ E
         ];
 
         return $responses[$contentType] ?? $responses['generic'];
-    }
-
-    /**
-     * For image analysis
-     */
-    public function analyzeImage($imageUrl, $prompt, $options = [])
-    {
-        try {
-            Log::debug('Starting image analysis', [
-                'prompt_preview' => substr($prompt, 0, 100),
-                'image_url' => $imageUrl
-            ]);
-
-            // Map model name if necessary
-            $modelName = $options['model'] ?? 'grok-2-vision';
-            if (isset($options['model_variant'])) {
-                $modelName = $options['model_variant'];
-            }
-            $openRouterModel = $this->mapModelName($modelName);
-
-            Log::debug('Mapped vision model', [
-                'original' => $modelName,
-                'mapped' => $openRouterModel
-            ]);
-
-            // For direct URLs, create content parts with text and image
-            $messageParts = [];
-
-            // Add text content
-            $messageParts[] = new TextContentData(
-                type: TextContentData::ALLOWED_TYPE,
-                text: $prompt
-            );
-
-            // Add image content
-            $messageParts[] = new ImageContentPartData(
-                type: ImageContentPartData::ALLOWED_TYPE,
-                image_url: new ImageUrlData(
-                    url: $imageUrl
-                )
-            );
-
-            // Prepare messages
-            $messages = [];
-            if (!empty($options['system_message'])) {
-                $messages[] = new MessageData(
-                    content: $options['system_message'],
-                    role: RoleType::SYSTEM
-                );
-
-                Log::debug('Added system message for vision analysis');
-            }
-
-            // Add user message with content parts
-            $messages[] = new MessageData(
-                content: $messageParts,
-                role: RoleType::USER
-            );
-
-            Log::debug('Creating vision ChatData', [
-                'model' => $openRouterModel,
-                'message_count' => count($messages)
-            ]);
-
-            // Create ChatData
-            $chatData = new ChatData([
-                'messages' => $messages,
-                'model' => $openRouterModel,
-                'temperature' => $options['temperature'] ?? 0.7
-            ]);
-
-            // Only add max_tokens if it was provided or is a reasonable value
-            if (!empty($options['max_tokens']) && $options['max_tokens'] > 0) {
-                $chatData->max_tokens = $options['max_tokens'];
-            }
-
-            // Make request
-            Log::debug('Sending vision request to OpenRouter');
-            $response = LaravelOpenRouter::chatRequest($chatData);
-
-            Log::debug('Received vision response', [
-                'has_choices' => isset($response->choices) ? 'yes' : 'no'
-            ]);
-
-            // Return content
-            if (isset($response->choices) && !empty($response->choices)) {
-                return $response->choices[0]->message->content ?? '';
-            }
-
-            return json_encode($response);
-        } catch (\Exception $e) {
-            Log::error('Vision API error', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-
-            return "Unable to analyze image: " . $e->getMessage();
-        }
     }
 }

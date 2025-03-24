@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use App\Services\AI\AIServiceFactory;
 
 class AIDashboardController extends Controller
 {
@@ -382,6 +383,7 @@ class AIDashboardController extends Controller
     {
         $contentType = $request->input('content_type');
         $contentId = $request->input('content_id');
+        $provider = $request->input('provider', 'openrouter');
         $model = $request->input('model', 'grok-2');
         $promptText = $request->input('prompt');
         $promptId = $request->input('prompt_id');
@@ -410,6 +412,7 @@ class AIDashboardController extends Controller
                 'content_type' => $contentType,
                 'max_tokens' => (int)$request->input('max_tokens', 4000),
                 'temperature' => (float)$request->input('temperature', 0.7),
+                'provider' => $provider,
             ];
 
             // Add model-specific parameters
@@ -424,8 +427,14 @@ class AIDashboardController extends Controller
                 $options['model_variant'] = $request->input('deepseek_model', 'deepseek-chat');
             }
 
+            // For Gemini vision models, we need a special format
+            if (str_contains($model, 'gemini') && str_contains($model, 'vision')) {
+                $options['vision_model'] = true;
+            }
+
             // Call AI model to generate content
-            $result = $this->aiService->generate($model, $prompt, $options, $useHtmlMeta);
+            $aiService = AIServiceFactory::createService($provider);
+            $result = $aiService->generate($model, $prompt, $options, $useHtmlMeta);
 
             // Format the result with our helper
             if ($contentType === 'posts' && is_array($result)) {
@@ -504,7 +513,8 @@ class AIDashboardController extends Controller
             $contentType = $request->input('content_type');
             $filterType = $request->input('filter_type');
             $filterId = $request->input('filter_id');
-            $model = $request->input('model', 'grok-2');
+            $provider = $request->input('provider', 'openrouter');
+            $model = $request->input('model');
             $promptText = $request->input('prompt');
             $promptId = $request->input('prompt_id');
             $useHtmlMeta = (bool)$request->input('use_html_meta', false);
@@ -541,6 +551,7 @@ class AIDashboardController extends Controller
                         'content_type' => $contentType,
                         'max_tokens' => (int)$request->input('max_tokens', 4000),
                         'temperature' => (float)$request->input('temperature', 0.7),
+                        'provider' => $provider,
                     ];
 
                     // Add system message for DeepSeek
@@ -1210,6 +1221,7 @@ class AIDashboardController extends Controller
             $contentType = $request->input('content_type');
             $filterType = $request->input('filter_type');
             $filterId = $request->input('filter_id');
+            $provider = $request->input('provider', 'openrouter');
             $model = $request->input('model', 'grok-2');
             $promptText = $request->input('prompt');
             $promptId = $request->input('prompt_id');
@@ -1238,6 +1250,7 @@ class AIDashboardController extends Controller
             
             // Prepare settings array
             $settings = [
+                'provider' => $provider,
                 'model' => $model,
                 'prompt' => $promptText,
                 'max_tokens' => (int)$request->input('max_tokens', 4000),
@@ -1528,6 +1541,63 @@ class AIDashboardController extends Controller
             ]);
             
             return redirect()->back()->with('error', 'Lỗi khi thử lại: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get all available AI providers
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getProviders()
+    {
+        try {
+            $providers = AIServiceFactory::getAvailableProviders();
+            
+            return response()->json([
+                'success' => true,
+                'providers' => $providers
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting AI providers', [
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi lấy danh sách nhà cung cấp AI: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get available models for a specific provider
+     * 
+     * @param string $provider
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getModelsForProvider($provider)
+    {
+        try {
+            $aiService = $this->aiService;
+            // Create a new service for the specified provider
+            $service = AIServiceFactory::createService($provider);
+            $models = $service->getAvailableModels();
+            
+            return response()->json([
+                'success' => true,
+                'models' => $models
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting models for provider', [
+                'provider' => $provider,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi lấy danh sách mô hình: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

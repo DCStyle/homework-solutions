@@ -337,22 +337,14 @@
             }
         });
 
-        // Temperature and max tokens sliders
+        // Temperature slider only
         $("#modal-temperature").on('input', function() {
             $("#modal-temperature-value").text($(this).val());
         });
 
-        $("#modal-max-tokens").on('input', function() {
-            $("#modal-max-tokens-value").text($(this).val());
-        });
-
-        // Bulk temperature and max tokens sliders
+        // Bulk temperature slider only 
         $("#bulk-temperature").on('input', function() {
             $("#bulk-temperature-value").text($(this).val());
-        });
-
-        $("#bulk-max-tokens").on('input', function() {
-            $("#bulk-max-tokens-value").text($(this).val());
         });
 
         // Prompt source toggle
@@ -409,12 +401,64 @@
             // Reset parameters
             $("#bulk-temperature").val(0.7);
             $("#bulk-temperature-value").text('0.7');
-            $("#bulk-max-tokens").val(1000);
-            $("#bulk-max-tokens-value").text('1000');
+
+            // Update selected items count in modal
+            $("#bulk-selected-count").text(`Đã chọn ${selectedItems.length} mục`);
+
+            // Initialize provider selector
+            initBulkProviderSelector();
 
             // Show modal
             if (bulkGenerateModal) {
                 bulkGenerateModal.show();
+            }
+        });
+
+        // Bulk prompt source toggle
+        $("#bulk-prompt-source").on('change', function() {
+            if ($(this).val() === 'custom') {
+                $("#bulk-saved-prompts-container").addClass('d-none');
+                $("#bulk-prompt-editor").removeClass('d-none');
+            } else if ($(this).val() === 'saved') {
+                $("#bulk-saved-prompts-container").removeClass('d-none');
+                $("#bulk-prompt-editor").removeClass('d-none');
+            } else {
+                $("#bulk-saved-prompts-container").addClass('d-none');
+                $("#bulk-prompt-editor").addClass('d-none');
+            }
+        });
+
+        // Saved prompt selection
+        $("#modal-saved-prompt").on('change', function() {
+            const selectedOption = $(this).find('option:selected');
+            if (selectedOption.val()) {
+                const promptText = selectedOption.data('prompt');
+                const systemMessage = selectedOption.data('system-message');
+
+                if (promptText) {
+                    $("#modal-prompt").val(promptText);
+                }
+
+                if (systemMessage) {
+                    $("#modal-system-message").val(systemMessage);
+                }
+            }
+        });
+
+        // Bulk saved prompt selection
+        $("#bulk-saved-prompt").on('change', function() {
+            const selectedOption = $(this).find('option:selected');
+            if (selectedOption.val()) {
+                const promptText = selectedOption.data('prompt');
+                const systemMessage = selectedOption.data('system-message');
+
+                if (promptText) {
+                    $("#bulk-prompt").val(promptText);
+                }
+
+                if (systemMessage) {
+                    $("#bulk-system-message").val(systemMessage);
+                }
             }
         });
 
@@ -425,7 +469,7 @@
             const model = $("#modal-model").val();
             const prompt = $("#modal-prompt").val();
             const temperature = $("#modal-temperature").val();
-            const maxTokens = $("#modal-max-tokens").val();
+            const maxTokens = 4096; // Always use maximum token value
             const systemMessage = $("#modal-system-message").val();
             const useHtmlMeta = $("#modal-use-html-meta").is(':checked');
 
@@ -516,7 +560,7 @@
             const model = $("#modal-model").val();
             const prompt = $("#modal-prompt").val();
             const temperature = $("#modal-temperature").val();
-            const maxTokens = $("#modal-max-tokens").val();
+            const maxTokens = 4096; // Always use maximum token value
             const systemMessage = $("#modal-system-message").val();
             const useHtmlMeta = $("#modal-use-html-meta").is(':checked');
 
@@ -581,7 +625,7 @@
             const model = $("#bulk-model").val();
             const prompt = $("#bulk-prompt").val();
             const temperature = $("#bulk-temperature").val();
-            const maxTokens = $("#bulk-max-tokens").val();
+            const maxTokens = 4096; // Always use maximum token value
             const systemMessage = $("#bulk-system-message").val();
             const useHtmlMeta = $("#bulk-use-html-meta").is(':checked');
             if (!prompt) {
@@ -607,6 +651,7 @@
             formData.append('content_type', currentContentType);
             formData.append('filter_type', 'ids');
             formData.append('filter_id', selectedIds);
+            formData.append('provider', $('#bulk-provider').val());
             formData.append('model', model);
             formData.append('prompt', prompt);
             formData.append('temperature', temperature);
@@ -665,54 +710,6 @@
                     $("#bulk-generate-start-btn").text('Bắt Đầu Tạo');
                 }
             });
-        });
-
-        // Bulk prompt source toggle
-        $("#bulk-prompt-source").on('change', function() {
-            if ($(this).val() === 'custom') {
-                $("#bulk-saved-prompts-container").addClass('d-none');
-                $("#bulk-prompt-editor").removeClass('d-none');
-            } else if ($(this).val() === 'saved') {
-                $("#bulk-saved-prompts-container").removeClass('d-none');
-                $("#bulk-prompt-editor").removeClass('d-none');
-            } else {
-                $("#bulk-saved-prompts-container").addClass('d-none');
-                $("#bulk-prompt-editor").addClass('d-none');
-            }
-        });
-
-        // Saved prompt selection
-        $("#modal-saved-prompt").on('change', function() {
-            const selectedOption = $(this).find('option:selected');
-            if (selectedOption.val()) {
-                const promptText = selectedOption.data('prompt');
-                const systemMessage = selectedOption.data('system-message');
-
-                if (promptText) {
-                    $("#modal-prompt").val(promptText);
-                }
-
-                if (systemMessage) {
-                    $("#modal-system-message").val(systemMessage);
-                }
-            }
-        });
-
-        // Bulk saved prompt selection
-        $("#bulk-saved-prompt").on('change', function() {
-            const selectedOption = $(this).find('option:selected');
-            if (selectedOption.val()) {
-                const promptText = selectedOption.data('prompt');
-                const systemMessage = selectedOption.data('system-message');
-
-                if (promptText) {
-                    $("#bulk-prompt").val(promptText);
-                }
-
-                if (systemMessage) {
-                    $("#bulk-system-message").val(systemMessage);
-                }
-            }
         });
     }
 
@@ -1484,5 +1481,343 @@
 
     // Initialize when document is ready
     $(document).ready(init);
+
+    /**
+     * Modal Handlers for Content Generation
+     */
+    function setupModals() {
+        // Initialize the single generation modal
+        generateSingleModal = new bootstrap.Modal(document.getElementById('generate-single-modal'));
+        bulkGenerateModal = new bootstrap.Modal(document.getElementById('bulk-generate-modal'));
+
+        // Initialize provider selector in the modal
+        initProviderSelector();
+        
+        // Initialize bulk provider selector
+        initBulkProviderSelector();
+        
+        // Set initial models to be loaded on provider selection
+        initModalModelSelector();
+
+        // Generate Single Modal handlers
+        $('#generate-single-modal').on('show.bs.modal', function(event) {
+            const button = $(event.relatedTarget);
+            const contentId = button.data('id');
+            const contentType = button.data('type');
+            const contentTitle = button.data('title');
+
+            // Populate modal fields
+            $('#modal-content-id').val(contentId);
+            $('#modal-content-type').val(contentType);
+            $('#modal-content-title').text(contentTitle);
+
+            // Set default prompt for the content type
+            setDefaultPrompt(contentType);
+        });
+
+        // Generate button click handler
+        $('#modal-generate-btn').on('click', function() {
+            generateSingleContent();
+        });
+
+        // Apply button click handler
+        $('#modal-apply-btn').on('click', function() {
+            applySingleContent();
+        });
+    }
+
+    /**
+     * Initialize provider selector in modals
+     */
+    function initProviderSelector() {
+        const $modalProvider = $('#modal-provider');
+        
+        // Fetch available providers
+        fetch(`${apiBaseUrl}/admin/ai-dashboard/providers`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Clear existing options
+                    $modalProvider.empty().append('<option value="">Chọn nhà cung cấp AI</option>');
+                    
+                    // Add provider options
+                    Object.entries(data.providers).forEach(([code, name]) => {
+                        $modalProvider.append(`<option value="${code}">${name}</option>`);
+                    });
+                    
+                    // Check for stored provider preference
+                    const savedProvider = localStorage.getItem('selectedProvider');
+                    if (savedProvider && $modalProvider.find(`option[value="${savedProvider}"]`).length > 0) {
+                        $modalProvider.val(savedProvider).trigger('change');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading providers:', error);
+            });
+            
+        // Handle provider change
+        $modalProvider.on('change', function() {
+            const provider = $(this).val();
+            if (provider) {
+                localStorage.setItem('selectedProvider', provider);
+                loadModelsForProvider(provider);
+            } else {
+                // Clear model select if no provider
+                $('#modal-model').empty().append('<option value="">Chọn mô hình AI</option>');
+                $('#modal-model').prop('disabled', true);
+            }
+        });
+    }
+
+    /**
+     * Initialize model selector in modals
+     */
+    function initModalModelSelector() {
+        const $modalModel = $('#modal-model');
+        
+        // Initially disable model selector until provider is selected
+        $modalModel.prop('disabled', true);
+        
+        // Handle model change
+        $modalModel.on('change', function() {
+            const model = $(this).val();
+            if (model) {
+                localStorage.setItem('selectedModel', model);
+                
+                // Show system message container for specific models if needed
+                if (model.includes('deepseek') || model.includes('mistral') || model.includes('llama')) {
+                    $('#modal-system-message-container').removeClass('hidden');
+                } else {
+                    $('#modal-system-message-container').addClass('hidden');
+                }
+            }
+        });
+    }
+
+    /**
+     * Load models for the selected provider
+     */
+    function loadModelsForProvider(provider) {
+        const $modalModel = $('#modal-model');
+        
+        // Show loading state
+        $modalModel.empty().append('<option value="">Đang tải mô hình...</option>');
+        $modalModel.prop('disabled', true);
+        
+        // Fetch models for the selected provider
+        fetch(`${apiBaseUrl}/admin/ai-dashboard/providers/${provider}/models`)
+            .then(response => response.json())
+            .then(data => {
+                // Clear existing options
+                $modalModel.empty().append('<option value="">Chọn mô hình AI</option>');
+                
+                if (data.success && data.models) {
+                    // Add model options
+                    Object.entries(data.models).forEach(([id, name]) => {
+                        $modalModel.append(`<option value="${id}">${name}</option>`);
+                    });
+                    
+                    // Enable model selector
+                    $modalModel.prop('disabled', false);
+                    
+                    // Check for saved model preference
+                    const savedModel = localStorage.getItem('selectedModel');
+                    if (savedModel && $modalModel.find(`option[value="${savedModel}"]`).length > 0) {
+                        $modalModel.val(savedModel).trigger('change');
+                    }
+                } else {
+                    $modalModel.append('<option value="">Không có mô hình nào</option>');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading models:', error);
+                $modalModel.empty().append('<option value="">Lỗi tải mô hình</option>');
+            })
+            .finally(() => {
+                $modalModel.prop('disabled', false);
+            });
+    }
+
+    /**
+     * Generate single content
+     */
+    function generateSingleContent() {
+        const $modalGenerateBtn = $('#modal-generate-btn');
+        const $modalApplyBtn = $('#modal-apply-btn');
+        const $modalResults = $('#modal-results');
+        const $modalSpinner = $('#modal-spinner');
+        
+        // Validate selections
+        if (!$('#modal-provider').val()) {
+            alert('Vui lòng chọn nhà cung cấp AI');
+            return;
+        }
+        if (!$('#modal-model').val()) {
+            alert('Vui lòng chọn mô hình AI');
+            return;
+        }
+        if (!$('#modal-prompt').val().trim()) {
+            alert('Vui lòng nhập prompt');
+            return;
+        }
+        
+        // Get form values
+        const contentId = $('#modal-content-id').val();
+        const contentType = $('#modal-content-type').val();
+        const provider = $('#modal-provider').val();
+        const model = $('#modal-model').val();
+        const prompt = $('#modal-prompt').val();
+        const temperature = $("#modal-temperature").val();
+        const maxTokens = $("#modal-max-tokens").val();
+        const systemMessage = $("#modal-system-message").val();
+        const useHtmlMeta = $("#modal-use-html-meta").is(':checked');
+        
+        // Show loading
+        $modalSpinner.removeClass('hidden');
+        $modalResults.html('<p class="text-gray-500">Đang tạo nội dung...</p>');
+        $modalGenerateBtn.prop('disabled', true);
+        $modalApplyBtn.addClass('hidden');
+        
+        // API call
+        $.ajax({
+            type: 'POST',
+            url: `${apiBaseUrl}/admin/ai-dashboard/generate-sample`,
+            data: {
+                content_id: contentId,
+                content_type: contentType,
+                provider: provider,
+                model: model,
+                prompt: prompt,
+                temperature: temperature,
+                max_tokens: maxTokens,
+                system_message: systemMessage,
+                use_html_meta: useHtmlMeta ? 1 : 0
+            },
+            success: function(response) {
+                // Hide loading
+                $modalSpinner.addClass('hidden');
+                $modalGenerateBtn.prop('disabled', false);
+                
+                if (response.success) {
+                    // Display results
+                    displayModalResults(response);
+                    
+                    // Show apply button
+                    $modalApplyBtn.removeClass('hidden');
+                } else {
+                    $modalResults.html(`<div class="text-red-500">${response.error || 'Lỗi không xác định'}</div>`);
+                }
+            },
+            error: function(xhr, status, error) {
+                // Hide loading
+                $modalSpinner.addClass('hidden');
+                $modalGenerateBtn.prop('disabled', false);
+                
+                // Display error
+                $modalResults.html(`
+                    <div class="rounded-sm border border-red-300 bg-red-50 p-4">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <span class="iconify text-red-500" data-icon="mdi-alert-circle"></span>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-red-800">Lỗi khi tạo nội dung: ${xhr.responseJSON?.message || error || 'Không xác định'}</p>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            }
+        });
+    }
+
+    /**
+     * Initialize bulk provider selector functionality
+     */
+    function initBulkProviderSelector() {
+        const $bulkProvider = $('#bulk-provider');
+        const $bulkModel = $('#bulk-model');
+        
+        // Fetch available providers
+        fetch(`${apiBaseUrl}/admin/ai-dashboard/providers`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Clear existing options
+                    $bulkProvider.empty().append('<option value="">Chọn nhà cung cấp AI</option>');
+                    
+                    // Add provider options
+                    Object.entries(data.providers).forEach(([code, name]) => {
+                        $bulkProvider.append(`<option value="${code}">${name}</option>`);
+                    });
+                    
+                    // Check for stored provider preference
+                    const savedProvider = localStorage.getItem('selectedProvider');
+                    if (savedProvider && $bulkProvider.find(`option[value="${savedProvider}"]`).length > 0) {
+                        $bulkProvider.val(savedProvider).trigger('change');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading providers:', error);
+            });
+            
+        // Handle provider change
+        $bulkProvider.on('change', function() {
+            const provider = $(this).val();
+            if (provider) {
+                localStorage.setItem('selectedProvider', provider);
+                loadBulkModelsForProvider(provider);
+            } else {
+                // Clear model select if no provider
+                $bulkModel.empty().append('<option value="">Chọn mô hình AI</option>');
+                $bulkModel.prop('disabled', true);
+            }
+        });
+    }
+
+    /**
+     * Load models for the selected provider in bulk modal
+     */
+    function loadBulkModelsForProvider(provider) {
+        const $bulkModel = $('#bulk-model');
+        
+        // Show loading state
+        $bulkModel.empty().append('<option value="">Đang tải mô hình...</option>');
+        $bulkModel.prop('disabled', true);
+        
+        // Fetch models for the selected provider
+        fetch(`${apiBaseUrl}/admin/ai-dashboard/providers/${provider}/models`)
+            .then(response => response.json())
+            .then(data => {
+                // Clear existing options
+                $bulkModel.empty().append('<option value="">Chọn mô hình AI</option>');
+                
+                if (data.success && data.models) {
+                    // Add model options
+                    Object.entries(data.models).forEach(([id, name]) => {
+                        $bulkModel.append(`<option value="${id}">${name}</option>`);
+                    });
+                    
+                    // Enable model selector
+                    $bulkModel.prop('disabled', false);
+                    
+                    // Check for saved model preference
+                    const savedModel = localStorage.getItem('selectedModel');
+                    if (savedModel && $bulkModel.find(`option[value="${savedModel}"]`).length > 0) {
+                        $bulkModel.val(savedModel).trigger('change');
+                    }
+                } else {
+                    $bulkModel.append('<option value="">Không có mô hình nào</option>');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading models:', error);
+                $bulkModel.empty().append('<option value="">Lỗi tải mô hình</option>');
+            })
+            .finally(() => {
+                $bulkModel.prop('disabled', false);
+            });
+    }
 
 })();

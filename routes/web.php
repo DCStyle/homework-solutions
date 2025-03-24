@@ -51,6 +51,10 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
         Route::get('/content/posts/{chapterId}', [App\Http\Controllers\Admin\AIDashboardController::class, 'getPosts']);
         Route::get('/content/details/{type}/{id}', [App\Http\Controllers\Admin\AIDashboardController::class, 'getContentDetails']);
 
+        // Provider and model selection
+        Route::get('/providers', [App\Http\Controllers\Admin\AIDashboardController::class, 'getProviders'])->name('admin.ai-dashboard.providers');
+        Route::get('/providers/{provider}/models', [App\Http\Controllers\Admin\AIDashboardController::class, 'getModelsForProvider'])->name('admin.ai-dashboard.provider-models');
+
         // API Endpoints
         Route::post('/generate-sample', [App\Http\Controllers\Admin\AIDashboardController::class, 'generateSample'])->name('admin.ai-dashboard.generate-sample');
         Route::post('/apply-prompt', [App\Http\Controllers\Admin\AIDashboardController::class, 'applyPrompt'])->name('admin.ai-dashboard.apply-prompt');
@@ -72,6 +76,16 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
         Route::get('/vision', [App\Http\Controllers\Admin\VisionAnalysisController::class, 'index'])->name('admin.ai-dashboard.vision');
         Route::post('/vision/analyze', [App\Http\Controllers\Admin\VisionAnalysisController::class, 'analyze'])->name('admin.ai-dashboard.vision.analyze');
         Route::post('/vision/analyze-api', [App\Http\Controllers\Admin\VisionAnalysisController::class, 'analyzeApi'])->name('admin.ai-dashboard.vision.analyze-api');
+    });
+
+    // AI API Keys management
+    Route::prefix('ai-api-keys')->group(function() {
+        Route::get('/', [App\Http\Controllers\Admin\AIApiKeyController::class, 'index'])->name('admin.ai_api_keys.index');
+        Route::post('/', [App\Http\Controllers\Admin\AIApiKeyController::class, 'store'])->name('admin.ai_api_keys.store');
+        Route::put('/{id}', [App\Http\Controllers\Admin\AIApiKeyController::class, 'update'])->name('admin.ai_api_keys.update');
+        Route::delete('/{id}', [App\Http\Controllers\Admin\AIApiKeyController::class, 'destroy'])->name('admin.ai_api_keys.destroy');
+        Route::patch('/{id}/toggle-active', [App\Http\Controllers\Admin\AIApiKeyController::class, 'toggleActive'])->name('admin.ai_api_keys.toggle_active');
+        Route::get('/{id}/test', [App\Http\Controllers\Admin\AIApiKeyController::class, 'testKey'])->name('admin.ai_api_keys.test');
     });
 
     // Settings

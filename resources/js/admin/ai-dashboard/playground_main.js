@@ -1016,26 +1016,132 @@ function selectFinalContentAndWait(contentId) {
 
 // Content generation functionality
 function initializeContentGeneration() {
-    // Content generation elements
+    const $providerSelect = $('#provider');
+    const $modelSelect = $('#model');
     const $generateBtn = $('#generate-btn');
-    const $resultsContainer = $('#results-container');
-    const $loadingIndicator = $('#loading-indicator');
-    const $results = $('#results');
     const $applyBtn = $('#apply-btn');
-
-    // Form elements
-    const $model = $('#model');
-    const $temperature = $('#temperature');
-    const $temperatureValue = $('#temperature-value');
-    const $maxTokens = $('#max-tokens');
-    const $maxTokensValue = $('#max-tokens-value');
-    const $prompt = $('#prompt');
+    const $resetBtn = $('#reset-btn');
+    const $promptTextarea = $('#prompt');
     const $systemMessage = $('#system-message');
+    const $systemMessageContainer = $('#system-message-container');
+    const $promptResponse = $('#prompt-response');
+    const $generatingSpinner = $('#generating-spinner');
+    const $generatingStatus = $('#generating-status');
+    const $responseContainer = $('#response-container');
+    const $resultContainer = $('#result-container');
     const $contentFinalSelector = $('#content-final-selector');
+    const $useHtmlMeta = $('#use-html-meta');
+    
+    // Initialize provider selector
+    initProviderSelector();
+    
+    // Initialize model selector to be populated after provider selection
+    initModelSelector();
+    
+    // Initialize UI controls (sliders, etc.)
+    initializeUIControls();
+    
+    function initProviderSelector() {
+        // Fetch available providers
+        fetch('/admin/ai-dashboard/providers')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Clear existing options
+                    $providerSelect.empty().append('<option value="">Chọn nhà cung cấp AI</option>');
+                    
+                    // Add provider options
+                    Object.entries(data.providers).forEach(([code, name]) => {
+                        $providerSelect.append(`<option value="${code}">${name}</option>`);
+                    });
+                    
+                    // Check for stored provider preference
+                    const savedProvider = localStorage.getItem('selectedProvider');
+                    if (savedProvider && $providerSelect.find(`option[value="${savedProvider}"]`).length > 0) {
+                        $providerSelect.val(savedProvider).trigger('change');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading providers:', error);
+            });
+            
+        // Handle provider change
+        $providerSelect.on('change', function() {
+            const provider = $(this).val();
+            if (provider) {
+                localStorage.setItem('selectedProvider', provider);
+                loadModelsForProvider(provider);
+            } else {
+                // Clear model select if no provider
+                $modelSelect.empty().append('<option value="">Chọn mô hình AI</option>');
+                $modelSelect.prop('disabled', true);
+            }
+        });
+    }
+    
+    function initModelSelector() {
+        // Initially disable model selector until provider is selected
+        $modelSelect.prop('disabled', true);
+        
+        // Handle model change
+        $modelSelect.on('change', function() {
+            const model = $(this).val();
+            if (model) {
+                localStorage.setItem('selectedModel', model);
+                
+                // Show system message container for specific models if needed
+                if (model.includes('deepseek') || model.includes('mistral') || model.includes('llama')) {
+                    $systemMessageContainer.removeClass('hidden');
+                } else {
+                    $systemMessageContainer.addClass('hidden');
+                }
+            }
+        });
+    }
+    
+    function loadModelsForProvider(provider) {
+        // Show loading state
+        $modelSelect.empty().append('<option value="">Đang tải mô hình...</option>');
+        $modelSelect.prop('disabled', true);
+        
+        // Fetch models for the selected provider
+        fetch(`/admin/ai-dashboard/providers/${provider}/models`)
+            .then(response => response.json())
+            .then(data => {
+                // Clear existing options
+                $modelSelect.empty().append('<option value="">Chọn mô hình AI</option>');
+                
+                if (data.success && data.models) {
+                    // Add model options
+                    Object.entries(data.models).forEach(([id, name]) => {
+                        $modelSelect.append(`<option value="${id}">${name}</option>`);
+                    });
+                    
+                    // Enable model selector
+                    $modelSelect.prop('disabled', false);
+                    
+                    // Check for saved model preference
+                    const savedModel = localStorage.getItem('selectedModel');
+                    if (savedModel && $modelSelect.find(`option[value="${savedModel}"]`).length > 0) {
+                        $modelSelect.val(savedModel).trigger('change');
+                    }
+                } else {
+                    $modelSelect.append('<option value="">Không có mô hình nào</option>');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading models:', error);
+                $modelSelect.empty().append('<option value="">Lỗi tải mô hình</option>');
+            })
+            .finally(() => {
+                $modelSelect.prop('disabled', false);
+            });
+    }
 
-    // Get active content type
     function getActiveContentType() {
-        return $('.content-type-btn.border-indigo-300').data('type');
+        // Get the content type from the active button that has the border-indigo-300 class
+        return $('.content-type-btn.border-indigo-300').data('type') || 'posts';
     }
 
     // Initialize event handlers
@@ -1045,23 +1151,9 @@ function initializeContentGeneration() {
             generateContent();
         });
 
-        // Temperature slider handler
-        $temperature.on('input', function() {
-            $temperatureValue.text($(this).val());
-        });
-
-        // Max tokens slider handler
-        $maxTokens.on('input', function() {
-            $maxTokensValue.text($(this).val());
-        });
-
-        // Model change handler
-        $model.on('change', function() {
-            if ($(this).val().startsWith('deepseek')) {
-                $('#system-message-container').removeClass('hidden');
-            } else {
-                $('#system-message-container').addClass('hidden');
-            }
+        // Reset button click handler
+        $resetBtn.on('click', function() {
+            resetContentGeneration();
         });
 
         // Apply changes button
@@ -1082,23 +1174,23 @@ function initializeContentGeneration() {
             return;
         }
 
-        if (!$prompt.val().trim()) {
+        if (!$promptTextarea.val().trim()) {
             alert('Vui lòng nhập prompt.');
             return;
         }
 
         // Get form values
-        const model = $model.val();
-        const temperature = $temperature.val();
-        const maxTokens = $maxTokens.val();
-        const promptText = $prompt.val();
-        const systemMessage = $systemMessage?.val();
+        const model = $modelSelect.val();
+        const temperature = $('#temperature').val();
+        const maxTokens = 4096; // Always use maximum token value
+        const promptText = $promptTextarea.val();
+        const systemMessage = $systemMessage.val();
         const useHtmlMeta = $('#use-html-meta').is(':checked');
 
         // Show loading
-        $loadingIndicator.removeClass('hidden');
-        $resultsContainer.removeClass('hidden');
-        $results.html('<p class="text-gray-500">Đang tạo nội dung...</p>');
+        $generatingSpinner.removeClass('hidden');
+        $responseContainer.removeClass('hidden');
+        $promptResponse.html('<p class="text-gray-500">Đang tạo nội dung...</p>');
         $generateBtn.prop('disabled', true);
         $applyBtn.addClass('hidden');
 
@@ -1106,6 +1198,7 @@ function initializeContentGeneration() {
         const formData = new FormData();
         formData.append('content_id', contentId);
         formData.append('content_type', contentType);
+        formData.append('provider', $providerSelect.val());
         formData.append('model', model);
         formData.append('prompt', promptText);
         formData.append('temperature', temperature);
@@ -1129,25 +1222,71 @@ function initializeContentGeneration() {
             },
             success: function(response) {
                 // Hide loading
-                $loadingIndicator.addClass('hidden');
+                $generatingSpinner.addClass('hidden');
                 $generateBtn.prop('disabled', false);
 
+                console.log('API Response:', response);
+                console.log('Response Container:', $responseContainer);
+                console.log('Prompt Response Element:', $promptResponse);
+
                 if (response.success) {
+                    // Make sure response container and results container are visible
+                    $responseContainer.removeClass('hidden');
+                    $('#results-container').removeClass('hidden');
+                    
                     // Display results based on content type
-                    displayResults(response, contentType);
+                    // Update loading state
+                $('#loading-indicator').addClass('hidden');
+                $('#generate-btn').prop('disabled', false);
+
+                // Display results
+                                    // Update results container
+                    $('#results-container').removeClass('hidden');
+                    $('#loading-indicator').addClass('hidden');
+                    
+                    if (contentType === 'posts' && typeof response.result === 'object') {
+                        // Handle meta information for posts
+                        const metaResult = response.result;
+                        $('#results').html(`
+                            <div class="ai-response space-y-4">
+                                <div>
+                                    <h5 class="text-lg font-semibold mb-2">Tiêu Đề Meta</h5>
+                                    <div class="meta-title p-3 bg-white border border-gray-300 rounded-lg">
+                                        ${metaResult.meta_title || ''}
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5 class="text-lg font-semibold mb-2">Mô Tả Meta</h5>
+                                    <div class="meta-description p-3 bg-white border border-gray-300 rounded-lg">
+                                        ${metaResult.meta_description || ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                    } else {
+                        // Handle regular content
+                        $('#results').html(`
+                            <div class="ai-response">
+                                ${typeof response.result === 'string' ? response.result : JSON.stringify(response.result)}
+                            </div>
+                        `);
+                    }
+                    
+                    // Show apply button
+                    $('#apply-btn').removeClass('hidden');
                     // Show apply button
                     $applyBtn.removeClass('hidden');
                 } else {
-                    $results.html(`<div class="text-red-500">${response.error || 'Lỗi không xác định'}</div>`);
+                    $promptResponse.html(`<div class="text-red-500">${response.error || 'Lỗi không xác định'}</div>`);
                 }
             },
             error: function(xhr, status, error) {
                 // Hide loading
-                $loadingIndicator.addClass('hidden');
+                $generatingSpinner.addClass('hidden');
                 $generateBtn.prop('disabled', false);
 
                 // Display error
-                $results.html(`
+                $promptResponse.html(`
                 <div class="rounded-sm border border-red-300 bg-red-50 p-4">
                     <div class="flex items-start">
                         <span class="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-red-100">
@@ -1170,62 +1309,82 @@ function initializeContentGeneration() {
 
     // Display results based on content type
     function displayResults(response, contentType) {
+        console.log('Displaying results for content type:', contentType);
+        console.log('Response data:', response);
+        
         let resultHtml = '';
 
         if (contentType === 'posts') {
             // For posts, show meta title and description
             const metaResult = response.result;
-
-            // The backend should have already decoded the Unicode for us
-            const metaTitle = metaResult.meta_title || '';
-            const metaDesc = metaResult.meta_description || '';
-
-            resultHtml = `
-            <div class="ai-response space-y-4">
-                <div>
-                    <h5 class="text-lg font-semibold mb-2">Tiêu Đề Meta</h5>
-                    <div class="meta-title p-3 bg-white border border-gray-300 rounded-lg">
-                        ${metaTitle}
-                    </div>
-                    <div class="mt-1 text-xs text-gray-500 flex items-center">
-                        <span>${metaTitle.length} ký tự</span>
-                        <span class="mx-2">•</span>
-                        <span class="${metaTitle.length > 60 ? 'text-red-500' : 'text-green-500'}">
-                            ${metaTitle.length > 60 ? 'Quá dài' : 'Độ dài tốt'}
-                        </span>
+            
+            // Check if result is already an object, or a string that needs to be displayed
+            if (typeof metaResult === 'string') {
+                resultHtml = `
+                <div class="ai-response space-y-4">
+                    <div>
+                        <h5 class="text-lg font-semibold mb-2">Kết quả</h5>
+                        <div class="p-3 bg-white border border-gray-300 rounded-lg">
+                            ${metaResult}
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <h5 class="text-lg font-semibold mb-2">Mô Tả Meta</h5>
-                    <div class="meta-description p-3 bg-white border border-gray-300 rounded-lg">
-                        ${metaDesc}
+                `;
+            } else {
+                // The backend should have already decoded the Unicode for us
+                const metaTitle = metaResult.meta_title || '';
+                const metaDesc = metaResult.meta_description || '';
+
+                resultHtml = `
+                <div class="ai-response space-y-4">
+                    <div>
+                        <h5 class="text-lg font-semibold mb-2">Tiêu Đề Meta</h5>
+                        <div class="meta-title p-3 bg-white border border-gray-300 rounded-lg">
+                            ${metaTitle}
+                        </div>
+                        <div class="mt-1 text-xs text-gray-500 flex items-center">
+                            <span>${metaTitle.length} ký tự</span>
+                            <span class="mx-2">•</span>
+                            <span class="${metaTitle.length > 60 ? 'text-red-500' : 'text-green-500'}">
+                                ${metaTitle.length > 60 ? 'Quá dài' : 'Độ dài tốt'}
+                            </span>
+                        </div>
                     </div>
-                    <div class="mt-1 text-xs text-gray-500 flex items-center">
-                        <span>${metaDesc.length} ký tự</span>
-                        <span class="mx-2">•</span>
-                        <span class="${metaDesc.length > 160 ? 'text-red-500' : (metaDesc.length < 120 ? 'text-yellow-500' : 'text-green-500')}">
-                            ${metaDesc.length > 160 ? 'Quá dài' : (metaDesc.length < 120 ? 'Có thể dài hơn' : 'Độ dài tốt')}
-                        </span>
+                    <div>
+                        <h5 class="text-lg font-semibold mb-2">Mô Tả Meta</h5>
+                        <div class="meta-description p-3 bg-white border border-gray-300 rounded-lg">
+                            ${metaDesc}
+                        </div>
+                        <div class="mt-1 text-xs text-gray-500 flex items-center">
+                            <span>${metaDesc.length} ký tự</span>
+                            <span class="mx-2">•</span>
+                            <span class="${metaDesc.length > 160 ? 'text-red-500' : (metaDesc.length < 120 ? 'text-yellow-500' : 'text-green-500')}">
+                                ${metaDesc.length > 160 ? 'Quá dài' : (metaDesc.length < 120 ? 'Có thể dài hơn' : 'Độ dài tốt')}
+                            </span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
+                `;
+            }
         } else {
-            // For other content types, show description as HTML
-            // The backend should have already processed and formatted the content
+            // For other content types or fallback if result is string
+            const result = typeof response.result === 'string' 
+                ? response.result 
+                : JSON.stringify(response.result);
+                
             resultHtml = `
             <div class="ai-response">
-                ${response.result}
+                ${result}
             </div>
-        `;
+            `;
         }
 
-        $results.html(resultHtml);
+        $promptResponse.html(resultHtml);
 
         // Highlight SEO keywords if present
-        if ($results.find('*:contains("Từ khóa SEO:")').length) {
+        if ($promptResponse.find('*:contains("Từ khóa SEO:")').length) {
             // Find and style keywords section
-            const keywordsText = $results.find('*:contains("Từ khóa SEO:")').last();
+            const keywordsText = $promptResponse.find('*:contains("Từ khóa SEO:")').last();
             keywordsText.addClass('keywords');
         }
     }
@@ -1237,10 +1396,10 @@ function initializeContentGeneration() {
         const contentType = getActiveContentType();
 
         // Get form values
-        const model = $model.val();
-        const temperature = $temperature.val();
-        const maxTokens = $maxTokens.val();
-        const promptText = $prompt.val();
+        const model = $modelSelect.val();
+        const temperature = $('#temperature').val();
+        const maxTokens = 4096; // Always use maximum token value
+        const promptText = $promptTextarea.val();
         const systemMessage = $systemMessage.val();
         const useHtmlMeta = $('#use-html-meta').is(':checked');
 
@@ -1253,6 +1412,7 @@ function initializeContentGeneration() {
         formData.append('content_type', contentType);
         formData.append('filter_type', 'ids');
         formData.append('filter_id', contentId);
+        formData.append('provider', $providerSelect.val());
         formData.append('model', model);
         formData.append('prompt', promptText);
         formData.append('temperature', temperature);
@@ -1277,7 +1437,7 @@ function initializeContentGeneration() {
             success: function(response) {
                 if (response.success) {
                     // Show success message
-                    $results.prepend(`
+                    $promptResponse.prepend(`
                         <div class="mb-4 rounded-lg bg-green-50 border border-green-200 p-4">
                             <div class="flex items-center">
                                 <span class="iconify text-green-500 mr-2" data-icon="mdi-check-circle"></span>
@@ -1293,7 +1453,7 @@ function initializeContentGeneration() {
                     $applyBtn.prop('disabled', false);
                     $applyBtn.html('Áp Dụng Thay Đổi');
                 } else {
-                    $results.prepend(`
+                    $promptResponse.prepend(`
                         <div class="mb-4 rounded-lg bg-red-50 border border-red-200 p-4">
                             <div class="flex items-center">
                                 <span class="iconify text-red-500 mr-2" data-icon="mdi-alert-circle"></span>
@@ -1309,7 +1469,7 @@ function initializeContentGeneration() {
             },
             error: function(xhr, status, error) {
                 // Display error
-                $results.prepend(`
+                $promptResponse.prepend(`
                     <div class="mb-4 rounded-lg bg-red-50 border border-red-200 p-4">
                         <div class="flex items-center">
                             <span class="iconify text-red-500 mr-2" data-icon="mdi-alert-circle"></span>
@@ -1323,6 +1483,20 @@ function initializeContentGeneration() {
                 $applyBtn.html('Áp Dụng Thay Đổi');
             }
         });
+    }
+
+    // Reset content generation
+    function resetContentGeneration() {
+        // Reset all form fields
+        $providerSelect.val('').trigger('change');
+        $modelSelect.empty().append('<option value="">Chọn mô hình AI</option>');
+        $modelSelect.prop('disabled', true);
+        $promptTextarea.val('');
+        $systemMessage.val('');
+        $useHtmlMeta.prop('checked', false);
+
+        // Reset content details
+        showContentPlaceholder();
     }
 
     // Initialize content generation
@@ -1356,3 +1530,27 @@ $(document).ready(function() {
         });
     }
 });
+
+// Initialize UI controls with default values
+function initializeUIControls() {
+    // Define the system message container
+    const $systemMessageContainer = $('#system-message-container');
+    
+    // Model-related UI
+    $('#model').on('change', function() {
+        const model = $(this).val();
+        if (model.startsWith('deepseek')) {
+            $systemMessageContainer.removeClass('hidden');
+        } else {
+            $systemMessageContainer.addClass('hidden');
+        }
+    });
+
+    // Temperature slider
+    $('#temperature').on('input', function() {
+        $('#temperature-value').text($(this).val());
+    });
+
+    // Initialize values
+    $('#temperature').val('0.7').trigger('input');
+}
