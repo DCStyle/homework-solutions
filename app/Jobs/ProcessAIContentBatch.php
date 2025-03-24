@@ -51,14 +51,25 @@ class ProcessAIContentBatch implements ShouldQueue
                         continue;
                     }
                     
-                    // Prepare prompt
+                    // Prepare prompt with variable replacements
                     $prompt = $this->preparePrompt($job->settings['prompt'], $item, $job->content_type);
+                    
+                    // Log the processed prompt for debugging
+                    Log::debug('Prepared prompt for bulk generation', [
+                        'original' => $job->settings['prompt'],
+                        'processed' => $prompt,
+                        'content_id' => $itemId,
+                        'content_type' => $job->content_type,
+                        'item_name' => $item->name ?? $item->title ?? 'Unknown'
+                    ]);
                     
                     // AI generation options
                     $options = [
                         'content_type' => $job->content_type,
-                        'max_tokens' => $job->settings['max_tokens'] ?? 4000,
+                        'max_tokens' => 4096, // Always use maximum token limit
                         'temperature' => $job->settings['temperature'] ?? 0.7,
+                        'provider' => $job->settings['provider'] ?? 'openrouter',
+                        'skip_prompt_processing' => true, // Skip AIService prompt processing since we've already done replacements
                     ];
                     
                     // Add model-specific parameters
@@ -67,7 +78,7 @@ class ProcessAIContentBatch implements ShouldQueue
                         $options['model_variant'] = $job->settings['model_variant'] ?? 'deepseek-chat';
                     }
                     
-                    // Generate content - Note: we no longer pass use_html_meta since we're moving away from that approach
+                    // Generate content
                     $result = $aiService->generate(
                         $job->settings['model'],
                         $prompt,

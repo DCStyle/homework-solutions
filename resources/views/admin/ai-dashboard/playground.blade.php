@@ -234,6 +234,17 @@
                             <!-- Model Selector -->
                             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                                 <div>
+                                    <label for="provider" class="mb-2.5 block text-sm font-medium text-black">Nhà Cung Cấp AI</label>
+                                    <div class="relative z-20 bg-white">
+                                        <select data-plugin-select2 id="provider" class="relative z-20 w-full appearance-none rounded-lg border border-stroke bg-transparent py-2 px-4 outline-none transition focus:border-primary active:border-primary">
+                                            <option value="">Chọn nhà cung cấp AI</option>
+                                        </select>
+                                        <span class="absolute top-1/2 right-4 z-10 -translate-y-1/2">
+                                            <span class="iconify" data-icon="mdi-chevron-down"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div>
                                     <label for="model" class="mb-2.5 block text-sm font-medium text-black">Mô Hình AI</label>
                                     <div class="relative z-20 bg-white">
                                         <select data-plugin-select2 id="model" class="relative z-20 w-full appearance-none rounded-lg border border-stroke bg-transparent py-2 px-4 outline-none transition focus:border-primary active:border-primary">
@@ -270,20 +281,8 @@
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label for="max-tokens" class="mb-2.5 block text-sm font-medium text-black">Số Token Tối Đa</label>
-                                    <div class="flex items-center gap-3">
-                                        <input
-                                            type="range"
-                                            id="max-tokens"
-                                            min="100"
-                                            max="4096"
-                                            step="100"
-                                            value="1000"
-                                            class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
-                                        >
-                                        <span id="max-tokens-value" class="w-14 text-right text-sm">1000</span>
-                                    </div>
+                                <div class="flex items-center">
+                                    <p class="text-sm text-gray-500">Luôn sử dụng giới hạn token tối đa cho mô hình</p>
                                 </div>
                             </div>
 
@@ -425,7 +424,7 @@
 @endsection
 
 @push('styles')
-@vite('resources/css/admin/ai-dashboard/playground.css')
+    @vite('resources/css/admin/ai-dashboard/playground.css')
 @endpush
 
 @push('scripts')
