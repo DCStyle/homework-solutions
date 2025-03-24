@@ -480,7 +480,7 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/ai-dashboard/stats_main.css') }}">
+    @vite('resources/css/admin/ai-dashboard/stats_main.css')
 @endpush
 
 @push('scripts')

@@ -1293,12 +1293,23 @@ class AIDashboardController extends Controller
     }
 
     /**
-     * Check job status
+     * Check job status with detailed content information
      */
     public function checkJobStatus(Request $request, $jobId)
     {
         try {
             $job = \App\Models\AIContentJob::findOrFail($jobId);
+            
+            // Get detailed information about each content item
+            $contentDetails = [];
+            if (!empty($job->item_ids)) {
+                foreach ($job->item_ids as $itemId) {
+                    $detail = $this->getContentItemDetail($job->content_type, $itemId);
+                    if ($detail) {
+                        $contentDetails[$itemId] = $detail;
+                    }
+                }
+            }
             
             return response()->json([
                 'success' => true,
@@ -1314,12 +1325,143 @@ class AIDashboardController extends Controller
                 'settings' => $job->settings,
                 'failed_items' => $job->failed_items,
                 'content_type' => $job->content_type,
+                'item_ids' => $job->item_ids,
+                'content_details' => $contentDetails
             ]);
         } catch (\Exception $e) {
+            Log::error('Error checking job status', [
+                'job_id' => $jobId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'error' => 'Error checking job status: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Get detailed information about a content item
+     */
+    private function getContentItemDetail($contentType, $itemId)
+    {
+        try {
+            $baseUrl = url('/');
+            
+            switch ($contentType) {
+                case 'posts':
+                    $item = \App\Models\Post::find($itemId);
+                    if ($item) {
+                        return [
+                            'id' => $item->id,
+                            'title' => $item->title,
+                            'edit_url' => "{$baseUrl}/admin/posts/{$item->id}/edit",
+                            'playground_url' => "{$baseUrl}/admin/ai-dashboard/playground?content_type=posts&content_id={$item->id}",
+                            'chapter_name' => $item->chapter->name ?? null,
+                            'book_name' => $item->chapter->book->name ?? null,
+                            'group_name' => $item->chapter->book->group->name ?? null,
+                        ];
+                    }
+                    break;
+                    
+                case 'chapters':
+                    $item = \App\Models\BookChapter::find($itemId);
+                    if ($item) {
+                        return [
+                            'id' => $item->id,
+                            'title' => $item->name . ' - ' . $item->book->name . ' - ' . $item->book->group->name,
+                            'edit_url' => "{$baseUrl}/admin/book-chapters/{$item->id}/edit",
+                            'playground_url' => "{$baseUrl}/admin/ai-dashboard/playground?content_type=chapters&content_id={$item->id}",
+                            'book_name' => $item->book->name ?? null,
+                            'group_name' => $item->book->group->name ?? null,
+                        ];
+                    }
+                    break;
+                    
+                case 'books':
+                    $item = \App\Models\Book::find($itemId);
+                    if ($item) {
+                        return [
+                            'id' => $item->id,
+                            'title' => $item->name . ' - ' . $item->group->name,
+                            'edit_url' => "{$baseUrl}/admin/books/{$item->id}/edit",
+                            'playground_url' => "{$baseUrl}/admin/ai-dashboard/playground?content_type=books&content_id={$item->id}",
+                            'group_name' => $item->group->name ?? null,
+                        ];
+                    }
+                    break;
+                    
+                case 'book_groups':
+                    $item = \App\Models\BookGroup::find($itemId);
+                    if ($item) {
+                        return [
+                            'id' => $item->id,
+                            'title' => $item->name . ' - ' . $item->category->name,
+                            'edit_url' => "{$baseUrl}/admin/book-groups/{$item->id}/edit",
+                            'playground_url' => "{$baseUrl}/admin/ai-dashboard/playground?content_type=book_groups&content_id={$item->id}",
+                            'category_name' => $item->category->name ?? null,
+                        ];
+                    }
+                    break;
+            }
+            
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Error getting content item detail', [
+                'content_type' => $contentType,
+                'item_id' => $itemId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return null;
+        }
+    }
+
+    /**
+     * Rerun a job by creating a new copy
+     */
+    public function rerunJob(Request $request, $jobId)
+    {
+        try {
+            $originalJob = \App\Models\AIContentJob::findOrFail($jobId);
+            
+            // Create a new job with the same settings
+            $newJob = new \App\Models\AIContentJob([
+                'batch_id' => uniqid('batch_', true),
+                'user_id' => Auth::id(),
+                'content_type' => $originalJob->content_type,
+                'total_items' => $originalJob->total_items,
+                'processed_items' => 0,
+                'success_count' => 0,
+                'failed_count' => 0,
+                'status' => 'pending',
+                'settings' => $originalJob->settings,
+                'item_ids' => $originalJob->item_ids,
+            ]);
+            
+            $newJob->save();
+            
+            // Mark original job as obsolete (we can create a new status for this)
+            $originalJob->status = 'replaced';
+            $originalJob->save();
+            
+            // Dispatch the new job
+            \App\Jobs\ProcessAIContentBatch::dispatch($newJob->id);
+            
+            // Redirect back with success message
+            return redirect()->route('admin.ai-dashboard.jobs')
+                ->with('success', "Đã tạo công việc mới #{$newJob->id} để chạy lại");
+        } catch (\Exception $e) {
+            Log::error('Error rerunning job', [
+                'job_id' => $jobId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()
+                ->with('error', 'Lỗi khi chạy lại công việc: ' . $e->getMessage());
         }
     }
 

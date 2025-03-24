@@ -425,7 +425,7 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin/ai-dashboard/playground.css') }}">
+@vite('resources/css/admin/ai-dashboard/playground.css')
 @endpush
 
 @push('scripts')
