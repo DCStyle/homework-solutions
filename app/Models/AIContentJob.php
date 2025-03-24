@@ -17,6 +17,21 @@ class AIContentJob extends Model
         'item_ids' => 'array',
         'failed_items' => 'array',
     ];
+
+    /**
+     * Get human-readable status
+     */
+    public function getStatusTextAttribute()
+    {
+        return match($this->status) {
+            'pending' => 'Đang chờ',
+            'processing' => 'Đang xử lý',
+            'completed' => 'Hoàn thành',
+            'failed' => 'Thất bại',
+            'replaced' => 'Đã thay thế', // Add this new status
+            default => $this->status
+        };
+    }
     
     public function user()
     {

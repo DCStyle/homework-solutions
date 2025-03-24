@@ -65,6 +65,7 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
         Route::get('/jobs', [App\Http\Controllers\Admin\AIDashboardController::class, 'jobsView'])->name('admin.ai-dashboard.jobs');
         Route::get('/jobs/list', [App\Http\Controllers\Admin\AIDashboardController::class, 'listJobs'])->name('admin.ai-dashboard.jobs.list');
         Route::get('/jobs/{jobId}', [App\Http\Controllers\Admin\AIDashboardController::class, 'checkJobStatus'])->name('admin.ai-dashboard.jobs.status');
+        Route::post('/jobs/{jobId}/rerun', [App\Http\Controllers\Admin\AIDashboardController::class, 'rerunJob'])->name('admin.ai-dashboard.rerun-job');
         Route::post('/jobs/{jobId}/retry', [App\Http\Controllers\Admin\AIDashboardController::class, 'retryFailedItems'])->name('admin.ai-dashboard.retry-job');
         
         // Vision Analysis (Optional)
