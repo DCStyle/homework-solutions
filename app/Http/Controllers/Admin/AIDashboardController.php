@@ -1440,7 +1440,23 @@ class AIDashboardController extends Controller
         try {
             $originalJob = \App\Models\AIContentJob::findOrFail($jobId);
             
-            // Create a new job with the same settings
+            // Create a copy of the original settings
+            $newSettings = $originalJob->settings;
+            
+            // Update settings with new values if provided
+            if ($request->filled('provider')) {
+                $newSettings['provider'] = $request->input('provider');
+            }
+            
+            if ($request->filled('model')) {
+                $newSettings['model'] = $request->input('model');
+            }
+            
+            if ($request->filled('temperature')) {
+                $newSettings['temperature'] = (float)$request->input('temperature');
+            }
+            
+            // Create a new job with updated settings
             $newJob = new \App\Models\AIContentJob([
                 'batch_id' => uniqid('batch_', true),
                 'user_id' => Auth::id(),
@@ -1450,7 +1466,7 @@ class AIDashboardController extends Controller
                 'success_count' => 0,
                 'failed_count' => 0,
                 'status' => 'pending',
-                'settings' => $originalJob->settings,
+                'settings' => $newSettings,
                 'item_ids' => $originalJob->item_ids,
             ]);
             
@@ -1465,7 +1481,8 @@ class AIDashboardController extends Controller
             
             // Redirect back with success message
             return redirect()->route('admin.ai-dashboard.jobs')
-                ->with('success', "Đã tạo công việc mới #{$newJob->id} để chạy lại");
+                ->with('success', "Đã tạo công việc mới #{$newJob->id} để chạy lại" . 
+                       ($request->filled('provider') ? " với " . $this->getProviderName($request->input('provider')) : ""));
         } catch (\Exception $e) {
             Log::error('Error rerunning job', [
                 'job_id' => $jobId,
@@ -1476,6 +1493,20 @@ class AIDashboardController extends Controller
             return redirect()->back()
                 ->with('error', 'Lỗi khi chạy lại công việc: ' . $e->getMessage());
         }
+    }
+    
+    /**
+     * Get the display name for a provider
+     */
+    private function getProviderName($providerCode)
+    {
+        $providers = [
+            'openrouter' => 'OpenRouter',
+            'google-gemini' => 'Google Gemini',
+            'xai-grok' => 'xAI Grok',
+        ];
+        
+        return $providers[$providerCode] ?? $providerCode;
     }
 
     /**
