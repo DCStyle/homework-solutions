@@ -30,18 +30,19 @@ class ProcessAIContentBatch implements ShouldQueue
         $job->save();
 
         $failed = [];
-        
+
         try {
             foreach ($job->item_ids as $index => $itemId) {
                 // Add rate limiting delay to prevent API throttling
                 if ($index > 0) {
-                    usleep(500000); // 500ms delay between requests
+                    // Wait 30s between each item
+                    sleep(30);
                 }
-                
+
                 try {
                     // Get content item
                     $item = $this->getContentObject($job->content_type, $itemId);
-                    
+
                     if (!$item) {
                         $failed[] = [
                             'id' => $itemId,
@@ -50,10 +51,10 @@ class ProcessAIContentBatch implements ShouldQueue
                         $job->failed_count++;
                         continue;
                     }
-                    
+
                     // Prepare prompt with variable replacements
                     $prompt = $this->preparePrompt($job->settings['prompt'], $item, $job->content_type);
-                    
+
                     // Log the processed prompt for debugging
                     Log::debug('Prepared prompt for bulk generation', [
                         'original' => $job->settings['prompt'],
@@ -62,7 +63,7 @@ class ProcessAIContentBatch implements ShouldQueue
                         'content_type' => $job->content_type,
                         'item_name' => $item->name ?? $item->title ?? 'Unknown'
                     ]);
-                    
+
                     // AI generation options
                     $options = [
                         'content_type' => $job->content_type,
@@ -71,23 +72,23 @@ class ProcessAIContentBatch implements ShouldQueue
                         'provider' => $job->settings['provider'] ?? 'openrouter',
                         'skip_prompt_processing' => true, // Skip AIService prompt processing since we've already done replacements
                     ];
-                    
+
                     // Add model-specific parameters
                     if (str_starts_with($job->settings['model'], 'deepseek')) {
                         $options['system_message'] = $job->settings['system_message'] ?? '';
                         $options['model_variant'] = $job->settings['model_variant'] ?? 'deepseek-chat';
                     }
-                    
+
                     // Generate content
                     $result = $aiService->generate(
                         $job->settings['model'],
                         $prompt,
                         $options
                     );
-                    
+
                     // Format the result with our improved formatter
                     $formattedResult = \App\Helpers\OpenRouterResponseFormatter::formatResponse($result, true);
-                    
+
                     // Update content in database
                     if ($this->updateContentSEO($item, $job->content_type, $formattedResult)) {
                         $job->success_count++;
@@ -98,42 +99,42 @@ class ProcessAIContentBatch implements ShouldQueue
                         ];
                         $job->failed_count++;
                     }
-                    
+
                 } catch (\Exception $e) {
                     Log::error('Error processing item in batch job', [
                         'item_id' => $itemId,
                         'content_type' => $job->content_type,
                         'error' => $e->getMessage()
                     ]);
-                    
+
                     $failed[] = [
                         'id' => $itemId,
                         'error' => $e->getMessage()
                     ];
                     $job->failed_count++;
                 }
-                
+
                 // Update job progress
                 $job->processed_items = $index + 1;
                 $job->failed_items = $failed;
                 $job->save();
             }
-            
+
             $job->status = 'completed';
             $job->save();
-            
+
         } catch (\Exception $e) {
             Log::error('Error processing batch job', [
                 'job_id' => $this->jobId,
                 'error' => $e->getMessage()
             ]);
-            
+
             $job->status = 'failed';
             $job->error_message = $e->getMessage();
             $job->save();
         }
     }
-    
+
     // Helper methods to get content, prepare prompts and update SEO content
     protected function getContentObject($type, $id)
     {
@@ -145,7 +146,7 @@ class ProcessAIContentBatch implements ShouldQueue
             default => null,
         };
     }
-    
+
     protected function preparePrompt($promptTemplate, $content, $contentType)
     {
         $replacements = [];
@@ -160,7 +161,7 @@ class ProcessAIContentBatch implements ShouldQueue
                     '{{category_name}}' => $content->chapter->book->group->category->name ?? '',
                 ];
                 break;
-                
+
             case 'chapters':
                 $replacements = [
                     '{{name}}' => $content->name ?? '',
@@ -189,7 +190,7 @@ class ProcessAIContentBatch implements ShouldQueue
         // Replace all tokens
         return str_replace(array_keys($replacements), array_values($replacements), $promptTemplate);
     }
-    
+
     /**
      * Update content SEO data with the formatted result
      * Modified to handle the updated approach where we don't use separate meta_title and meta_description
