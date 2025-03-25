@@ -26,7 +26,13 @@ class ProcessAIContentBatch implements ShouldQueue
     public function handle(AIService $aiService)
     {
         $job = AIContentJob::findOrFail($this->jobId);
-        $job->status = 'processing';
+
+        // Skip if job is already cancelled
+        if ($job->status === AIContentJob::$JOB_STATUS_CANCELLED) {
+            return;
+        }
+
+        $job->status = AIContentJob::$JOB_STATUS_PROCESSING;
         $job->save();
 
         $failed = [];
@@ -120,7 +126,7 @@ class ProcessAIContentBatch implements ShouldQueue
                 $job->save();
             }
 
-            $job->status = 'completed';
+            $job->status = AIContentJob::$JOB_STATUS_COMPLETED;
             $job->save();
 
         } catch (\Exception $e) {
@@ -129,7 +135,7 @@ class ProcessAIContentBatch implements ShouldQueue
                 'error' => $e->getMessage()
             ]);
 
-            $job->status = 'failed';
+            $job->status = AIContentJob::$JOB_STATUS_FAILED;
             $job->error_message = $e->getMessage();
             $job->save();
         }

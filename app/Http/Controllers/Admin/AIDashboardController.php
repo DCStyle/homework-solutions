@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AIContentJob;
 use App\Models\Book;
 use App\Models\BookChapter;
 use App\Models\BookGroup;
@@ -1381,7 +1382,7 @@ class AIDashboardController extends Controller
                 'user_id' => Auth::id(),
                 'content_type' => $contentType,
                 'total_items' => count($itemIds),
-                'status' => 'pending',
+                'status' => AIContentJob::$JOB_STATUS_PENDING,
                 'settings' => $settings,
                 'item_ids' => $itemIds,
             ]);
@@ -1571,7 +1572,7 @@ class AIDashboardController extends Controller
                 'processed_items' => 0,
                 'success_count' => 0,
                 'failed_count' => 0,
-                'status' => 'pending',
+                'status' => AIContentJob::$JOB_STATUS_PENDING,
                 'settings' => $newSettings,
                 'item_ids' => $originalJob->item_ids,
             ]);
@@ -1598,6 +1599,59 @@ class AIDashboardController extends Controller
 
             return redirect()->back()
                 ->with('error', 'Lỗi khi chạy lại công việc: ' . $e->getMessage());
+        }
+    }
+
+    public function cancelJob(Request $request, $jobId)
+    {
+        try {
+            $job = \App\Models\AIContentJob::findOrFail($jobId);
+
+            // Cancel the job
+            $job->status = AIContentJob::$JOB_STATUS_CANCELLED;
+            $job->save();
+
+            return redirect()->route('admin.ai-dashboard.jobs')
+                ->with('success', "Đã hủy công việc #{$jobId}");
+        } catch (\Exception $e) {
+            Log::error('Error cancelling job', [
+                'job_id' => $jobId,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()->with('error', 'Lỗi khi hủy công việc: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Retry failed items in a job
+     */
+    public function retryFailedItems(Request $request, $jobId)
+    {
+        try {
+            $job = \App\Models\AIContentJob::findOrFail($jobId);
+
+            // Check if job belongs to current user
+            if ($job->user_id !== Auth::id()) {
+                return redirect()->back()->with('error', 'Bạn không có quyền thử lại công việc này');
+            }
+
+            // Retry failed items
+            $newJobId = $job->retryFailedItems();
+
+            if ($newJobId) {
+                return redirect()->route('admin.ai-dashboard.jobs')
+                    ->with('success', "Đã tạo công việc mới #{$newJobId} để thử lại các mục lỗi");
+            } else {
+                return redirect()->back()->with('error', 'Không có mục lỗi nào để thử lại');
+            }
+        } catch (\Exception $e) {
+            Log::error('Error retrying failed items', [
+                'job_id' => $jobId,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()->with('error', 'Lỗi khi thử lại: ' . $e->getMessage());
         }
     }
 
@@ -1647,38 +1701,6 @@ class AIDashboardController extends Controller
             ->paginate(10);
 
         return view('admin.ai-dashboard.jobs', compact('jobs'));
-    }
-
-    /**
-     * Retry failed items in a job
-     */
-    public function retryFailedItems(Request $request, $jobId)
-    {
-        try {
-            $job = \App\Models\AIContentJob::findOrFail($jobId);
-
-            // Check if job belongs to current user
-            if ($job->user_id !== Auth::id()) {
-                return redirect()->back()->with('error', 'Bạn không có quyền thử lại công việc này');
-            }
-
-            // Retry failed items
-            $newJobId = $job->retryFailedItems();
-
-            if ($newJobId) {
-                return redirect()->route('admin.ai-dashboard.jobs')
-                    ->with('success', "Đã tạo công việc mới #{$newJobId} để thử lại các mục lỗi");
-            } else {
-                return redirect()->back()->with('error', 'Không có mục lỗi nào để thử lại');
-            }
-        } catch (\Exception $e) {
-            Log::error('Error retrying failed items', [
-                'job_id' => $jobId,
-                'error' => $e->getMessage()
-            ]);
-
-            return redirect()->back()->with('error', 'Lỗi khi thử lại: ' . $e->getMessage());
-        }
     }
 
     /**

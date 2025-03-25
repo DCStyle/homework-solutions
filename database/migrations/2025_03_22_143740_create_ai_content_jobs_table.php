@@ -20,13 +20,13 @@ return new class extends Migration
             $table->unsignedInteger('processed_items')->default(0);
             $table->unsignedInteger('success_count')->default(0);
             $table->unsignedInteger('failed_count')->default(0);
-            $table->string('status'); // pending, processing, completed, failed
+            $table->string('status'); // pending, processing, completed, failed, cancelled
             $table->text('error_message')->nullable();
             $table->json('settings'); // Store model, prompt, temperature, etc.
             $table->json('item_ids'); // Store IDs of items to process
             $table->json('failed_items')->nullable(); // For retry functionality
             $table->timestamps();
-            
+
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
