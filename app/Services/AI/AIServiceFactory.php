@@ -30,6 +30,10 @@ class AIServiceFactory
             throw new \Exception("No active API key found for provider: {$provider}");
         }
 
+        // Update the last_used_date
+        $apiKeyModel->last_used_date = now();
+        $apiKeyModel->save();
+
         $apiKey = $apiKeyModel->api_key;
 
         switch ($provider) {

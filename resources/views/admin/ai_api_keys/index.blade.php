@@ -38,106 +38,110 @@
     @endif
 
     <!-- API Keys Table -->
-    <div class="rounded-lg border border-stroke bg-white p-6 shadow-md">
-        <div class="p-4 border-b border-gray-200 bg-gray-50">
-            <h2 class="font-semibold text-gray-700">Tất Cả Khóa API</h2>
-        </div>
-        
-        @if(count($apiKeys) > 0)
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-100">
-                        <tr>
-                            <th class="px-4 py-3">Nhà Cung Cấp</th>
-                            <th class="px-4 py-3">Khóa API</th>
-                            <th class="px-4 py-3">Email</th>
-                            <th class="px-4 py-3">Trạng Thái</th>
-                            <th class="px-4 py-3">Ngày Thêm</th>
-                            <th class="px-4 py-3 text-center">Thao Tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($apiKeys as $key)
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="px-4 py-3">
-                                <div class="flex items-center">
-                                    @if($key->provider == 'google-gemini')
-                                        <span class="iconify mr-2 text-blue-500" data-icon="mdi-google"></span>
-                                    @elseif($key->provider == 'xai-grok')
-                                        <span class="iconify mr-2 text-green-500" data-icon="mdi-robot"></span>
-                                    @elseif($key->provider == 'openrouter')
-                                        <span class="iconify mr-2 text-purple-500" data-icon="mdi-web"></span>
-                                    @else
-                                        <span class="iconify mr-2 text-gray-500" data-icon="mdi-key"></span>
-                                    @endif
-                                    {{ $providers[$key->provider] ?? $key->provider }}
-                                </div>
-                            </td>
-                            <td class="px-4 py-3 font-mono text-xs relative group">
-                                <span class="api-key-masked">
-                                    {{ substr($key->api_key, 0, 5) }}•••••••••••{{ substr($key->api_key, -4) }}
-                                </span>
-                                <span class="api-key-full hidden">{{ $key->api_key }}</span>
-                                <button type="button" class="toggle-key-visibility ml-2 text-gray-500 hover:text-gray-700">
-                                    <span class="iconify" data-icon="mdi-eye"></span>
-                                </button>
-                                <button type="button" class="copy-key ml-1 text-gray-500 hover:text-gray-700" data-key="{{ $key->api_key }}">
-                                    <span class="iconify" data-icon="mdi-content-copy"></span>
-                                </button>
-                            </td>
-                            <td class="px-4 py-3">{{ $key->email }}</td>
-                            <td class="px-4 py-3">
-                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-sm {{ $key->is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
-                                    <span class="iconify mr-1" data-icon="{{ $key->is_active ? 'mdi-check-circle' : 'mdi-circle-outline' }}"></span>
-                                    {{ $key->is_active ? 'Hoạt Động' : 'Không Hoạt Động' }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 text-gray-500">{{ $key->created_at->format('M d, Y') }}</td>
-                            <td class="px-4 py-3">
-                                <div class="flex items-center justify-center space-x-2">
-                                    <button type="button" class="text-blue-500 hover:bg-blue-100 p-2 rounded-full edit-api-key" 
-                                            data-id="{{ $key->id }}"
-                                            data-provider="{{ $key->provider }}"
-                                            data-email="{{ $key->email }}"
-                                            data-key="{{ $key->api_key }}"
-                                            data-active="{{ $key->is_active }}">
-                                        <span class="iconify" data-icon="mdi-pencil"></span>
+    @if(count($apiKeys) > 0)
+        @foreach($apiKeys as $providerCode => $keys)
+            <div class="rounded-lg border border-stroke bg-white p-6 shadow-md mb-6">
+                <div class="p-4 border-b border-gray-200 bg-gray-50 flex items-center">
+                    @if($providerCode == 'google-gemini')
+                        <span class="iconify mr-2 text-blue-500 text-2xl" data-icon="mdi-google"></span>
+                    @elseif($providerCode == 'xai-grok')
+                        <span class="iconify mr-2 text-green-500 text-2xl" data-icon="mdi-robot"></span>
+                    @elseif($providerCode == 'openrouter')
+                        <span class="iconify mr-2 text-purple-500 text-2xl" data-icon="mdi-web"></span>
+                    @else
+                        <span class="iconify mr-2 text-gray-500 text-2xl" data-icon="mdi-key"></span>
+                    @endif
+                    <h2 class="font-semibold text-gray-700">{{ $providers[$providerCode] ?? $providerCode }} ({{ count($keys) }})</h2>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                            <tr>
+                                <th class="px-4 py-3">Khóa API</th>
+                                <th class="px-4 py-3">Email</th>
+                                <th class="px-4 py-3">Trạng Thái</th>
+                                <th class="px-4 py-3">Lần Sử Dụng Cuối</th>
+                                <th class="px-4 py-3 text-center">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($keys as $key)
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="px-4 py-3 font-mono text-xs relative group">
+                                    <span class="api-key-masked">
+                                        {{ substr($key->api_key, 0, 5) }}•••••••••••{{ substr($key->api_key, -4) }}
+                                    </span>
+                                    <span class="api-key-full hidden">{{ $key->api_key }}</span>
+                                    <button type="button" class="toggle-key-visibility ml-2 text-gray-500 hover:text-gray-700">
+                                        <span class="iconify" data-icon="mdi-eye"></span>
                                     </button>
-                                    
-                                    <a href="{{ route('admin.ai_api_keys.test', $key->id) }}" class="text-amber-500 hover:bg-amber-100 p-2 rounded-full">
-                                        <span class="iconify" data-icon="mdi-connection"></span>
-                                    </a>
-                                    
-                                    <form action="{{ route('admin.ai_api_keys.toggle_active', $key->id) }}" method="POST" class="inline-block">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="text-{{ $key->is_active ? 'gray' : 'green' }}-500 hover:bg-{{ $key->is_active ? 'gray' : 'green' }}-100 p-2 rounded-full">
-                                            <span class="iconify" data-icon="mdi-{{ $key->is_active ? 'ban' : 'check' }}"></span>
+                                    <button type="button" class="copy-key ml-1 text-gray-500 hover:text-gray-700" data-key="{{ $key->api_key }}">
+                                        <span class="iconify" data-icon="mdi-content-copy"></span>
+                                    </button>
+                                </td>
+                                <td class="px-4 py-3">{{ $key->email }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-sm {{ $key->is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                                        <span class="iconify mr-1" data-icon="{{ $key->is_active ? 'mdi-check-circle' : 'mdi-circle-outline' }}"></span>
+                                        {{ $key->is_active ? 'Hoạt Động' : 'Không Hoạt Động' }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-gray-500">
+                                    @if($key->last_used_date)
+                                        {{ $key->last_used_date->format('d/m/Y H:i') }}
+                                    @else
+                                        <span class="text-gray-400">Chưa sử dụng</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center justify-center space-x-2">
+                                        <button type="button" class="text-blue-500 hover:bg-blue-100 p-2 rounded-full edit-api-key" 
+                                                data-id="{{ $key->id }}"
+                                                data-provider="{{ $key->provider }}"
+                                                data-email="{{ $key->email }}"
+                                                data-key="{{ $key->api_key }}"
+                                                data-active="{{ $key->is_active }}">
+                                            <span class="iconify" data-icon="mdi-pencil"></span>
                                         </button>
-                                    </form>
-                                    
-                                    <form action="{{ route('admin.ai_api_keys.destroy', $key->id) }}" method="POST" class="inline-block delete-key-form">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-500 hover:bg-red-100 p-2 rounded-full">
-                                            <span class="iconify" data-icon="mdi-delete"></span>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                                        
+                                        <a href="{{ route('admin.ai_api_keys.test', $key->id) }}" class="text-amber-500 hover:bg-amber-100 p-2 rounded-full">
+                                            <span class="iconify" data-icon="mdi-connection"></span>
+                                        </a>
+                                        
+                                        <form action="{{ route('admin.ai_api_keys.toggle_active', $key->id) }}" method="POST" class="inline-block">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="text-{{ $key->is_active ? 'gray' : 'green' }}-500 hover:bg-{{ $key->is_active ? 'gray' : 'green' }}-100 p-2 rounded-full">
+                                                <span class="iconify" data-icon="mdi-{{ $key->is_active ? 'ban' : 'check' }}"></span>
+                                            </button>
+                                        </form>
+                                        
+                                        <form action="{{ route('admin.ai_api_keys.destroy', $key->id) }}" method="POST" class="inline-block delete-key-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-500 hover:bg-red-100 p-2 rounded-full">
+                                                <span class="iconify" data-icon="mdi-delete"></span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        @else
+        @endforeach
+    @else
+        <div class="rounded-lg border border-stroke bg-white p-6 shadow-md">
             <div class="rounded-lg bg-gray-50 p-8 text-center">
                 <span class="iconify text-4xl text-gray-400 mb-3" data-icon="mdi-key-outline"></span>
                 <h4 class="text-lg font-medium text-gray-600 mb-1">Không Tìm Thấy Khóa API</h4>
                 <p class="text-gray-500">Nhấp vào "Thêm Khóa API Mới" để thêm khóa API đầu tiên của bạn.</p>
             </div>
-        @endif
-    </div>
+        </div>
+    @endif
 
     <!-- Provider Information Cards -->
     <div class="mt-8">

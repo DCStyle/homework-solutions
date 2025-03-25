@@ -15,15 +15,17 @@ class AIApiKey extends Model
         'provider',
         'api_key',
         'email',
-        'is_active'
+        'is_active',
+        'last_used_date'
     ];
     
     protected $casts = [
         'is_active' => 'boolean',
+        'last_used_date' => 'datetime',
     ];
     
     /**
-     * Get a random active API key for a provider
+     * Get the API key that hasn't been used for the longest time for a provider
      *
      * @param string $provider
      * @return \App\Models\AIApiKey|null
@@ -32,7 +34,7 @@ class AIApiKey extends Model
     {
         return self::where('provider', $provider)
             ->where('is_active', true)
-            ->inRandomOrder()
+            ->orderBy('last_used_date', 'asc') // Order by last_used_date ascending (nulls first)
             ->first();
     }
     

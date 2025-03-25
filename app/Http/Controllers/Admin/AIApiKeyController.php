@@ -17,7 +17,8 @@ class AIApiKeyController extends Controller
      */
     public function index()
     {
-        $apiKeys = AIApiKey::orderBy('provider')->orderBy('created_at', 'desc')->get();
+        // Group API keys by provider
+        $apiKeys = AIApiKey::orderBy('provider')->get()->groupBy('provider');
         $providers = AIServiceFactory::getAvailableProviders();
         
         return view('admin.ai_api_keys.index', compact('apiKeys', 'providers'));
