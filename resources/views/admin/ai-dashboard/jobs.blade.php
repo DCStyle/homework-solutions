@@ -173,17 +173,7 @@
                                             Chi tiết
                                         </button>
 
-                                        @if($job->status !== \App\Models\AIContentJob::$JOB_STATUS_PENDING && $job->status !== \App\Models\AIContentJob::$JOB_STATUS_REPLACED)
-                                            <button
-                                                type="button"
-                                                class="rerun-job inline-flex items-center text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50"
-                                                title="{{ $job->status === 'processing' ? 'Công việc có thể bị treo, tạo bản sao để chạy lại' : 'Tạo bản sao và chạy lại công việc này' }}"
-                                                data-job-id="{{ $job->id }}"
-                                            >
-                                                <span class="iconify mr-1" data-icon="mdi-play-circle-outline"></span>
-                                                Chạy lại
-                                            </button>
-
+                                        @if($job->status === \App\Models\AIContentJob::$JOB_STATUS_PENDING)
                                             <form action="{{ route('admin.ai-dashboard.cancel-job', $job->id) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 <button
@@ -195,6 +185,18 @@
                                                     Huỷ
                                                 </button>
                                             </form>
+                                        @endif
+
+                                        @if($job->status !== \App\Models\AIContentJob::$JOB_STATUS_PENDING && $job->status !== \App\Models\AIContentJob::$JOB_STATUS_REPLACED)
+                                            <button
+                                                type="button"
+                                                class="rerun-job inline-flex items-center text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50"
+                                                title="{{ $job->status === 'processing' ? 'Công việc có thể bị treo, tạo bản sao để chạy lại' : 'Tạo bản sao và chạy lại công việc này' }}"
+                                                data-job-id="{{ $job->id }}"
+                                            >
+                                                <span class="iconify mr-1" data-icon="mdi-play-circle-outline"></span>
+                                                Chạy lại
+                                            </button>
                                         @endif
 
                                         @if($job->status === \App\Models\AIContentJob::$JOB_STATUS_COMPLETED && $job->failed_count > 0)
