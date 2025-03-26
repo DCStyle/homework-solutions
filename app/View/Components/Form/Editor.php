@@ -10,14 +10,16 @@ class Editor extends Component
 {
     public $name;
     public $value;
+    public $height;
 
     /**
      * Create a new component instance.
      */
-    public function __construct($name, $value = null)
+    public function __construct($name, $value = null, $height = 900)
     {
         $this->name = $name;
         $this->value = $value;
+        $this->height = $height;
     }
 
     /**

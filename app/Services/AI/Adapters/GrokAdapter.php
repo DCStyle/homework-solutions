@@ -15,89 +15,56 @@ class GrokAdapter implements AIServiceInterface
     private $apiKey;
     private $aiService;
 
-    /**
-     * Constructor
-     *
-     * @param string $apiKey
-     */
     public function __construct($apiKey)
     {
         $this->apiKey = $apiKey;
-        // Configure Grok with API key
         config(['grok.api_key' => $apiKey]);
-        // Initialize AIService for prompt and response processing
         $this->aiService = new AIService();
     }
 
-    /**
-     * Generate content using Grok AI
-     *
-     * @param string $model
-     * @param string|array $prompt
-     * @param array $options
-     * @param bool $useHtmlMeta
-     * @return array
-     */
     public function generate($model, $prompt, $options = [], $useHtmlMeta = false)
     {
         try {
-            // Log the original model and prompt
             Log::debug('Grok generation started', [
                 'model' => $model,
                 'prompt_preview' => substr(is_string($prompt) ? $prompt : json_encode($prompt), 0, 100)
             ]);
 
-            // Process the prompt using AIService for better structure
-            // Only process string prompts, not arrays
             if (is_string($prompt)) {
                 $contentType = $options['content_type'] ?? 'generic';
                 $processedPrompt = $this->aiService->processPrompt($prompt, $contentType, $useHtmlMeta);
-
-                Log::debug('Prompt processed with AIService', [
-                    'content_type' => $contentType,
-                    'processed_prompt_preview' => substr($processedPrompt, 0, 100) . '...'
-                ]);
             } else {
                 $processedPrompt = $prompt;
             }
 
-            // Format the prompt as messages for chat API
             $messages = $this->formatPromptAsMessages($processedPrompt);
 
             // Create chat options
             $chatOptions = new ChatOptions(
                 model: $this->getGrokModel($model),
                 temperature: $options['temperature'] ?? 0.7,
-                stream: $options['stream'] ?? false
+                stream: $options['stream'] ?? false,
+                maxTokens: $options['max_tokens'] ?? 1024,
+                topP: $options['top_p'] ?? 1
             );
 
-            // Generate response using Grok
-            $content = '';
-            try {
-                // Handle streaming responses
-                if ($options['stream'] ?? false) {
-                    $response = GrokAI::chat($messages, $chatOptions);
-                    foreach ($response as $chunk) {
-                        $content .= $chunk->content();
-                    }
-                } else {
-                    $response = GrokAI::chat($messages, $chatOptions);
-                    $content = $response->content();
-                }
-            } catch (GrokException $e) {
-                Log::error('Grok API error details', [
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                    'model_requested' => $model
-                ]);
-                throw new \Exception('Grok API error: ' . $e->getMessage());
+            // Handle streaming response
+            if ($options['stream'] ?? false) {
+                return $this->handleStreamingResponse($messages, $chatOptions, $options);
             }
+
+            // Handle regular response
+            $response = GrokAI::chat($messages, $chatOptions);
+            $content = is_object($response) && method_exists($response, 'content') 
+                ? $response->content() 
+                : (is_array($response) && isset($response['content']) 
+                    ? $response['content'] 
+                    : (string)$response);
 
             if (empty($content)) {
                 throw new \Exception('Empty response from Grok API');
             }
 
-            // Format response to match our application's expected format
             $formattedResponse = [
                 'choices' => [
                     [
@@ -108,52 +75,92 @@ class GrokAdapter implements AIServiceInterface
                 ]
             ];
 
-            // Process the response using AIService for cleaning and formatting
-            $contentType = $options['content_type'] ?? 'generic';
-            $processedResponse = $this->aiService->processResponse($formattedResponse, $contentType, $options);
+            return $this->aiService->processResponse(
+                $formattedResponse,
+                $options['content_type'] ?? 'generic',
+                $options
+            );
 
-            Log::debug('Response processed with AIService', [
-                'content_type' => $contentType,
-                'response_type' => gettype($processedResponse),
-                'is_array' => is_array($processedResponse) ? 'true' : 'false'
+        } catch (GrokException $e) {
+            Log::error('Grok API error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
-
-            return $processedResponse;
+            throw new \Exception('Grok API error: ' . $e->getMessage());
         } catch (\Exception $e) {
             Log::error('Grok generation error', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-
             throw $e;
         }
     }
 
-    /**
-     * Analyze an image using Grok Vision
-     *
-     * @param string $imageUrl
-     * @param string $prompt
-     * @param array $options
-     * @return array
-     */
+    private function handleStreamingResponse($messages, ChatOptions $chatOptions, array $options)
+    {
+        try {
+            $response = GrokAI::chat($messages, $chatOptions);
+            $content = '';
+            $streamCallback = $options['stream_callback'] ?? null;
+
+            foreach ($response as $chunk) {
+                $chunkContent = $chunk->content() ?? '';
+                
+                // Handle stream callback if provided
+                if ($streamCallback && is_callable($streamCallback)) {
+                    $streamCallback($chunkContent);
+                } elseif ($options['flush_output'] ?? false) {
+                    // Direct output for HTTP streaming
+                    echo $chunkContent;
+                    ob_flush();
+                    flush();
+                }
+
+                $content .= $chunkContent;
+            }
+
+            return [
+                'choices' => [
+                    [
+                        'message' => [
+                            'content' => $content
+                        ]
+                    ]
+                ],
+                'usage' => [
+                    'prompt_tokens' => -1,
+                    'completion_tokens' => -1,
+                    'total_tokens' => -1
+                ]
+            ];
+
+        } catch (GrokException $e) {
+            Log::error('Grok streaming error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw new \Exception('Grok streaming error: ' . $e->getMessage());
+        }
+    }
+
     public function analyzeImage($imageUrl, $prompt, $options = [])
     {
         try {
-            // Process the vision prompt with AIService if needed
             $contentType = $options['content_type'] ?? 'image_analysis';
             $processedPrompt = $this->aiService->processPrompt($prompt, $contentType, false);
 
-            // Use Grok Vision API
             $response = GrokAI::vision()->analyze(
                 $imageUrl,
                 $processedPrompt,
                 $this->getGrokModel($options['model'] ?? 'grok-2-vision')
             );
 
-            $content = $response->content();
+            $content = is_object($response) && method_exists($response, 'content')
+                ? $response->content()
+                : (is_array($response) && isset($response['content'])
+                    ? $response['content']
+                    : (string)$response);
 
-            // Format to match our application expected format
             $formattedResponse = [
                 'choices' => [
                     [
@@ -164,23 +171,20 @@ class GrokAdapter implements AIServiceInterface
                 ]
             ];
 
-            // Process the response using AIService for cleaning and formatting
-            return $this->aiService->processResponse($formattedResponse, $contentType, $options);
+            return $this->aiService->processResponse(
+                $formattedResponse,
+                $contentType,
+                $options
+            );
         } catch (\Exception $e) {
             Log::error('Grok vision analysis error', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-
             throw $e;
         }
     }
 
-    /**
-     * Get available models for Grok
-     *
-     * @return array
-     */
     public function getAvailableModels()
     {
         return [
@@ -194,12 +198,6 @@ class GrokAdapter implements AIServiceInterface
         ];
     }
 
-    /**
-     * Map model name to Grok model enum
-     *
-     * @param string $model
-     * @return Model
-     */
     private function getGrokModel($model)
     {
         return match($model) {
@@ -214,20 +212,12 @@ class GrokAdapter implements AIServiceInterface
         };
     }
 
-    /**
-     * Format a prompt into messages for Grok
-     *
-     * @param string|array $prompt
-     * @return array
-     */
     private function formatPromptAsMessages($prompt)
     {
-        // If prompt is already an array of messages, return as is
         if (is_array($prompt) && isset($prompt[0]['role'])) {
             return $prompt;
         }
 
-        // Convert string prompt to a single user message
         return [
             ['role' => 'user', 'content' => is_string($prompt) ? $prompt : json_encode($prompt)]
         ];

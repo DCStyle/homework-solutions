@@ -39,9 +39,18 @@
             </h1>
 
             <nav aria-label="breadcrumb" class="my-4">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a title="{{ setting('site_name', 'Home') }}" href="{{ route('home') }}">{{ setting('site_name', 'Home') }}</a></li>
-                    <li class="breadcrumb-item"><a title="{{ $category->name }}" href="{{ route('categories.show', $category->slug) }}" class="font-bold text-orange-400">{{ $category->name }}</a></li>
+                <ol class="flex flex-wrap items-center text-sm md:text-base px-0">
+                    <li class="flex items-center">
+                        <a title="{{ setting('site_name', 'Home') }}" href="{{ route('home') }}" class="text-gray-600 hover:text-blue-500">
+                            {{ setting('site_name', 'Home') }}
+                        </a>
+                        <span class="mx-2 text-gray-500">/</span>
+                    </li>
+                    <li class="flex items-center">
+                        <a title="{{ $category->name }}" href="{{ route('categories.show', $category->slug) }}" class="font-bold text-orange-400 hover:text-orange-500">
+                            {{ $category->name }}
+                        </a>
+                    </li>
                 </ol>
             </nav>
 
@@ -96,3 +105,8 @@
         @include('layouts.sidebar-right')
     </div>
 @endsection
+
+@push('styles')
+    <!-- Typography -->
+    <link rel="stylesheet" href="{{ asset('css/typography.css') }}" />
+@endpush

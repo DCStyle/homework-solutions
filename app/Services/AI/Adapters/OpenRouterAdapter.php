@@ -11,42 +11,25 @@ use MoeMizrak\LaravelOpenrouter\DTO\MessageData;
 use MoeMizrak\LaravelOpenrouter\DTO\ProviderPreferencesData;
 use MoeMizrak\LaravelOpenrouter\DTO\ResponseFormatData;
 use MoeMizrak\LaravelOpenrouter\DTO\TextContentData;
-use MoeMizrak\LaravelOpenRouter\Facades\LaravelOpenRouter;
 use Illuminate\Support\Arr;
+use MoeMizrak\LaravelOpenrouter\Facades\LaravelOpenRouter;
 use MoeMizrak\LaravelOpenrouter\Types\RoleType;
 
 class OpenRouterAdapter implements AIServiceInterface
 {
     private $apiKey;
 
-    /**
-     * Constructor
-     *
-     * @param string $apiKey
-     */
     public function __construct($apiKey)
     {
         $this->apiKey = $apiKey;
-        // Configure OpenRouter with API key
         config(['openrouter.api_key' => $apiKey]);
     }
 
-    /**
-     * Generate content using OpenRouter
-     *
-     * @param string $model
-     * @param string|array $prompt
-     * @param array $options
-     * @param bool $useHtmlMeta
-     * @return array
-     */
     public function generate($model, $prompt, $options = [], $useHtmlMeta = false)
     {
         try {
-            // Prepare messages array
             $messages = [];
 
-            // Add system message if provided
             if (!empty($options['system_message'])) {
                 $messages[] = new MessageData(
                     content: $options['system_message'],
@@ -54,13 +37,11 @@ class OpenRouterAdapter implements AIServiceInterface
                 );
             }
 
-            // Add user message
             $messages[] = new MessageData(
                 content: is_string($prompt) ? $prompt : json_encode($prompt),
                 role: RoleType::USER
             );
 
-            // Create response format for structured output if needed
             $responseFormat = $useHtmlMeta ? new ResponseFormatData(
                 type: 'json_schema',
                 json_schema: [
@@ -84,7 +65,6 @@ class OpenRouterAdapter implements AIServiceInterface
                 ]
             ) : null;
 
-            // Create chat data
             $chatData = new ChatData(
                 messages: $messages,
                 model: $this->mapModelName($model),
@@ -101,34 +81,25 @@ class OpenRouterAdapter implements AIServiceInterface
                 )
             );
 
-            // Check rate limits before making request
             $limits = $this->checkLimits();
             if ($limits && $limits->credits <= 0) {
                 throw new \Exception('OpenRouter credits exhausted');
             }
 
-            // Handle streaming or regular request
+            // Handle streaming
             if ($options['stream'] ?? false) {
-                $content = $this->handleStreamingResponse($chatData);
-                $response = (object) [
-                    'choices' => [
-                        (object) [
-                            'message' => (object) ['content' => $content]
-                        ]
-                    ]
-                ];
-            } else {
-                $response = LaravelOpenRouter::chatRequest($chatData);
+                return $this->handleStreamingResponse($chatData, $options);
             }
+
+            // Handle regular response
+            $response = LaravelOpenRouter::chatRequest($chatData);
 
             // Track cost if needed
             if (!empty($response->id)) {
                 LaravelOpenRouter::costRequest($response->id);
             }
 
-            // Process the response
             if ($useHtmlMeta) {
-                // Extract meta information from structured response
                 $content = json_decode($response->choices[0]->message->content, true);
                 return [
                     'meta_title' => $content['meta_title'] ?? '',
@@ -136,7 +107,6 @@ class OpenRouterAdapter implements AIServiceInterface
                 ];
             }
 
-            // Return standard format
             return [
                 'choices' => [
                     [
@@ -152,23 +122,65 @@ class OpenRouterAdapter implements AIServiceInterface
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-
             throw $e;
         }
     }
 
-    /**
-     * Analyze an image using OpenRouter
-     *
-     * @param string $imageUrl
-     * @param string $prompt
-     * @param array $options
-     * @return array
-     */
+    private function handleStreamingResponse(ChatData $chatData, array $options)
+    {
+        try {
+            $content = '';
+            $streamCallback = $options['stream_callback'] ?? null;
+            $promise = LaravelOpenRouter::chatStreamRequest($chatData);
+            $stream = $promise->wait();
+
+            while (!$stream->eof()) {
+                $rawResponse = $stream->read(1024);
+                $response = LaravelOpenRouter::filterStreamingResponse($rawResponse);
+
+                if (!empty($response)) {
+                    $chunkContent = Arr::get($response[0], 'choices.0.message.content', '');
+
+                    // Handle stream callback if provided
+                    if ($streamCallback && is_callable($streamCallback)) {
+                        $streamCallback($chunkContent);
+                    } elseif ($options['flush_output'] ?? false) {
+                        // Direct output for HTTP streaming
+                        echo $chunkContent;
+                        ob_flush();
+                        flush();
+                    }
+
+                    $content .= $chunkContent;
+                }
+            }
+
+            return [
+                'choices' => [
+                    [
+                        'message' => [
+                            'content' => $content
+                        ]
+                    ]
+                ],
+                'usage' => [
+                    'prompt_tokens' => -1,
+                    'completion_tokens' => -1,
+                    'total_tokens' => -1
+                ]
+            ];
+        } catch (\Exception $e) {
+            Log::error('OpenRouter streaming error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+    }
+
     public function analyzeImage($imageUrl, $prompt, $options = [])
     {
         try {
-            // Create message for image analysis
             $message = new MessageData(
                 content: [
                     new TextContentData(
@@ -185,7 +197,6 @@ class OpenRouterAdapter implements AIServiceInterface
                 role: RoleType::USER
             );
 
-            // Create chat data for vision analysis
             $chatData = new ChatData(
                 messages: [$message],
                 model: $this->mapModelName($options['model'] ?? 'grok-2-vision'),
@@ -193,41 +204,21 @@ class OpenRouterAdapter implements AIServiceInterface
                 temperature: $options['temperature'] ?? 0.7
             );
 
-            // Check rate limits before making request
             $limits = $this->checkLimits();
             if ($limits && $limits->credits <= 0) {
                 throw new \Exception('OpenRouter credits exhausted');
             }
 
-            // Handle streaming or regular request
             if ($options['stream'] ?? false) {
-                $content = $this->handleStreamingResponse($chatData);
-                $response = (object) [
-                    'choices' => [
-                        (object) [
-                            'message' => (object) ['content' => $content]
-                        ]
-                    ]
-                ];
-            } else {
-                $response = LaravelOpenRouter::chatRequest($chatData);
+                return $this->handleStreamingResponse($chatData, $options);
             }
 
-            // Track cost if needed
+            $response = LaravelOpenRouter::chatRequest($chatData);
+
             if (!empty($response->id)) {
                 LaravelOpenRouter::costRequest($response->id);
             }
 
-            // Track cost if needed
-            if (!empty($response->id)) {
-                $cost = LaravelOpenRouter::costRequest($response->id);
-                Log::info('OpenRouter image analysis cost', [
-                    'generation_id' => $response->id,
-                    'cost' => $cost
-                ]);
-            }
-
-            // Return in standard format
             return [
                 'choices' => [
                     [
@@ -242,19 +233,12 @@ class OpenRouterAdapter implements AIServiceInterface
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-
             throw $e;
         }
     }
 
-    /**
-     * Get available models for OpenRouter
-     *
-     * @return array
-     */
     public function getAvailableModels()
     {
-        // Return the models from the existing mapModelName method
         return [
             'x-ai/grok-2' => 'Grok 2 (OpenRouter)',
             'x-ai/grok-2-vision-1212' => 'Grok 2 Vision (OpenRouter)',
@@ -268,17 +252,6 @@ class OpenRouterAdapter implements AIServiceInterface
         ];
     }
 
-    /**
-     * Map model name to OpenRouter format
-     *
-     * @param string $model
-     * @return string
-     */
-    /**
-     * Check rate limits
-     *
-     * @return array
-     */
     private function checkLimits()
     {
         try {
@@ -291,70 +264,30 @@ class OpenRouterAdapter implements AIServiceInterface
         }
     }
 
-    /**
-     * Handle streaming response
-     *
-     * @param ChatData $chatData
-     * @return string
-     */
-    private function handleStreamingResponse(ChatData $chatData)
-    {
-        $content = '';
-        $promise = LaravelOpenRouter::chatStreamRequest($chatData);
-        $stream = $promise->wait();
-
-        while (!$stream->eof()) {
-            $rawResponse = $stream->read(1024);
-            $response = LaravelOpenRouter::filterStreamingResponse($rawResponse);
-            if (!empty($response)) {
-                $content .= Arr::get($response[0], 'choices.0.message.content', '');
-            }
-        }
-
-        return $content;
-    }
-
-    /**
-     * Map model name to OpenRouter format
-     *
-     * @param string $model
-     * @return string
-     */
     private function mapModelName($model)
     {
-        // Map model names from old format to OpenRouter format
         $modelMap = [
-            // DeepSeek models
             'deepseek-v3' => 'deepseek/deepseek-chat:free',
             'deepseek-chat' => 'deepseek/deepseek-chat:free',
             'deepseek-r1' => 'deepseek/deepseek-r1:free',
-
-            // Grok models - text
             'grok-2' => 'x-ai/grok-2',
             'grok-2-latest' => 'x-ai/grok-2',
             'grok-2-1212' => 'x-ai/grok-2-1212',
             'grok-2-mini' => 'x-ai/grok-2-mini',
-
-            // Grok models - vision
             'grok-2-vision' => 'x-ai/grok-2-vision-1212',
             'grok-2-vision-latest' => 'x-ai/grok-2-vision-1212',
-
-            // Google models
             'google/gemini-2.0-flash-thinking-exp:free' => 'google/gemini-2.0-flash-thinking-exp:free',
             'google/gemma-3-1b-it:free' => 'google/gemma-3-1b-it:free',
             'google/gemma-3-27b-it:free' => 'google/gemma-3-27b-it:free',
-
-            // Other models
             'qwen/qwq-32b:free' => 'qwen/qwq-32b:free',
             'meta-llama/llama-3.2-1b-instruct:free' => 'meta-llama/llama-3.2-1b-instruct:free',
             'mistralai/mistral-small-3.1-24b-instruct:free' => 'mistralai/mistral-small-3.1-24b-instruct:free',
         ];
 
-        // If the model is already in the correct format (contains a slash), use it directly
         if (str_contains($model, '/')) {
             return $model;
         }
 
-        return $modelMap[$model] ?? 'x-ai/grok-2';  // Default to Grok-2 if unknown
+        return $modelMap[$model] ?? 'x-ai/grok-2';
     }
 }

@@ -118,6 +118,10 @@ tbody, td, tfoot, th, thead, tr {
     display: none
 }
 
+.show {
+    display: block
+}
+
 li ol,li ul {
     margin: 0
 }

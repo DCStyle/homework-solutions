@@ -10,6 +10,16 @@ class AIService
 {
     private $defaultProvider = 'openrouter';
 
+    public function getDefaultProvider()
+    {
+        return $this->defaultProvider;
+    }
+
+    public function getProviderList()
+    {
+        return AIServiceFactory::getActiveProviders();
+    }
+
     /**
      * Call AI model to generate content
      *
@@ -37,7 +47,7 @@ class AIService
 
             // Check if we should skip prompt processing (for bulk jobs that already replaced variables)
             $skipPromptProcessing = $options['skip_prompt_processing'] ?? false;
-            
+
             if ($skipPromptProcessing) {
                 $processedPrompt = $prompt; // Use the prompt as-is
                 Log::debug('Skipping prompt processing, using pre-processed prompt', [

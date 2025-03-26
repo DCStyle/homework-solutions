@@ -89,6 +89,24 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
         Route::get('/{id}/test', [App\Http\Controllers\Admin\AIApiKeyController::class, 'testKey'])->name('admin.ai_api_keys.test');
     });
 
+    // Wiki Q&A Admin Management
+    Route::prefix('wiki')->name('admin.wiki.')->group(function() {
+        // Dashboard and settings
+        Route::get('/', [App\Http\Controllers\Admin\WikiSettingsController::class, 'index'])->name('dashboard');
+        Route::get('/settings', [App\Http\Controllers\Admin\WikiSettingsController::class, 'index'])->name('settings');
+        Route::put('/settings', [App\Http\Controllers\Admin\WikiSettingsController::class, 'update'])->name('settings.update');
+
+        // Moderation
+        Route::get('/moderation', [App\Http\Controllers\Admin\WikiSettingsController::class, 'moderation'])->name('moderation');
+        Route::get('/questions', [App\Http\Controllers\Admin\WikiSettingsController::class, 'questions'])->name('questions');
+
+        // Question management
+        Route::prefix('questions')->name('questions.')->group(function() {
+            Route::patch('/{question}/status', [App\Http\Controllers\Admin\WikiSettingsController::class, 'updateStatus'])->name('status');
+            Route::put('/{questionId}/approve', [App\Http\Controllers\Admin\WikiSettingsController::class, 'approveQuestion'])->name('approve');
+            Route::put('/{questionId}/reject', [App\Http\Controllers\Admin\WikiSettingsController::class, 'rejectQuestion'])->name('reject');
+        });
+    });
     // Settings
     Route::prefix('settings')->group(function() {
         Route::get('/', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('admin.settings.index');
@@ -230,7 +248,6 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
     });
 });
 
-
 // Categories
 Route::get('/categories/{category_slug}.html', [App\Http\Controllers\CategoriesController::class, 'show'])->name('categories.show');
 
@@ -261,6 +278,34 @@ Route::prefix('articles')->group(function() {
 
 // Article categories
 Route::get('/article-categories/{category_slug}.html', [App\Http\Controllers\ArticleCategoriesController::class, 'show'])->name('article-categories.show');
+
+// Wiki Q&A System Routes
+Route::prefix('hoi-dap')->name('wiki.')->group(function () {
+    // Main pages
+    Route::get('/', [App\Http\Controllers\WikiController::class, 'index'])->name('index');
+    Route::get('/tim-kiem', [App\Http\Controllers\WikiController::class, 'search'])->name('search');
+
+    // Questions
+    Route::prefix('cau-hoi')->name('questions.')->group(function() {
+        Route::get('/tao-moi', [App\Http\Controllers\WikiQuestionController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\WikiQuestionController::class, 'store'])->name('store');
+        Route::get('/{question}/thanh-cong', [App\Http\Controllers\WikiQuestionController::class, 'success'])->name('success');
+    });
+
+    // Comments (auth required)
+    Route::middleware('auth')->group(function () {
+        // Question comments
+        Route::post('/cau-hoi/{question}/binh-luan', [App\Http\Controllers\WikiCommentController::class, 'store'])->name('comments.store');
+        Route::get('/cau-hoi/{question}/binh-luan', [App\Http\Controllers\WikiCommentController::class, 'loadMore'])->name('comments.load-more');
+
+        // Comment management
+        Route::put('/binh-luan/{comment}', [App\Http\Controllers\WikiCommentController::class, 'update'])->name('comments.update');
+        Route::delete('/binh-luan/{comment}', [App\Http\Controllers\WikiCommentController::class, 'destroy'])->name('comments.destroy');
+    });
+
+    // Category pages
+    Route::get('/{categorySlug}/{questionSlug}', [App\Http\Controllers\WikiController::class, 'show'])->name('show');
+});
 
 // Images
 Route::prefix('images')->group(function() {
