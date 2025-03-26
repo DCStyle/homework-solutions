@@ -41,8 +41,8 @@
 
             <div class="md:rounded-lg md:p-4 md:bg-gray-200">
                 @foreach ($categories as $category)
-                    <div class="flex items-center gap-2 bg-white p-2 mb-2 shadow-md border-b-2 border-orange-400 md:gap-4 md:p-4 collapsed"
-                         data-bs-toggle="collapse" href="#category-collapse-{{ $category->id }}" role="button" aria-expanded="false" aria-controls="collapseExample"
+                    <div class="flex items-center gap-2 bg-white p-2 mb-2 shadow-md border-b-2 border-orange-400 md:gap-4 md:p-4 category-toggle cursor-pointer"
+                         data-target="category-collapse-{{ $category->id }}"
                     >
                         <span class="iconify text-2xl" data-icon="mdi-school"></span>
 
@@ -50,20 +50,19 @@
                             {{ $category->name }}
                         </p>
 
-                        <a class="ml-auto px-2 py-1 rounded-full bg-blue-500 text-white font-medium text-sm js-category-toggle-button w-[160px] text-center hover:bg-blue-600 md:px-4 md:py-2 md:text-md"
-                        >
-                            <span class="inactive inline-flex items-center">
+                        <a class="ml-auto px-2 py-1 rounded-full bg-blue-500 text-white font-medium text-sm js-category-toggle-button w-[160px] text-center hover:bg-blue-600 md:px-4 md:py-2 md:text-md">
+                            <span class="active inline-flex items-center">
                                 Xem thêm
                                 <span class="iconify text-2xl" data-icon="mdi-chevron-right"></span>
                             </span>
 
-                            <span class="active inline-flex items-center">
+                            <span class="inactive items-center">
                                 <span class="iconify text-2xl" data-icon="mdi-chevron-down"></span>
                             </span>
                         </a>
                     </div>
 
-                    <div class="collapse mb-4" id="category-collapse-{{ $category->id }}">
+                    <div class="hidden mb-4 category-content" id="category-collapse-{{ $category->id }}">
                         <div class="category-container bg-white p-4 border-2 border-blue-600 rounded-md">
                             <div class="category-arrow" style="background-image: url('{{ asset('images/shapen.png') }}')"></div>
 
@@ -157,3 +156,77 @@
         @include('articles.latest', ['articles' => $articles, 'hasMore' => true])
     @endisset
 @endsection
+
+@push('styles')
+    <style>
+        /* Category toggle animations */
+        .category-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .category-content.show {
+            max-height: 2000px; /* Large enough to accommodate content */
+            transition: max-height 0.5s ease-in;
+        }
+
+        /* Toggle button styles */
+        .category-toggle.active .active {
+            display: none;
+        }
+
+        .category-toggle.active .inactive {
+            display: inline-flex;
+        }
+
+        /* Arrow styling */
+        .category-arrow {
+            width: 30px;
+            height: 15px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            position: relative;
+            top: -15px;
+            margin: 0 auto;
+        }
+    </style>
+@endpush
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            $('.category-toggle').click(function(e) {
+                // Prevent triggering if clicking on links inside
+                if ($(e.target).is('a') || $(e.target).parents('a').length) {
+                    return;
+                }
+
+                var targetId = $(this).data('target');
+                var contentElement = $('#' + targetId);
+
+                // Toggle active class for styling
+                $(this).toggleClass('active');
+
+                // Toggle content visibility with animation
+                if (contentElement.hasClass('show')) {
+                    contentElement.removeClass('show');
+                    setTimeout(function() {
+                        contentElement.addClass('hidden');
+                    }, 500); // Match transition duration
+                } else {
+                    contentElement.removeClass('hidden');
+                    // Trigger reflow
+                    contentElement[0].offsetHeight;
+                    contentElement.addClass('show');
+                }
+            });
+
+            // Handle toggle button clicks separately
+            $('.js-category-toggle-button').click(function(e) {
+                e.stopPropagation();
+                $(this).closest('.category-toggle').click();
+            });
+        });
+    </script>
+@endpush

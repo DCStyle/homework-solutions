@@ -66,7 +66,9 @@
 
         @include('layouts.sidebar-right')
     </div>
+@endsection
 
+@push('scripts')
     <script>
         MathJax = {
             tex: {
@@ -83,4 +85,9 @@
         async
         src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
     </script>
-@endsection
+@endpush
+
+@push('styles')
+    <!-- Typography -->
+    <link rel="stylesheet" href="{{ asset('css/typography.css') }}" />
+@endpush

@@ -20,3 +20,11 @@ Route::post('posts/import', [PostController::class, 'importPostFromJSON']);
 
 Route::post('attachments/upload', [AttachmentController::class, 'upload']);
 Route::delete('attachments/{attachment}', [AttachmentController::class, 'destroy']);
+
+// Wiki Q&A System API Routes
+Route::prefix('wiki')->group(function () {
+    Route::get('/questions/search', [App\Http\Controllers\Api\WikiQuestionsController::class, 'search']);
+    Route::get('/questions/{question}/stream', [App\Http\Controllers\WikiQuestionController::class, 'stream'])->name('api.wiki.questions.stream');
+    Route::get('/questions/{question}/check-answer', [App\Http\Controllers\WikiQuestionController::class, 'checkAnswer'])->name('api.wiki.questions.check-answer');
+    Route::apiResource('/comments', App\Http\Controllers\Api\WikiCommentsController::class)->only(['store', 'update', 'destroy']);
+});

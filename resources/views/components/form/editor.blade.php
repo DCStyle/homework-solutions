@@ -6,21 +6,49 @@
 </div>
 
 <script>
-    // Ensure MathJax is loaded and initialized
-    window.MathJax = {
-        tex: {
-            inlineMath: [['$', '$'], ['\\(', '\\)']],
-            displayMath: [['$$', '$$'], ['\\[', '\\]']],
-            processEscapes: true
-        },
-        startup: {
-            ready: function() {
-                MathJax.startup.defaultReady();
-                // Signal TinyMCE that MathJax is ready
-                window.MathJaxReady = true;
+    // First, load MathJax externally
+    function loadMathJax() {
+        return new Promise((resolve, reject) => {
+            if (window.MathJax) {
+                resolve(window.MathJax);
+                return;
             }
-        }
-    };
+
+            // Configure MathJax
+            window.MathJax = {
+                tex: {
+                    inlineMath: [['$', '$'], ['\\(', '\\)']],
+                    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                    processEscapes: true
+                },
+                startup: {
+                    ready: function() {
+                        MathJax.startup.defaultReady();
+                        window.MathJaxReady = true;
+                        resolve(window.MathJax);
+                    }
+                },
+                options: {
+                    enableMenu: false
+                }
+            };
+
+            // Load MathJax script
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+            script.async = true;
+            script.onload = () => {
+                // MathJax startup.ready will resolve the promise
+            };
+            script.onerror = () => {
+                console.error('Failed to load MathJax');
+                window.MathJaxReady = false;
+                // Resolve anyway to not block editor initialization
+                resolve(null);
+            };
+            document.head.appendChild(script);
+        });
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
         let editor = null;
@@ -30,8 +58,25 @@
             uploadUrl: '{{ route('images.upload') }}'
         });
 
-        function initTinyMCE() {
+        // Safe MathJax rendering function
+        function safeTypeset() {
+            try {
+                if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+                    return window.MathJax.typesetPromise();
+                }
+            } catch (e) {
+                console.warn('MathJax typesetting failed:', e);
+            }
+            return Promise.resolve(); // Return resolved promise if MathJax not available
+        }
+
+        // Initialize TinyMCE with MathJax support
+        async function initTinyMCE() {
+            // Ensure MathJax is loaded first
+            await loadMathJax();
+
             return tinymce.init({
+                license_key: 'gpl',
                 selector: '#{{ $name }}',
                 plugins: 'lists link image table code',
                 paste_as_text: false, // Allow HTML pasting
@@ -46,15 +91,17 @@
                 },
                 toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image table mathjax',
                 mathjax: {
-                    lib: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js',
+                    lib: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js', // We've already loaded this
                     symbols: {start: '\\(', end: '\\)'},
                     className: 'math-tex',
                     configUrl: "{{ env('APP_ENV') === 'public'
                                     ? secure_asset('js/tinymce/plugins/mathjax/config.js')
                                     : asset('js/tinymce/plugins/mathjax/config.js')
-                                }}"
+                                }}",
+                    // Add this line to prevent initialization issues
+                    ignoreUnloadIfMathJaxNotReady: true
                 },
-                height: 900,
+                height: {{ $height ?? 300 }},
                 images_upload_url: '{{ route('images.upload') }}',
                 images_upload_handler: function (blobInfo, progress) {
                     return new Promise((resolve, reject) => {
@@ -90,6 +137,32 @@
                 setup: function(ed) {
                     editor = ed;
 
+                    // Monkey patch the MathJax plugin methods that might cause errors
+                    ed.on('init', function() {
+                        if (ed.plugins.mathjax) {
+                            const originalRender = ed.plugins.mathjax.originalRender || ed.plugins.mathjax.render;
+
+                            // Override the render function with a safe version
+                            ed.plugins.mathjax.render = function() {
+                                try {
+                                    if (typeof originalRender === 'function') {
+                                        return originalRender.apply(this, arguments);
+                                    }
+                                } catch (e) {
+                                    console.warn('MathJax render failed:', e);
+                                }
+                            };
+
+                            // Store the original for reference
+                            ed.plugins.mathjax.originalRender = originalRender;
+                        }
+
+                        // Force MathJax typeset after initialization
+                        setTimeout(function() {
+                            safeTypeset();
+                        }, 1000);
+                    });
+
                     // Process content after paste to handle any remaining base64 images
                     ed.on('PastePostProcess', function(e) {
                         // Only process if content exists and has base64 images
@@ -109,6 +182,9 @@
 
                                     // Insert the processed content
                                     ed.insertContent(processedContent);
+
+                                    // Re-render MathJax content
+                                    setTimeout(() => safeTypeset(), 100);
                                 })
                                 .catch(err => {
                                     console.error('Error processing pasted images:', err);
@@ -149,64 +225,24 @@
                         }
                     });
 
-                    // Fix for MathJax not being ready
-                    ed.on('init', function() {
-                        // Force MathJax to be re-initialized if needed
-                        if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
-                            // Ensure MathJax is ready
-                            setTimeout(function() {
-                                try {
-                                    MathJax.typesetPromise();
-                                } catch (e) {
-                                    console.error('Error initializing MathJax:', e);
-                                }
-                            }, 1000);
-                        }
+                    // When content is set, re-render MathJax
+                    ed.on('SetContent', function() {
+                        setTimeout(() => safeTypeset(), 100);
                     });
                 }
             });
         }
 
-        // Wait a bit to make sure MathJax is properly initialized
-        setTimeout(function() {
-            // Initialize TinyMCE
-            initTinyMCE().then(() => {
-                // Check if initial content has base64 images and process them
-                try {
-                    if (editor) {
-                        const initialContent = editor.getContent();
-                        if (initialContent && typeof initialContent === 'string' && initialContent.indexOf('data:image') !== -1) {
-                            // Show loading message
-                            editor.setProgressState(true);
-                            editor.setContent(initialContent + '<p id="initial-loading">Processing embedded images... Please wait.</p>');
-
-                            // Process the initial content to upload any base64 images
-                            imagePasteHandler.processContent(initialContent)
-                                .then(processedContent => {
-                                    // Remove loading message and update content
-                                    editor.setProgressState(false);
-                                    const loadingElement = editor.dom.get('initial-loading');
-                                    if (loadingElement) {
-                                        editor.dom.remove(loadingElement);
-                                    }
-                                    editor.setContent(processedContent);
-                                })
-                                .catch(err => {
-                                    console.error('Error processing initial images:', err);
-                                    editor.setProgressState(false);
-                                    const loadingElement = editor.dom.get('initial-loading');
-                                    if (loadingElement) {
-                                        editor.dom.remove(loadingElement);
-                                    }
-                                });
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error checking initial content:', error);
-                }
-            }).catch(err => {
-                console.error('Error initializing TinyMCE:', err);
+        // Initialize editor with proper MathJax loading
+        initTinyMCE().catch(err => {
+            console.error('Error initializing TinyMCE:', err);
+            // Fallback to basic initialization if there's an error
+            tinymce.init({
+                selector: '#{{ $name }}',
+                plugins: 'lists link image table code',
+                toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image table',
+                height: {{ $height ?? 300 }}
             });
-        }, 500);
+        });
     });
 </script>

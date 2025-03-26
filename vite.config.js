@@ -14,6 +14,10 @@ export default defineConfig({
                 'resources/css/admin/ai-dashboard/stats_main.css',
                 'resources/css/admin/ai-dashboard/jobs_main.css',
 
+                // CSS - public - Wiki
+                'resources/css/public/wiki/chat.css',
+                'resources/css/public/wiki/live_search.css',
+
                 // JS - main
                 'resources/js/app.js',
 
@@ -27,7 +31,11 @@ export default defineConfig({
                 'resources/js/admin/ai-dashboard/vision_results_main.js',
 
                 // JS - admin - AI API keys
-                'resources/js/admin/ai-api-keys/index_main.js'
+                'resources/js/admin/ai-api-keys/index_main.js',
+
+                // JS - public - Wiki
+                'resources/js/public/wiki/chat.js',
+                'resources/js/public/wiki/live_search.js',
             ],
             refresh: true,
         }),

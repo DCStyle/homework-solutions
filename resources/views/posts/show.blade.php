@@ -80,43 +80,44 @@
 
                     <li class="flex items-center">
                         <a
-                            href="{{ route('categories.show', $post->chapter->book->group->category->slug) }}"
-                            title="{{ $post->chapter->book->group->category->name }}"
+                            href="{{ route('categories.show', $category->slug) }}"
+                            title="{{ $category->name }}"
                             class="text-gray-600 hover:text-blue-500 transition-colors duration-200"
                         >
-                            {{ $post->chapter->book->group->category->name }}
+                            {{ $category->name }}
                         </a>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mx-2 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </li>
 
                     <li class="flex items-center">
                         <a
-                            href="{{ route('bookGroups.show', $post->chapter->book->group->slug) }}"
-                            title="{{ $post->chapter->book->group->name }}"
+                            href="{{ route('bookGroups.show', $group->slug) }}"
+                            title="{{ $group->name }}"
                             class="text-gray-600 hover:text-blue-500 transition-colors duration-200"
                         >
-                            {{ $post->chapter->book->group->name }}
+                            {{ $group->name }}
                         </a>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mx-2 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </li>
 
                     <li class="flex items-center">
                         <a
-                            href="{{ route('books.show', $post->chapter->book->slug) }}"
-                            title="{{ $post->chapter->book->name }}"
+                            href="{{ route('books.show', $book->slug) }}"
+                            title="{{ $book->name }}"
                             class="text-gray-600 hover:text-blue-500 transition-colors duration-200"
                         >
-                            {{ $post->chapter->book->name }}
+                            {{ $book->name }}
                         </a>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mx-2 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </li>
 
                     <li class="flex items-center">
-                        <a href="{{ route('bookChapters.show', $post->chapter->slug) }}"
-                            title="{{ $post->chapter->name }}"
+                        <a
+                            href="{{ route('bookChapters.show', $chapter->slug) }}"
+                            title="{{ $chapter->name }}"
                             class="text-gray-600 hover:text-blue-500 transition-colors duration-200"
                         >
-                            {{ $post->chapter->name }}
+                            {{ $chapter->name }}
                         </a>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mx-2 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </li>
@@ -588,6 +589,9 @@
 @endpush
 
 @push('styles')
+    <!-- Typography -->
+    <link rel="stylesheet" href="{{ asset('css/typography.css') }}" />
+
     <style>
         .animate-fade-in {
             animation: fadeIn 0.2s ease-in-out;

@@ -62,11 +62,30 @@
             </h1>
 
             <nav aria-label="breadcrumb" class="my-4">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a title="{{ setting('site_name', 'Home') }}" href="{{ route('home') }}">{{ setting('site_name', 'Home') }}</a></li>
-                    <li class="breadcrumb-item"><a title="{{ $book->group->category->name }}" href="{{ route('categories.show', $book->group->category->slug) }}">{{ $book->group->category->name }}</a></li>
-                    <li class="breadcrumb-item"><a title="{{ $book->group->name }}" href="{{ route('bookGroups.show', $book->group->slug) }}">{{ $book->group->name }}</a></li>
-                    <li class="breadcrumb-item"><a title="{{ $book->name }}" href="{{ route('books.show', $book->slug) }}" class="font-bold text-orange-400">{{ $book->name }}</a></li>
+                <ol class="flex flex-wrap items-center text-sm md:text-base px-0">
+                    <li class="flex items-center">
+                        <a title="{{ setting('site_name', 'Home') }}" href="{{ route('home') }}" class="text-gray-600 hover:text-blue-500">
+                            {{ setting('site_name', 'Home') }}
+                        </a>
+                        <span class="mx-2 text-gray-500">/</span>
+                    </li>
+                    <li class="flex items-center">
+                        <a title="{{ $book->group->category->name }}" href="{{ route('categories.show', $book->group->category->slug) }}" class="text-gray-600 hover:text-blue-500">
+                            {{ $book->group->category->name }}
+                        </a>
+                        <span class="mx-2 text-gray-500">/</span>
+                    </li>
+                    <li class="flex items-center">
+                        <a title="{{ $book->group->name }}" href="{{ route('bookGroups.show', $book->group->slug) }}" class="text-gray-600 hover:text-blue-500">
+                            {{ $book->group->name }}
+                        </a>
+                        <span class="mx-2 text-gray-500">/</span>
+                    </li>
+                    <li class="flex items-center">
+                        <a title="{{ $book->name }}" href="{{ route('books.show', $book->slug) }}" class="font-bold text-orange-400 hover:text-orange-500">
+                            {{ $book->name }}
+                        </a>
+                    </li>
                 </ol>
             </nav>
 
@@ -176,3 +195,8 @@
         @include('layouts.sidebar-right')
     </div>
 @endsection
+
+@push('styles')
+    <!-- Typography -->
+    <link rel="stylesheet" href="{{ asset('css/typography.css') }}" />
+@endpush

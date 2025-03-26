@@ -44,7 +44,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     @include('layouts.externalStylesheets')
-
     @vite('resources/css/app.css')
 
     <!-- Fonts -->
@@ -64,9 +63,6 @@
         gtag('config', 'G-QYXLDJP7G6');
     </script>
 
-    <!-- Typography -->
-    <link rel="stylesheet" href="{{ asset('css/typography.css') }}" />
-
     @stack('styles')
 </head>
 <body>
@@ -75,11 +71,9 @@
         @include('layouts.header')
 
         <!-- Main Content -->
-        <main class="py-4 w-full overflow-x-hidden">
+        <main class="w-full overflow-x-hidden">
             @yield('content')
         </main>
-
-        @include('modals.mobile-category-modal')
 
         <!-- Include the Custom Footer Links -->
         <x-partials.footer-links />
@@ -88,11 +82,8 @@
         @include('layouts.footer')
     </div>
 
-    <x-modal-search :is-admin="false" />
-
     <!-- Include external scripts -->
     @include('layouts.externalScripts')
-
     @stack('scripts')
 </body>
 </html>

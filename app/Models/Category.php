@@ -70,4 +70,9 @@ class Category extends Model
     {
         return $this->hasMany(BookGroup::class)->orderBy('created_at');
     }
+
+    public function wikiQuestions()
+    {
+        return $this->hasMany(WikiQuestion::class);
+    }
 }

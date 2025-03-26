@@ -37,6 +37,28 @@
 
             <!-- Menu Group -->
             <div class="mt-4">
+                <h3 class="mb-4 text-sm font-medium text-[#8a99af] px-6">Wiki Hỏi Đáp</h3>
+                <ul class="mb-6 flex flex-col gap-1.5">
+                    @include('admin_layouts.sidebar_menu_item', [
+                        'itemTitle' => "Cài đặt Wiki",
+                        'itemIcon' => 'mdi-cog-outline',
+                        'itemLink' => route('admin.wiki.settings')
+                    ])
+                    @include('admin_layouts.sidebar_menu_item', [
+                        'itemTitle' => "Quản lý câu hỏi",
+                        'itemIcon' => 'mdi-frequently-asked-questions',
+                        'itemLink' => route('admin.wiki.questions')
+                    ])
+                    @include('admin_layouts.sidebar_menu_item', [
+                        'itemTitle' => "Kiểm duyệt",
+                        'itemIcon' => 'mdi-shield-check',
+                        'itemLink' => route('admin.wiki.moderation')
+                    ])
+                </ul>
+            </div>
+
+            <!-- Menu Group -->
+            <div class="mt-4">
                 <h3 class="mb-4 text-sm font-medium text-[#8a99af] px-6">Danh mục</h3>
                 <ul class="mb-6 flex flex-col gap-1.5">
                     @include('admin_layouts.sidebar_menu_item', ['itemTitle' => "Tất cả danh mục", 'itemIcon' => 'mdi-format-list-bulleted', 'itemLink' => route('admin.categories.index')])

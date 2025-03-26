@@ -6,6 +6,7 @@ use App\Models\AIApiKey;
 use App\Services\AI\Adapters\GeminiAdapter;
 use App\Services\AI\Adapters\GrokAdapter;
 use App\Services\AI\Adapters\OpenRouterAdapter;
+use App\Services\AIService;
 
 class AIServiceFactory
 {
@@ -18,9 +19,11 @@ class AIServiceFactory
      */
     public static function createService($provider = null)
     {
+        $aiService = new AIService();
+
         if (!$provider) {
             // Default provider if none specified
-            $provider = 'openrouter';
+            $provider = $aiService->getDefaultProvider();
         }
 
         // Get a random API key for the provider
