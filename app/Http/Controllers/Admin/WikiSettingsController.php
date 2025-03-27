@@ -107,13 +107,13 @@ class WikiSettingsController extends Controller
             $perPage = $request->input('per_page', 10);
 
             // Get questions by status
-            $questions = WikiQuestion::where('status', $status)
+            $pendingQuestions = WikiQuestion::where('status', $status)
                 ->with(['user', 'category', 'bookGroup'])
                 ->orderBy('created_at', 'desc')
                 ->paginate($perPage);
 
             return view('admin.wiki.moderation', [
-                'questions' => $questions,
+                'pendingQuestions' => $pendingQuestions,
                 'status' => $status
             ]);
         } catch (\Exception $e) {
@@ -122,7 +122,7 @@ class WikiSettingsController extends Controller
             ]);
 
             return view('admin.wiki.moderation', [
-                'questions' => collect(),
+                'pendingQuestions' => collect(),
                 'status' => $request->input('status', 'pending'),
                 'error' => 'Error loading questions: ' . $e->getMessage()
             ]);
