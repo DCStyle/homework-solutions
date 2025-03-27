@@ -118,55 +118,53 @@
         @endif
 
         {{-- Comments --}}
-        @if($question->comments->isNotEmpty())
-            <div class="mb-4">
-                <h3 class="text-sm font-medium text-gray-600 mb-2">Bình luận</h3>
-                <div class="comments-container">
-                    @foreach($question->comments->take(3) as $comment)
-                        <div class="flex items-start space-x-2 text-sm comment-item pt-2 pb-3 {{ !$loop->last ? 'border-b border-gray-100' : '' }}">
-                            <img src="{{ $comment->user->avatar_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($comment->user->name[0] ?? 'A') . '&background=e5e7eb&color=6b7280&size=28' }}"
-                                 alt="{{ $comment->user->name ?? 'Anonymous' }}"
-                                 class="w-7 h-7 rounded-full flex-shrink-0 mt-0.5">
-                            <div class="flex-grow">
-                                <p class="font-semibold text-gray-700 leading-tight text-xs">{{ $comment->user->name ?? 'Anonymous' }}</p>
-                                <div x-data="{ commentExpanded: false }" class="relative mt-1">
-                                    <div x-show="!commentExpanded" class="text-gray-600 prose prose-sm max-w-none line-clamp-2 text-xs">
-                                        {!! $comment->content !!}
-                                    </div>
-                                    <div x-show="commentExpanded" class="text-gray-600 prose prose-sm max-w-none text-xs" style="display: none;">
-                                        {!! $comment->content !!}
-                                    </div>
-                                    <button x-show="!commentExpanded && ($el.previousElementSibling.scrollHeight > $el.previousElementSibling.clientHeight)"
-                                            @click="commentExpanded = true"
-                                            class="absolute bottom-0 right-0 text-xs font-semibold text-blue-600 hover:underline bg-gradient-to-r from-transparent via-gray-50 to-gray-50 pl-4">
-                                        ... more
-                                    </button>
-                                    <button x-show="commentExpanded"
-                                            @click="commentExpanded = false"
-                                            class="text-xs font-semibold text-blue-600 hover:underline mt-1"
-                                            style="display: none;">
-                                        less
-                                    </button>
+        <div class="mb-4">
+            <h3 class="text-sm font-medium text-gray-600 mb-2">Bình luận</h3>
+            <div class="comments-container">
+                @foreach($question->comments->take(3) as $comment)
+                    <div class="flex items-start space-x-2 text-sm comment-item pt-2 pb-3 {{ !$loop->last ? 'border-b border-gray-100' : '' }}">
+                        <img src="{{ $comment->user->avatar_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($comment->user->name[0] ?? 'A') . '&background=e5e7eb&color=6b7280&size=28' }}"
+                             alt="{{ $comment->user->name ?? 'Anonymous' }}"
+                             class="w-7 h-7 rounded-full flex-shrink-0 mt-0.5">
+                        <div class="flex-grow">
+                            <p class="font-semibold text-gray-700 leading-tight text-xs">{{ $comment->user->name ?? 'Anonymous' }}</p>
+                            <div x-data="{ commentExpanded: false }" class="relative mt-1">
+                                <div x-show="!commentExpanded" class="text-gray-600 prose prose-sm max-w-none line-clamp-2 text-xs">
+                                    {!! $comment->content !!}
                                 </div>
-                                <p class="text-xs text-gray-400 mt-0.5">{{ $comment->created_at->diffForHumans() }}</p>
+                                <div x-show="commentExpanded" class="text-gray-600 prose prose-sm max-w-none text-xs" style="display: none;">
+                                    {!! $comment->content !!}
+                                </div>
+                                <button x-show="!commentExpanded && ($el.previousElementSibling.scrollHeight > $el.previousElementSibling.clientHeight)"
+                                        @click="commentExpanded = true"
+                                        class="absolute bottom-0 right-0 text-xs font-semibold text-blue-600 hover:underline bg-gradient-to-r from-transparent via-gray-50 to-gray-50 pl-4">
+                                    ... more
+                                </button>
+                                <button x-show="commentExpanded"
+                                        @click="commentExpanded = false"
+                                        class="text-xs font-semibold text-blue-600 hover:underline mt-1"
+                                        style="display: none;">
+                                    less
+                                </button>
                             </div>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ $comment->created_at->diffForHumans() }}</p>
                         </div>
-                    @endforeach
-                </div>
-
-                @if($question->comments->count() > 3)
-                    <button type="button"
-                            class="text-xs text-blue-600 hover:underline block mt-2 load-more-comments-btn"
-                            data-question-id="{{ $question->id }}"
-                            data-last-comment-id="{{ $question->comments->take(3)->last()->id }}"
-                            data-total-comments="{{ $question->comments->count() }}"
-                            data-loaded-count="3">
-                        Xêm thêm bình luận
-                    </button>
-                    <div class="more-comments-container mt-2" style="display: none;"></div>
-                @endif
+                    </div>
+                @endforeach
             </div>
-        @endif
+
+            @if($question->comments->count() > 3)
+                <button type="button"
+                        class="text-xs text-blue-600 hover:underline block mt-2 load-more-comments-btn"
+                        data-question-id="{{ $question->id }}"
+                        data-last-comment-id="{{ $question->comments->take(3)->last()->id }}"
+                        data-total-comments="{{ $question->comments->count() }}"
+                        data-loaded-count="3">
+                    Xêm thêm bình luận
+                </button>
+                <div class="more-comments-container mt-2" style="display: none;"></div>
+            @endif
+        </div>
 
         {{-- Add Comment Form --}}
         @auth
