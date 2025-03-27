@@ -69,6 +69,7 @@ class WikiSettingsController extends Controller
             $validated = $request->validate([
                 'auto_generate_answers' => 'required|boolean',
                 'default_ai_provider' => 'required|string',
+                'default_api_key' => 'nullable|string',
                 'moderation_enabled' => 'required|boolean',
                 'max_comments_per_day' => 'required|integer|min:0',
                 'approve_questions_automatic' => 'required|boolean',
@@ -356,6 +357,7 @@ class WikiSettingsController extends Controller
         $defaultSettings = [
             'auto_generate_answers' => '1',
             'default_ai_provider' => 'openrouter',
+            'default_api_key' => '',
             'moderation_enabled' => '1',
             'max_comments_per_day' => '30',
             'approve_questions_automatic' => '0',

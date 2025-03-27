@@ -65,8 +65,11 @@ class WikiAIService
     {
         try {
             $providerName = $this->getAIProvider();
+            $defaultApiKey = $this->getAIApiKey();
+
             $embeddingModel = $this->getEmbeddingModel($providerName);
-            $service = AIServiceFactory::createService($providerName);
+
+            $service = AIServiceFactory::createService($providerName, $defaultApiKey);
 
             $response = $service->generate($embeddingModel, $text, [
                 'purpose' => 'embedding',
@@ -138,8 +141,11 @@ class WikiAIService
     {
         try {
             $providerName = $this->getAIProvider();
+            $defaultApiKey = $this->getAIApiKey();
+
             $model = $this->getAnswerModel($providerName);
-            $service = AIServiceFactory::createService($providerName);
+
+            $service = AIServiceFactory::createService($providerName, $defaultApiKey);
 
             // Strip HTML tags and extract text
             $textContent = strip_tags($content);
@@ -295,8 +301,12 @@ EOT;
             Log::debug('Generating answer for question: ' . $question->id);
 
             $providerName = $this->getAIProvider();
+            $defaultApiKey = $this->getAIApiKey();
+
             $model = $this->getAnswerModel($providerName);
-            $service = AIServiceFactory::createService($providerName);
+
+            $service = AIServiceFactory::createService($providerName, $defaultApiKey);
+
             $prompt = $this->buildQuestionPrompt($question);
 
             $options = [
@@ -436,6 +446,11 @@ EOT;
         $defaultProvider = $aiService->getDefaultProvider();
 
         return WikiSetting::get('default_ai_provider', $defaultProvider);
+    }
+
+    private function getAIApiKey(): ?string
+    {
+        return WikiSetting::get('default_api_key');
     }
 
     /**
