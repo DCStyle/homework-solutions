@@ -17,7 +17,7 @@ class AIServiceFactory
      * @return AIServiceInterface
      * @throws \Exception
      */
-    public static function createService($provider = null)
+    public static function createService($provider = null, $defaultApiKey = null)
     {
         $aiService = new AIService();
 
@@ -26,18 +26,21 @@ class AIServiceFactory
             $provider = $aiService->getDefaultProvider();
         }
 
-        // Get a random API key for the provider
-        $apiKeyModel = AIApiKey::getRandomKeyForProvider($provider);
+        if ($defaultApiKey) {
+            $apiKey = $defaultApiKey;
+        } else {
+            // Get a random API key for the provider
+            $apiKeyModel = AIApiKey::getRandomKeyForProvider($provider);
+            if (!$apiKeyModel) {
+                throw new \Exception("No active API key found for provider: {$provider}");
+            }
 
-        if (!$apiKeyModel) {
-            throw new \Exception("No active API key found for provider: {$provider}");
+            // Update the last_used_date
+            $apiKeyModel->last_used_date = now();
+            $apiKeyModel->save();
+
+            $apiKey = $apiKeyModel->api_key;
         }
-
-        // Update the last_used_date
-        $apiKeyModel->last_used_date = now();
-        $apiKeyModel->save();
-
-        $apiKey = $apiKeyModel->api_key;
 
         switch ($provider) {
             case 'google-gemini':
