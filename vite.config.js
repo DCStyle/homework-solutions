@@ -35,7 +35,10 @@ export default defineConfig({
 
                 // JS - public - Wiki
                 'resources/js/public/wiki/chat.js',
+                'resources/js/public/wiki/comments.js',
+                'resources/js/public/wiki/feed.js',
                 'resources/js/public/wiki/live_search.js',
+                'resources/js/public/wiki/wiki-utils.js',
             ],
             refresh: true,
         }),
