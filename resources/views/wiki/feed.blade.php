@@ -3,25 +3,22 @@
 @section('title', 'Wiki Feed')
 
 @section('content')
-    {{-- Match the background and container structure of wiki.index --}}
-    <div class="py-8 bg-gradient-to-r from-blue-100 to-cyan-100"> {{-- Slightly lighter gradient --}}
+    <div class="py-8 bg-gradient-to-r from-blue-100 to-cyan-100">
         <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
 
-            {{-- Optional: Add a header or search bar if desired, similar to wiki.index --}}
             <div class="text-center mb-10">
-                <h1 class="text-3xl font-bold text-gray-900 mb-3">Questions Feed</h1>
+                <h1 class="text-3xl font-bold text-gray-900 mb-3">Câu hỏi mới nhất</h1>
                 <p class="max-w-2xl mx-auto text-gray-600">
-                    Scroll through the latest questions and answers from the community.
+                    Khám phá những câu hỏi mới nhất từ cộng đồng.
                 </p>
             </div>
-            {{-- @include('wiki.partials.search') --}} {{-- Uncomment if search is needed here --}}
+
+            @include('wiki.partials.search')
 
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
-                {{-- Left Sidebar (Copied from wiki.index) --}}
                 <div class="lg:col-span-3">
-                    <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 sticky top-8"> {{-- Added sticky top --}}
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 sticky top-8">
                         <div class="p-5 border-b border-gray-100">
                             <h2 class="text-lg font-semibold text-gray-800 flex items-center">
                                 <span class="iconify mr-2" data-icon="mdi-folder-multiple-outline" data-width="22"></span>
@@ -29,7 +26,6 @@
                             </h2>
                         </div>
                         <div class="p-4">
-                            {{-- Ensure $categories and $bookGroups are passed from controller --}}
                             @include('wiki.partials.sidebar')
                         </div>
                     </div>
@@ -46,9 +42,9 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <p class="text-gray-500">No questions found.</p>
-                                <a href="{{ route('wiki.questions.create') }}" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    Ask a Question
+                                <p class="text-gray-500">Chưa có câu hỏi nào</p>
+                                <a href="{{ route('wiki.index') }}" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Hãy là người đầu tiên đặt câu hỏi
                                 </a>
                             </div>
                         @endforelse
@@ -60,17 +56,17 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <span class="text-sm text-gray-600">Loading more questions...</span>
+                        <span class="text-sm text-gray-600">Đang tải...</span>
                     </div>
 
                     {{-- End of feed indicator - initially hidden --}}
                     <div id="feed-end-indicator" class="py-6 text-center hidden mt-6">
-                        <p class="text-sm text-gray-500">No more questions to load</p>
+                        <p class="text-sm text-gray-500 hidden">No more questions to load</p>
                     </div>
 
                     {{-- Hidden pagination data for JavaScript to use --}}
-                    <div id="feed-pagination-data" 
-                        data-current-page="{{ $feedQuestions->currentPage() }}" 
+                    <div id="feed-pagination-data"
+                        data-current-page="{{ $feedQuestions->currentPage() }}"
                         data-last-page="{{ $feedQuestions->lastPage() }}"
                         data-total="{{ $feedQuestions->total() }}"
                         data-has-more="{{ $feedQuestions->hasMorePages() ? 'true' : 'false' }}"
@@ -116,7 +112,13 @@
                                     @endforelse
                                 </ul>
                             </div>
-                            {{-- Optional: Link to view all --}}
+
+                            <div class="p-4 bg-gray-50 border-t border-gray-100 text-center">
+                                <a href="{{ route('wiki.feed') }}" class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700">
+                                    Xem tất cả câu hỏi
+                                    <span class="iconify ml-1" data-icon="mdi-arrow-right" data-width="16"></span>
+                                </a>
+                            </div>
                         </div>
 
                         {{-- Trending Questions --}}
@@ -144,9 +146,9 @@
                                     @endforelse
                                 </ul>
                             </div>
-                            {{-- Optional: Ask Question CTA --}}
+
                             <div class="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 border-t border-gray-100 text-center">
-                                <a href="{{ route('wiki.questions.create') }}" class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700">
+                                <a href="{{ route('wiki.index') }}" class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700">
                                     Đặt câu hỏi mới
                                     <span class="iconify ml-1" data-icon="mdi-arrow-right" data-width="16"></span>
                                 </a>
@@ -154,7 +156,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>

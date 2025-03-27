@@ -13,20 +13,17 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\WikiCommentController;
 
 class WikiCommentsController extends Controller
 {
     use ApiResponseTrait;
 
     protected $commentRepository;
-    protected $webCommentController;
 
-    public function __construct(CommentRepository $commentRepository, WikiCommentController $webCommentController)
+    public function __construct(CommentRepository $commentRepository)
     {
-        $this->middleware('auth:sanctum');
+        $this->middleware('auth:sanctum')->except('getForQuestion');
         $this->commentRepository = $commentRepository;
-        $this->webCommentController = $webCommentController;
     }
 
     /**
@@ -42,18 +39,13 @@ class WikiCommentsController extends Controller
 
             // Find the question
             $question = WikiQuestion::findOrFail($questionId);
-            
-            // Delegate to web controller's store method
-            $response = $this->webCommentController->store($request, $question);
-            $responseData = json_decode($response->getContent(), true);
-            
-            if (!$responseData['success']) {
-                throw new \Exception($responseData['message']);
-            }
-            
+
+            // Create the comment using the repository
+            $comment = $this->commentRepository->store($question, $request->validated());
+
             // Return API-formatted response
             return $this->createdResponse(
-                new CommentResource($responseData['comment']),
+                new CommentResource($comment),
                 'Comment created successfully'
             );
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -79,21 +71,26 @@ class WikiCommentsController extends Controller
     public function update(Request $request, WikiComment $comment): JsonResponse
     {
         try {
-            // Delegate to web controller's update method
-            $response = $this->webCommentController->update($request, $comment);
-            $responseData = json_decode($response->getContent(), true);
-            
-            if (!$responseData['success']) {
-                throw new \Exception($responseData['message']);
+            // Check if user owns this comment
+            if (Auth::id() !== $comment->user_id) {
+                return $this->unauthorizedResponse('You are not authorized to update this comment');
             }
-            
+
+            // Validate the request
+            $validated = $request->validate([
+                'content' => 'required|string|min:5',
+            ]);
+
+            // Update the comment through the repository
+            $comment = $this->commentRepository->update($comment, $validated);
+
             // Return API-formatted response
             return $this->successResponse(
-                new CommentResource($responseData['comment']),
+                new CommentResource($comment),
                 'Comment updated successfully'
             );
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            return $this->unauthorizedResponse('You are not authorized to update this comment');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
             Log::error('Error updating comment: ' . $e->getMessage(), [
                 'comment_id' => $comment->id,
@@ -114,18 +111,16 @@ class WikiCommentsController extends Controller
     public function destroy(WikiComment $comment): JsonResponse
     {
         try {
-            // Delegate to web controller's destroy method
-            $response = $this->webCommentController->destroy($comment);
-            $responseData = json_decode($response->getContent(), true);
-            
-            if (!$responseData['success']) {
-                throw new \Exception($responseData['message']);
+            // Check if user owns this comment or is admin
+            if (Auth::id() !== $comment->user_id && !Auth::user()->is_admin) {
+                return $this->unauthorizedResponse('You are not authorized to delete this comment');
             }
-            
+
+            // Delete the comment
+            $this->commentRepository->delete($comment);
+
             // Return API-formatted response
             return $this->deletedResponse('Comment deleted successfully');
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            return $this->unauthorizedResponse('You are not authorized to delete this comment');
         } catch (\Exception $e) {
             Log::error('Error deleting comment: ' . $e->getMessage(), [
                 'comment_id' => $comment->id,
@@ -153,41 +148,27 @@ class WikiCommentsController extends Controller
             ]);
 
             $questionId = $validated['question_id'];
+            $lastId = $validated['last_id'] ?? 0;
+            $limit = $validated['limit'] ?? 10;
+
             $question = WikiQuestion::findOrFail($questionId);
-            
-            // Create a new request with the required parameters
-            $newRequest = new Request([
-                'last_id' => $validated['last_id'] ?? 0,
-                'limit' => $validated['limit'] ?? 10,
-                'ajax' => 1
-            ]);
-            
-            // Delegate to web controller's loadMore method
-            $response = $this->webCommentController->loadMore($newRequest, $question);
-            $responseData = json_decode($response->getContent(), true);
-            
-            // Check if the response has a valid structure
-            if (!$responseData['success']) {
-                throw new \Exception($responseData['message'] ?? 'Error loading comments');
+
+            // Get comments using repository
+            $comments = $this->commentRepository->getForQuestion($question, $lastId, $limit);
+
+            // Check if there are more comments
+            $hasMore = $comments->count() > $limit;
+
+            // Limit the result set if needed
+            if ($hasMore) {
+                $comments = $comments->take($limit);
             }
-            
-            // Make sure comments are properly structured
-            $comments = collect($responseData['comments'])->map(function($comment) {
-                // Ensure each comment has a 'user' field with at least id and name
-                if (!isset($comment['user']) && isset($comment['user_id'])) {
-                    $comment['user'] = [
-                        'id' => $comment['user_id'],
-                        'name' => $comment['user_name'] ?? 'User'
-                    ];
-                }
-                return $comment;
-            });
-            
+
             // Return API-formatted response
             return $this->successResponse([
                 'success' => true,
                 'comments' => CommentResource::collection($comments),
-                'has_more' => $responseData['has_more'],
+                'has_more' => $hasMore,
                 'question_id' => $questionId
             ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {

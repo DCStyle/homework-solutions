@@ -5,17 +5,34 @@
 @endsection
 
 @section('content')
-<div class="py-6">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="py-8 bg-gradient-to-r from-blue-100 to-cyan-100">
+    <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+            <!-- Sidenav Content -->
+            <div class="lg:col-span-3 hidden md:block">
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 sticky top-8">
+                    <div class="p-5 border-b border-gray-100">
+                        <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+                            <span class="iconify mr-2" data-icon="mdi-folder-multiple-outline" data-width="22"></span>
+                            Danh Mục
+                        </h2>
+                    </div>
+                    <div class="p-4">
+                        @include('wiki.partials.sidebar')
+                    </div>
+                </div>
+            </div>
+
             <!-- Main Content -->
-            <div class="md:col-span-9">
+            <div class="lg:col-span-6">
+                @include('wiki.partials.search')
+
                 <!-- Question Details -->
                 <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
                     <div class="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
                         <div class="flex items-center justify-between">
                             <h1 class="text-xl font-semibold text-gray-900">{{ $question->title }}</h1>
-                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-indigo-100 text-indigo-800">
+                            <span class="whitespace-nowrap px-2 py-1 text-xs font-medium rounded-full bg-indigo-100 text-indigo-800">
                                 {{ $question->category->name }}
                             </span>
                         </div>
@@ -48,76 +65,7 @@
                     </div>
                     <div class="px-4 py-5 sm:p-6">
                         <div id="answer-content" class="prose max-w-none">
-                            @if($question->answers->count() > 0)
-                                {!! $question->answers->first()->content !!}
-                            @else
-                                <div class="p-4 border border-yellow-300 bg-yellow-50 rounded-md">
-                                    <p class="text-yellow-700">Đang tạo câu trả lời...</p>
-                                    <div class="loading-indicator mt-2 h-1 w-full bg-gray-200 rounded">
-                                        <div class="h-1 bg-yellow-500 rounded w-1/3 animate-pulse"></div>
-                                    </div>
-                                </div>
-                                <div id="streaming-content" class="mt-4 hidden"></div>
-                                <script>
-                                    document.addEventListener('DOMContentLoaded', function() {
-                                        const streamingContent = document.getElementById('streaming-content');
-                                        const loadingIndicator = document.querySelector('.loading-indicator');
-
-                                        // Function to start streaming the answer
-                                        function streamAnswer() {
-                                            // Show the streaming content div
-                                            streamingContent.classList.remove('hidden');
-
-                                            // Create a new EventSource connection
-                                            const eventSource = new EventSource("{{ route('api.wiki.questions.stream', $question) }}");
-
-                                            let contentBuffer = '';
-
-                                            // Process incoming data chunks
-                                            eventSource.onmessage = function(event) {
-                                                // Add the new text to our buffer
-                                                contentBuffer += event.data;
-
-                                                // Update the content div
-                                                streamingContent.innerHTML = contentBuffer;
-
-                                                // Scroll to the bottom of the div
-                                                streamingContent.scrollTop = streamingContent.scrollHeight;
-                                            };
-
-                                            // Handle completed streaming
-                                            eventSource.addEventListener('DONE', function(event) {
-                                                // Close the connection
-                                                eventSource.close();
-
-                                                // Hide the loading indicator
-                                                if (loadingIndicator) {
-                                                    loadingIndicator.parentNode.classList.add('hidden');
-                                                }
-                                            });
-
-                                            // Handle errors
-                                            eventSource.onerror = function(event) {
-                                                console.error("Error in event stream:", event);
-                                                eventSource.close();
-
-                                                // If no content was streamed, show an error message
-                                                if (contentBuffer === '') {
-                                                    streamingContent.innerHTML = '<p class="text-red-600">Không thể tạo câu trả lời. Vui lòng thử lại sau.</p>';
-                                                }
-
-                                                // Hide the loading indicator
-                                                if (loadingIndicator) {
-                                                    loadingIndicator.parentNode.classList.add('hidden');
-                                                }
-                                            };
-                                        }
-
-                                        // Start streaming the answer
-                                        streamAnswer();
-                                    });
-                                </script>
-                            @endif
+                            {!! $question->answers->first()->content !!}
                         </div>
                     </div>
                 </div>
@@ -126,41 +74,89 @@
                 @include('wiki.partials.comments', ['question' => $question])
             </div>
 
-            <div class="md:col-span-12 lg:col-span-3 hidden md:block">
-                <!-- Related Questions -->
-                <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
-                    <div class="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
-                        <h2 class="text-base font-medium text-gray-900">Câu hỏi liên quan</h2>
-                    </div>
-                    <div class="px-4 py-3">
-                        <ul class="space-y-3">
-                            @forelse($relatedQuestions as $relatedQuestion)
-                                <li>
-                                    <a href="{{ route('wiki.show', [$relatedQuestion->category->slug, $relatedQuestion->slug]) }}" class="block text-sm text-indigo-600 hover:text-indigo-900 hover:underline">
-                                        {{ $relatedQuestion->title }}
-                                    </a>
-                                </li>
-                            @empty
-                                <li class="text-sm text-gray-500">Không có câu hỏi liên quan.</li>
-                            @endforelse
-                        </ul>
-                    </div>
-                </div>
+            <div class="lg:col-span-3 hidden md:block">
+                <div class="sticky top-8">
+                    <!-- Related Questions -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+                        <div class="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
+                            <h2 class="text-lg font-medium text-gray-900 inline-flex items-center">
+                                <span class="iconify mr-2" data-icon="mdi-link-variant" data-width="22"></span>
+                                Câu hỏi liên quan
+                            </h2>
+                        </div>
 
-                <!-- Category Info -->
-                <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
-                    <div class="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
-                        <h2 class="text-base font-medium text-gray-900">Thông tin danh mục</h2>
+                        <div class="px-4 py-3">
+                            <ul class="space-y-3">
+                                @forelse($relatedQuestions as $relatedQuestion)
+                                    <li>
+                                        <a href="{{ route('wiki.show', [$relatedQuestion->category->slug, $relatedQuestion->slug]) }}" class="block text-sm text-indigo-600 hover:text-indigo-900 hover:underline">
+                                            {{ $relatedQuestion->title }}
+                                        </a>
+                                    </li>
+                                @empty
+                                    <li class="text-sm text-gray-500">Không có câu hỏi liên quan.</li>
+                                @endforelse
+                            </ul>
+                        </div>
+
+                        <div class="p-4 bg-gray-50 border-t border-gray-100 text-center">
+                            <a href="{{ route('wiki.feed') }}" class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700">
+                                Xem tất cả câu hỏi
+                                <span class="iconify ml-1" data-icon="mdi-arrow-right" data-width="16"></span>
+                            </a>
+                        </div>
                     </div>
-                    <div class="px-4 py-5 sm:p-6">
-                        <h3 class="text-sm font-medium text-gray-900">{{ $question->category->name }}</h3>
-                        <div class="mt-3 text-sm text-gray-600">
-                            <p>Số câu hỏi: {{ $question->category->wikiQuestions()->count() }}</p>
+
+                    <!-- Category Info -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+                        <div class="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
+                            <h2 class="text-lg font-medium text-gray-900 inline-flex items-center">
+                                <span class="iconify mr-2" data-icon="mdi-folder-multiple-outline" data-width="22"></span>
+                                Thông tin danh mục
+                            </h2>
+                        </div>
+                        <div class="px-4 py-5 sm:p-6">
+                            <h3 class="text-sm font-medium text-gray-900">{{ $question->category->name }}</h3>
+                            <div class="mt-3 text-sm text-gray-600">
+                                <p>Số câu hỏi: {{ $question->category->wikiQuestions()->count() }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Trending Questions --}}
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                        <div class="p-5 border-b border-gray-100">
+                            <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+                                <span class="iconify mr-2" data-icon="mdi-trending-up" data-width="22"></span>
+                                Câu Hỏi Nổi Bật
+                            </h2>
+                        </div>
+                        <div>
+                            <ul class="divide-y divide-gray-100">
+                                @forelse($trendingQuestions as $question)
+                                    <li>
+                                        <a href="{{ route('wiki.show', [$question->category->slug ?? 'uncategorized', $question->slug]) }}" class="block p-4 hover:bg-gray-50 transition-colors">
+                                            <p class="font-medium text-indigo-600 text-sm line-clamp-1">{{ $question->title }}</p>
+                                            {{-- Add view/comment count if needed --}}
+                                        </a>
+                                    </li>
+                                @empty
+                                    <li class="p-4 text-center text-gray-500">
+                                        <span class="iconify block mx-auto mb-2" data-icon="mdi-chart-line" data-width="24"></span>
+                                        Chưa có câu hỏi nổi bật.
+                                    </li>
+                                @endforelse
+                            </ul>
+                        </div>
+                        {{-- Optional: Ask Question CTA --}}
+                        <div class="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 border-t border-gray-100 text-center">
+                            <a href="{{ route('wiki.index') }}" class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700">
+                                Đặt câu hỏi mới
+                                <span class="iconify ml-1" data-icon="mdi-arrow-right" data-width="16"></span>
+                            </a>
                         </div>
                     </div>
                 </div>
-
-                @include('wiki.partials.sidebar')
             </div>
         </div>
     </div>

@@ -17,7 +17,10 @@
         </form>
 
         <div class="mt-2 text-xs text-gray-500">
-            <p>Gợi ý: "Cách sử dụng vòng lặp trong PHP", "Laravel migration là gì"</p>
+            <p>Gợi ý:
+                <b><i>"Viết bài văn trình bày ý kiến về một vấn đề đời sống...",
+                        "Cho hcn ABCD vẽ đường cao AH vuông góc với BD (H thuộc BD)..."</i></b>
+            </p>
         </div>
 
         <!-- Live search results will be shown here -->

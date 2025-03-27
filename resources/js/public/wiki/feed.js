@@ -78,30 +78,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Function to handle answer form submissions
-    function setupAnswerForms() {
-        document.querySelectorAll('.js-answer-form').forEach(form => {
+    function setupCommentForms() {
+        document.querySelectorAll('.js-comment-form').forEach(form => {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
                 const submitButton = form.querySelector('button[type="submit"]');
-                const textarea = form.querySelector('textarea[name="content"]');
+                const textarea = form.querySelector('textarea');
                 const errorContainer = form.querySelector('.validation-error');
+                const questionId = form.getAttribute('data-question-id');
 
                 // Validate input
                 if (!textarea.value.trim()) {
-                    errorContainer.textContent = 'Answer cannot be empty';
-                    errorContainer.style.display = 'block';
+                    if (errorContainer) {
+                        errorContainer.textContent = 'Comment cannot be empty';
+                        errorContainer.style.display = 'block';
+                    }
                     return;
                 }
 
                 // Disable button and hide previous errors
-                submitButton.disabled = true;
-                submitButton.textContent = 'Submitting...';
-                errorContainer.style.display = 'none';
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Submitting...';
+                }
+                if (errorContainer) {
+                    errorContainer.style.display = 'none';
+                }
 
                 try {
-                    const response = await fetch(form.action, {
+                    const response = await fetch('/api/wiki/comments', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -110,30 +116,86 @@ document.addEventListener('DOMContentLoaded', () => {
                             'Accept': 'application/json'
                         },
                         body: JSON.stringify({
-                            content: textarea.value
+                            content: textarea.value,
+                            question_id: questionId,
+                            parent_id: form.querySelector('input[name="parent_id"]')?.value || null
                         })
                     });
 
                     const data = await response.json();
 
-                    if (response.ok) {
-                        // Success - reload the page to show the new answer
-                        window.location.reload();
+                    if (response.ok && data.success) {
+                        // Clear the textarea
+                        textarea.value = '';
+
+                        // Get the comments container
+                        const commentsSection = form.closest('.feed-item').querySelector('.comments-container');
+                        if (commentsSection) {
+                            // Create new comment HTML
+                            const comment = data.data;
+                            const commentHtml = `
+                            <div class="flex items-start space-x-2 text-sm comment-item pt-2 pb-3 border-b border-gray-100">
+                                <img src="${comment.user?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent((comment.user?.name[0] || 'A'))}&background=e5e7eb&color=6b7280&size=28`}"
+                                     alt="${comment.user?.name || 'Anonymous'}"
+                                     class="w-7 h-7 rounded-full flex-shrink-0 mt-0.5">
+                                <div class="flex-grow">
+                                    <p class="font-semibold text-gray-700 leading-tight text-xs">${comment.user?.name || 'Anonymous'}</p>
+                                    <div x-data="{ commentExpanded: false }" class="relative mt-1">
+                                        <div x-show="!commentExpanded" class="text-gray-600 prose prose-sm max-w-none line-clamp-2 text-xs">
+                                            ${comment.content}
+                                        </div>
+                                        <div x-show="commentExpanded" class="text-gray-600 prose prose-sm max-w-none text-xs" style="display: none;">
+                                            ${comment.content}
+                                        </div>
+                                        <button x-show="!commentExpanded && ($el.previousElementSibling.scrollHeight > $el.previousElementSibling.clientHeight)"
+                                                @click="commentExpanded = true"
+                                                class="absolute bottom-0 right-0 text-xs font-semibold text-blue-600 hover:underline bg-gradient-to-r from-transparent via-gray-50 to-gray-50 pl-4">
+                                            ... more
+                                        </button>
+                                        <button x-show="commentExpanded"
+                                                @click="commentExpanded = false"
+                                                class="text-xs font-semibold text-blue-600 hover:underline mt-1"
+                                                style="display: none;">
+                                            less
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mt-0.5">just now</p>
+                                </div>
+                            </div>
+                        `;
+
+                            // Prepend the new comment
+                            commentsSection.insertAdjacentHTML('afterbegin', commentHtml);
+
+                            // Update comment count if present
+                            const countElement = form.closest('.feed-item').querySelector('.comment-count');
+                            if (countElement) {
+                                const currentCount = parseInt(countElement.textContent) || 0;
+                                countElement.textContent = currentCount + 1;
+                            }
+
+                            // Initialize Alpine.js for the new comment
+                            initAlpineComponents();
+                        }
                     } else {
                         // Show error message
-                        const errorMsg = data.message ||
-                            (data.errors && Object.values(data.errors).flat().join(', ')) ||
-                            'Error submitting answer';
-                        errorContainer.textContent = errorMsg;
-                        errorContainer.style.display = 'block';
+                        if (errorContainer) {
+                            errorContainer.textContent = data.message || 'Error submitting comment';
+                            errorContainer.style.display = 'block';
+                        }
                     }
                 } catch (error) {
-                    console.error('Error submitting answer:', error);
-                    errorContainer.textContent = 'Network error. Please try again.';
-                    errorContainer.style.display = 'block';
+                    console.error('Error submitting comment:', error);
+                    if (errorContainer) {
+                        errorContainer.textContent = 'Network error. Please try again.';
+                        errorContainer.style.display = 'block';
+                    }
                 } finally {
-                    submitButton.disabled = false;
-                    submitButton.textContent = 'Submit Answer';
+                    // Re-enable the button
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Submit';
+                    }
                 }
             });
         });
@@ -144,33 +206,33 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.load-more-comments-btn').forEach(button => {
             button.addEventListener('click', async function(e) {
                 e.preventDefault();
-                
+
                 const questionId = this.dataset.questionId;
                 const lastCommentId = this.dataset.lastCommentId;
                 const totalComments = parseInt(this.dataset.totalComments);
                 const loadedCount = parseInt(this.dataset.loadedCount || '3');
                 const commentsContainer = this.nextElementSibling;
-                
+
                 if (!questionId || !lastCommentId) {
                     console.error('Missing question ID or last comment ID');
                     return;
                 }
-                
+
                 try {
                     // Show loading state
                     this.innerHTML = '<span class="inline-flex items-center"><svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Loading...</span>';
-                    
+
                     // Determine how many comments to load
                     const loadLimit = 3; // Load 3 comments at a time
-                    
+
                     // Make API request to load more comments
                     let url = new URL(`${window.location.origin}/api/wiki/comments`);
                     url.searchParams.append('question_id', questionId);
                     url.searchParams.append('last_id', lastCommentId);
                     url.searchParams.append('limit', loadLimit);
-                    
+
                     console.log('Request URL for comments:', url.toString());
-                    
+
                     const response = await fetch(url, {
                         method: 'GET',
                         headers: {
@@ -178,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     });
-                    
+
                     // Check response status and log details
                     if (!response.ok) {
                         const errorText = await response.text();
@@ -189,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                         throw new Error(`Request failed with status ${response.status}: ${response.statusText}`);
                     }
-                    
+
                     // Parse JSON response
                     let data;
                     try {
@@ -199,75 +261,78 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.error('JSON parse error:', jsonError);
                         throw new Error('Failed to parse response as JSON');
                     }
-                    
-                    if (data.success && data.comments && data.comments.length > 0) {
+
+                    // FIX: Access the correct nested properties in the response
+                    // Previously accessing data.comments, now accessing data.data.comments
+                    if (data.success && data.data && data.data.comments && data.data.comments.length > 0) {
                         // Show the comments container if it's hidden
                         if (commentsContainer.style.display === 'none') {
                             commentsContainer.style.display = 'block';
                         }
-                        
+
                         // Build HTML for new comments
                         let commentHTML = '';
                         let newLastCommentId = lastCommentId;
-                        
-                        data.comments.forEach(comment => {
+
+                        // FIX: Iterate through data.data.comments instead of data.comments
+                        data.data.comments.forEach(comment => {
                             // Update last comment ID for next request
                             newLastCommentId = comment.id;
-                            
+
                             // Format the comment creation date
                             const createdAt = new Date(comment.created_at);
                             const timeAgo = timeSince(createdAt);
-                            
+
                             commentHTML += `
-                                <div class="flex items-start space-x-2 text-sm comment-item pt-2 pb-3 border-b border-gray-100">
-                                    <img src="${comment.user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user.name[0] || 'A')}&background=e5e7eb&color=6b7280&size=28`}" 
-                                         alt="${comment.user.name || 'Anonymous'}" 
-                                         class="w-7 h-7 rounded-full flex-shrink-0 mt-0.5">
-                                    <div class="flex-grow">
-                                        <p class="font-semibold text-gray-700 leading-tight text-xs">${comment.user.name || 'Anonymous'}</p>
-                                        <div x-data="{ commentExpanded: false }" class="relative mt-1">
-                                            <div x-show="!commentExpanded" class="text-gray-600 prose prose-sm max-w-none line-clamp-2 text-xs">
-                                                ${comment.content}
-                                            </div>
-                                            <div x-show="commentExpanded" class="text-gray-600 prose prose-sm max-w-none text-xs" style="display: none;">
-                                                ${comment.content}
-                                            </div>
-                                            <button x-show="!commentExpanded && ($el.previousElementSibling.scrollHeight > $el.previousElementSibling.clientHeight)"
-                                                    @click="commentExpanded = true"
-                                                    class="absolute bottom-0 right-0 text-xs font-semibold text-blue-600 hover:underline bg-gradient-to-r from-transparent via-gray-50 to-gray-50 pl-4">
-                                                ... more
-                                            </button>
-                                            <button x-show="commentExpanded"
-                                                    @click="commentExpanded = false"
-                                                    class="text-xs font-semibold text-blue-600 hover:underline mt-1"
-                                                    style="display: none;">
-                                                less
-                                            </button>
+                            <div class="flex items-start space-x-2 text-sm comment-item pt-2 pb-3 border-b border-gray-100">
+                                <img src="${comment.user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user.name[0] || 'A')}&background=e5e7eb&color=6b7280&size=28`}"
+                                     alt="${comment.user.name || 'Anonymous'}"
+                                     class="w-7 h-7 rounded-full flex-shrink-0 mt-0.5">
+                                <div class="flex-grow">
+                                    <p class="font-semibold text-gray-700 leading-tight text-xs">${comment.user.name || 'Anonymous'}</p>
+                                    <div x-data="{ commentExpanded: false }" class="relative mt-1">
+                                        <div x-show="!commentExpanded" class="text-gray-600 prose prose-sm max-w-none line-clamp-2 text-xs">
+                                            ${comment.content}
                                         </div>
-                                        <p class="text-xs text-gray-400 mt-0.5">${timeAgo}</p>
+                                        <div x-show="commentExpanded" class="text-gray-600 prose prose-sm max-w-none text-xs" style="display: none;">
+                                            ${comment.content}
+                                        </div>
+                                        <button x-show="!commentExpanded && ($el.previousElementSibling.scrollHeight > $el.previousElementSibling.clientHeight)"
+                                                @click="commentExpanded = true"
+                                                class="absolute bottom-0 right-0 text-xs font-semibold text-blue-600 hover:underline bg-gradient-to-r from-transparent via-gray-50 to-gray-50 pl-4">
+                                            ... more
+                                        </button>
+                                        <button x-show="commentExpanded"
+                                                @click="commentExpanded = false"
+                                                class="text-xs font-semibold text-blue-600 hover:underline mt-1"
+                                                style="display: none;">
+                                            less
+                                        </button>
                                     </div>
+                                    <p class="text-xs text-gray-400 mt-0.5">${timeAgo}</p>
                                 </div>
-                            `;
+                            </div>
+                        `;
                         });
-                        
+
                         // Append new comments to container
                         commentsContainer.innerHTML += commentHTML;
-                        
+
                         // Update the total loaded count
-                        const newLoadedCount = loadedCount + data.comments.length;
-                        
+                        const newLoadedCount = loadedCount + data.data.comments.length;
+
                         // Update button data for next load
                         this.dataset.lastCommentId = newLastCommentId;
                         this.dataset.loadedCount = newLoadedCount.toString();
-                        
-                        // Update button text or hide if all comments loaded
-                        if (newLoadedCount >= totalComments || !data.has_more) {
+
+                        // FIX: Use data.data.has_more instead of data.has_more
+                        if (newLoadedCount >= totalComments || !data.data.has_more) {
                             this.style.display = 'none'; // Hide the button
                         } else {
                             const remainingComments = totalComments - newLoadedCount;
                             this.innerHTML = `View ${remainingComments} more ${remainingComments === 1 ? 'comment' : 'comments'}`;
                         }
-                        
+
                         // Initialize Alpine.js components for the new comments
                         initAlpineComponents();
                     } else {
@@ -337,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const loadingIndicator = document.getElementById('feed-loading-indicator');
         const endIndicator = document.getElementById('feed-end-indicator');
         const paginationData = document.getElementById('feed-pagination-data');
-        
+
         if (!feedContainer || !loadingIndicator || !paginationData) {
             console.error('Missing required elements for infinite scroll:', {
                 feedContainer: !!feedContainer,
@@ -368,25 +433,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Get current URL parameters (preserve existing filters like category_id if present)
         const urlParams = new URLSearchParams(window.location.search);
-        
+
         // Function to load more questions
         async function loadMoreQuestions() {
             if (isLoading || !hasMorePages) return;
-            
+
             console.log('Loading more questions, page:', currentPage + 1);
-            
+
             isLoading = true;
-            
+
             try {
                 // Set the next page number in URL parameters
                 urlParams.set('page', currentPage + 1);
-                
+
                 // Add ajax parameter to get just the questions without layout
                 urlParams.set('ajax', '1');
-                
+
                 const requestUrl = `${window.location.pathname}?${urlParams.toString()}`;
                 console.log('Request URL:', requestUrl);
-                
+
                 // Make the request to get more questions
                 const response = await fetch(requestUrl, {
                     headers: {
@@ -394,39 +459,39 @@ document.addEventListener('DOMContentLoaded', () => {
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`Failed to load more questions: ${response.status} ${response.statusText}`);
                 }
-                
+
                 const data = await response.json();
                 console.log('Response data:', data);
-                
+
                 if (data.success && data.html && data.html.trim() !== '') {
                     // Create a temporary container
                     const tempContainer = document.createElement('div');
                     tempContainer.innerHTML = data.html;
-                    
+
                     // Get all the top-level nodes (question items)
                     const questionNodes = tempContainer.children;
                     console.log(`Found ${questionNodes.length} question items to append`);
-                    
+
                     // Convert HTMLCollection to Array and append each question
                     Array.from(questionNodes).forEach(node => {
                         feedContainer.appendChild(node);
                     });
-                    
+
                     // Update pagination info
                     currentPage++;
                     hasMorePages = data.has_more;
-                    
+
                     // Initialize interactive elements in the new content
                     setupExpandableContent();
                     setupLoadMoreComments();
                     setupCopyLinkButtons();
                     setupTextareaAutoResize();
                     initAlpineComponents();
-                    
+
                     // Show end indicator if we've reached the last page
                     if (!hasMorePages) {
                         loadingIndicator.classList.add('hidden');
@@ -446,14 +511,14 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error('Error loading more questions:', error);
                 loadingIndicator.classList.add('hidden');
-                
+
                 endIndicator.textContent = 'Error loading more questions. Please refresh the page.';
                 endIndicator.classList.remove('hidden');
             } finally {
                 isLoading = false;
             }
         }
-        
+
         // Set up intersection observer for infinite scrolling
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
@@ -466,22 +531,22 @@ document.addEventListener('DOMContentLoaded', () => {
             rootMargin: '0px 0px 100px 0px', // Start loading when indicator is 100px from viewport
             threshold: 0.1 // Fire when at least 10% of the target is visible
         });
-        
+
         // Observe the loading indicator
         observer.observe(loadingIndicator);
         console.log('Observer attached to loading indicator');
-        
+
         // Trigger immediate load if the indicator is already visible
         if (isElementInViewport(loadingIndicator) && hasMorePages) {
             console.log('Loading indicator is in viewport on page load, triggering immediate load');
             setTimeout(loadMoreQuestions, 500); // Small delay to ensure everything is initialized
         }
     }
-    
+
     // Helper function to check if an element is in the viewport
     function isElementInViewport(el) {
         if (!el) return false;
-        
+
         const rect = el.getBoundingClientRect();
         return (
             rect.top >= 0 &&
@@ -494,9 +559,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to format time string for relative time (e.g., "2 hours ago")
     function timeSince(date) {
         const seconds = Math.floor((new Date() - date) / 1000);
-        
+
         let interval = seconds / 31536000; // years
-        
+
         if (interval > 1) {
             return Math.floor(interval) + " years ago";
         }
@@ -524,25 +589,25 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.load-more-answers-btn').forEach(button => {
             button.addEventListener('click', async function(e) {
                 e.preventDefault();
-                
+
                 const questionId = this.dataset.questionId;
                 const lastAnswerId = this.dataset.lastAnswerId;
                 const totalAnswers = parseInt(this.dataset.totalAnswers);
                 const loadedCount = parseInt(this.dataset.loadedCount || '2');
                 const answersContainer = this.nextElementSibling;
-                
+
                 if (!questionId || !lastAnswerId) {
                     console.error('Missing question ID or last answer ID');
                     return;
                 }
-                
+
                 try {
                     // Show loading state
                     this.innerHTML = '<span class="inline-flex items-center"><svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Loading...</span>';
-                    
+
                     // Determine how many answers to load
                     const loadLimit = 3; // Load 3 answers at a time
-                    
+
                     // Make API request to load more answers
                     const response = await fetch(`/api/wiki/questions/${questionId}/answers?last_id=${lastAnswerId}&limit=${loadLimit}&skip_ai=1`, {
                         method: 'GET',
@@ -551,31 +616,31 @@ document.addEventListener('DOMContentLoaded', () => {
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     });
-                    
+
                     const data = await response.json();
-                    
+
                     if (data.success && data.answers && data.answers.length > 0) {
                         // Show the answers container if it's hidden
                         if (answersContainer.style.display === 'none') {
                             answersContainer.style.display = 'block';
                         }
-                        
+
                         // Build HTML for new answers
                         let answerHTML = '';
                         let newLastAnswerId = lastAnswerId;
-                        
+
                         data.answers.forEach(answer => {
                             // Update last answer ID for next request
                             newLastAnswerId = answer.id;
-                            
+
                             // Format the answer creation date
                             const createdAt = new Date(answer.created_at);
                             const timeAgo = timeSince(createdAt);
-                            
+
                             answerHTML += `
                                 <div class="flex items-start space-x-2 text-sm answer-item pt-2 pb-3 border-b border-gray-100">
-                                    <img src="${answer.user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(answer.user.name[0] || 'A')}&background=e5e7eb&color=6b7280&size=32`}" 
-                                         alt="${answer.user.name || 'Anonymous'}" 
+                                    <img src="${answer.user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(answer.user.name[0] || 'A')}&background=e5e7eb&color=6b7280&size=32`}"
+                                         alt="${answer.user.name || 'Anonymous'}"
                                          class="w-8 h-8 rounded-full flex-shrink-0 mt-0.5">
                                     <div class="flex-grow">
                                         <p class="font-semibold text-gray-800 leading-tight">${answer.user.name || 'Anonymous'}</p>
@@ -603,17 +668,17 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             `;
                         });
-                        
+
                         // Append new answers to container
                         answersContainer.innerHTML += answerHTML;
-                        
+
                         // Update the total loaded count
                         const newLoadedCount = loadedCount + data.answers.length;
-                        
+
                         // Update button data for next load
                         this.dataset.lastAnswerId = newLastAnswerId;
                         this.dataset.loadedCount = newLoadedCount.toString();
-                        
+
                         // Update button text or hide if all answers loaded
                         if (newLoadedCount >= totalAnswers || !data.has_more) {
                             this.style.display = 'none'; // Hide the button
@@ -621,7 +686,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             const remainingAnswers = totalAnswers - newLoadedCount;
                             this.innerHTML = `View ${remainingAnswers} more ${remainingAnswers === 1 ? 'answer' : 'answers'}`;
                         }
-                        
+
                         // Initialize Alpine.js components for the new answers
                         initAlpineComponents();
                     } else {
@@ -642,12 +707,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize all interactive elements
     function init() {
         setupExpandableContent();
-        setupAnswerForms();
+        setupCommentForms();
         setupLoadMoreComments();
         setupLoadMoreAnswers();
         setupCopyLinkButtons();
         setupTextareaAutoResize();
-        
+
         // Initialize infinite scroll after a short delay to ensure page is fully loaded
         setTimeout(setupInfiniteScroll, 100);
     }

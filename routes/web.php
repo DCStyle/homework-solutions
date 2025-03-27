@@ -7,6 +7,7 @@ use App\Http\Controllers\ImageController;
 use App\Http\Controllers\MultiSearchController;
 use App\Http\Controllers\SearchController;
 use App\Models\Category;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PostsController;
@@ -303,29 +304,6 @@ Route::prefix('hoi-dap')->name('wiki.')->group(function () {
             ->name('success')
             ->middleware('auth');
     });
-
-    // Comments - Authentication required for mutations
-    Route::middleware('auth')->group(function () {
-        // Store a new comment on a question
-        Route::post('/cau-hoi/{question}/binh-luan', [App\Http\Controllers\WikiCommentController::class, 'store'])
-            ->name('comments.store');
-
-        // Update an existing comment
-        Route::put('/binh-luan/{comment}', [App\Http\Controllers\WikiCommentController::class, 'update'])
-            ->name('comments.update');
-
-        // Delete a comment
-        Route::delete('/binh-luan/{comment}', [App\Http\Controllers\WikiCommentController::class, 'destroy'])
-            ->name('comments.destroy');
-    });
-
-    // Load more comments - Public access
-    Route::get('/cau-hoi/{question}/binh-luan', [App\Http\Controllers\WikiCommentController::class, 'loadMore'])
-        ->name('comments.load-more');
-
-    // AJAX version of load more comments - Public access
-    Route::get('/cau-hoi/{question}/binh-luan', [App\Http\Controllers\WikiCommentController::class, 'loadMoreAjax'])
-        ->name('comments.load-more-ajax');
 
     // Show a specific question by category and slug - Public access
     Route::get('/{categorySlug}/{questionSlug}', [App\Http\Controllers\WikiController::class, 'show'])
