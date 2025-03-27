@@ -67,10 +67,9 @@
                     <div class="p-5">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <!-- Featured Category Cards -->
-                            @forelse($categories->take(4) as $category)
+                            @forelse($categories as $category)
                                 <a href="{{ route('categories.show', $category->slug) }}" class="block rounded-lg border border-gray-100 p-5 hover:bg-gray-50 hover:border-gray-200 transition-all">
                                     <h3 class="font-medium text-indigo-600 mb-1">{{ $category->name }}</h3>
-                                    <p class="text-sm text-gray-500 line-clamp-2">{!! $category->description ?? 'Khám phá các câu hỏi và kiến thức trong danh mục này' !!}</p>
                                 </a>
                             @empty
                                 <div class="col-span-2 text-center py-4 text-gray-500">
