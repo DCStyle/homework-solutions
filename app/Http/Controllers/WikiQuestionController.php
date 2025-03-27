@@ -6,25 +6,30 @@ use App\Models\Category;
 use App\Models\BookGroup;
 use App\Models\WikiQuestion;
 use App\Models\WikiAnswer;
-use App\Models\WikiComment;
+use App\Repositories\QuestionRepository;
+use App\Repositories\AnswerRepository;
 use App\Services\WikiAIService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
-
-ini_set('output_buffering', 'off');
-ini_set('zlib.output_compression', false);
-ini_set('implicit_flush', true);
 
 class WikiQuestionController extends Controller
 {
     protected WikiAIService $aiService;
+    protected QuestionRepository $questionRepository;
+    protected AnswerRepository $answerRepository;
 
-    public function __construct(WikiAIService $aiService)
-    {
+    public function __construct(
+        WikiAIService $aiService,
+        QuestionRepository $questionRepository,
+        AnswerRepository $answerRepository
+    ) {
         $this->aiService = $aiService;
-        $this->middleware('auth')->except(['stream']);
+        $this->questionRepository = $questionRepository;
+        $this->answerRepository = $answerRepository;
+        $this->middleware('auth')->except(['stream', 'checkAnswer']);
     }
 
     /**
@@ -52,51 +57,45 @@ class WikiQuestionController extends Controller
             'book_group_id' => 'nullable|exists:book_groups,id',
         ]);
 
-        // Get category and book group names for context
-        $categoryName = null;
-        $bookGroupName = null;
-        $category = null;
+        try {
+            // Store the question using the repository
+            $question = $this->questionRepository->store($validated);
 
-        if (isset($validated['category_id'])) {
-            $category = Category::find($validated['category_id']);
-            $categoryName = $category ? $category->name : null;
-        }
+            // If this is an AJAX request, return JSON response
+            if ($request->wantsJson() || $request->ajax()) {
+                $category = $question->category;
 
-        if (isset($validated['book_group_id']) && $validated['book_group_id']) {
-            $bookGroup = BookGroup::find($validated['book_group_id']);
-            $bookGroupName = $bookGroup ? $bookGroup->name : null;
-        }
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Câu hỏi của bạn đã được gửi và đang được xử lý.',
+                    'question_id' => $question->id,
+                    'question_slug' => $question->slug,
+                    'category_slug' => $category ? $category->slug : '',
+                    'question_title' => $question->title,
+                    'question_url' => route('wiki.show', [$category->slug, $question->slug])
+                ]);
+            }
 
-        // Generate title using AI
-        $title = $this->aiService->generateQuestionTitle(
-            $validated['content'],
-            $categoryName,
-            $bookGroupName
-        );
+            // For non-AJAX requests, redirect as usual
+            return redirect()->route('wiki.questions.success', $question)
+                ->with('message', 'Câu hỏi của bạn đã được gửi và đang được xử lý.');
+        } catch (\Exception $e) {
+            Log::error('Error storing question: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'trace' => $e->getTraceAsString()
+            ]);
 
-        $question = new WikiQuestion();
-        $question->fill($validated);
-        $question->title = $title;
-        $question->user_id = Auth::id();
-        $question->status = 'pending';
-        $question->save();
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Đã xảy ra lỗi khi lưu câu hỏi. Vui lòng thử lại.',
+                ], 500);
+            }
 
-        // If this is an AJAX request, return JSON response
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Câu hỏi của bạn đã được gửi và đang được xử lý.',
-                'question_id' => $question->id,
-                'question_slug' => $question->slug,
-                'category_slug' => $category ? $category->slug : '',
-                'question_title' => $question->title,
-                'question_url' => route('wiki.show', [$category->slug, $question->slug])
+            return back()->withInput()->withErrors([
+                'content' => 'Đã xảy ra lỗi khi lưu câu hỏi. Vui lòng thử lại.'
             ]);
         }
-
-        // For non-AJAX requests, redirect as usual
-        return redirect()->route('wiki.questions.success', $question)
-            ->with('message', 'Câu hỏi của bạn đã được gửi và đang được xử lý.');
     }
 
     /**
@@ -110,24 +109,8 @@ class WikiQuestionController extends Controller
     }
 
     /**
-     * Store a new comment for a question.
+     * Stream the AI-generated answer for a question.
      */
-    public function storeComment(Request $request, WikiQuestion $question): RedirectResponse
-    {
-        $validated = $request->validate([
-            'content' => 'required|string',
-            'parent_id' => 'nullable|exists:wiki_comments,id',
-        ]);
-
-        $comment = new WikiComment();
-        $comment->fill($validated);
-        $comment->question_id = $question->id;
-        $comment->user_id = Auth::id();
-        $comment->save();
-
-        return back()->with('message', 'Comment added successfully.');
-    }
-
     public function stream(WikiQuestion $question)
     {
         // Set proper headers for SSE with UTF-8 encoding
@@ -135,39 +118,90 @@ class WikiQuestionController extends Controller
         header('Cache-Control: no-cache');
         header('X-Accel-Buffering: no'); // Disable Nginx buffering if you use Nginx
 
-        // Generate the answer
-        $content = app(WikiAIService::class)->generateAnswer($question);
+        try {
+            // Generate the answer
+            $content = $this->aiService->generateAnswer($question);
 
-        // Save the answer to the database
-        $answer = new WikiAnswer();
-        $answer->question_id = $question->id;
-        $answer->content = $content;
-        $answer->is_ai = true;
-        $answer->save();
+            // Save the answer to the database
+            $answer = new WikiAnswer();
+            $answer->question_id = $question->id;
+            $answer->content = $content;
+            $answer->is_ai = true;
+            $answer->save();
 
-        // Update question status to published
-        $question->status = 'published';
-        $question->save();
+            // Update question status to published
+            $this->questionRepository->updateStatus($question, 'published');
 
-        // Process the content with Vietnamese character handling
-        $content = $this->processVietnameseContent($content);
+            // Process the content with Vietnamese character handling
+            $content = $this->processVietnameseContent($content);
 
-        // Start the stream
-        echo "data: <START_CONTENT>\n\n";
-        flush();
-
-        // Stream in safe-sized chunks that don't break UTF-8 sequences
-        $chunks = $this->createSafeUtf8Chunks($content, 200); // Safe chunk size
-
-        foreach ($chunks as $chunk) {
-            echo "data: $chunk\n\n";
+            // Start the stream
+            echo "data: <START_CONTENT>\n\n";
             flush();
-            usleep(50000); // Small delay to simulate typing
-        }
 
-        echo "data: <END_CONTENT>\n\n";
-        echo "event: DONE\ndata: {\"status\":\"complete\"}\n\n";
-        flush();
+            // Stream in safe-sized chunks that don't break UTF-8 sequences
+            $chunks = $this->createSafeUtf8Chunks($content, 200); // Safe chunk size
+
+            foreach ($chunks as $chunk) {
+                echo "data: $chunk\n\n";
+                flush();
+                usleep(50000); // Small delay to simulate typing
+            }
+
+            echo "data: <END_CONTENT>\n\n";
+            echo "event: DONE\ndata: {\"status\":\"complete\"}\n\n";
+            flush();
+
+        } catch (\Exception $e) {
+            Log::error('Error streaming AI answer: ' . $e->getMessage(), [
+                'question_id' => $question->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Send error event
+            echo "event: ERROR\ndata: {\"message\":\"" . addslashes($e->getMessage()) . "\"}\n\n";
+            flush();
+
+            // Try to provide a fallback answer
+            try {
+                $fallbackContent = $this->getFallbackAnswer($question);
+
+                $answer = new WikiAnswer();
+                $answer->question_id = $question->id;
+                $answer->content = $fallbackContent;
+                $answer->is_ai = true;
+                $answer->save();
+
+                $this->questionRepository->updateStatus($question, 'published');
+            } catch (\Exception $fallbackEx) {
+                Log::error('Error creating fallback answer: ' . $fallbackEx->getMessage(), [
+                    'question_id' => $question->id
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Check the saved answer for a question.
+     */
+    public function checkAnswer(WikiQuestion $question)
+    {
+        try {
+            $status = $this->answerRepository->checkAnswerStatus($question);
+            return response()->json($status);
+        } catch (\Exception $e) {
+            Log::error('Error checking answer status: ' . $e->getMessage(), [
+                'question_id' => $question->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'question_id' => $question->id,
+                'question_status' => $question->status
+            ], 500);
+        }
     }
 
     /**
@@ -222,32 +256,5 @@ class WikiQuestionController extends Controller
 
 <p>Cảm ơn bạn đã sử dụng hệ thống hỏi đáp của chúng tôi!</p>
 EOT;
-    }
-
-    /**
-     * Check the saved answer for a question.
-     */
-    public function checkAnswer(WikiQuestion $question)
-    {
-        $answer = $question->answers()->where('is_ai', true)->first();
-
-        if (!$answer) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'No answer found',
-                'question_id' => $question->id,
-                'question_status' => $question->status
-            ]);
-        }
-
-        return response()->json([
-            'status' => 'success',
-            'answer_id' => $answer->id,
-            'content_length' => strlen($answer->content),
-            'content_preview' => substr($answer->content, 0, 200),
-            'question_status' => $question->status,
-            'created_at' => $answer->created_at->toDateTimeString(),
-            'updated_at' => $answer->updated_at->toDateTimeString()
-        ]);
     }
 }

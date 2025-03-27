@@ -4,273 +4,273 @@ namespace App\Services;
 
 use App\Models\WikiQuestion;
 use App\Models\WikiQuestionEmbedding;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class WikiSearchService
 {
-    protected WikiAIService $aiService;
-
-    public function __construct(WikiAIService $aiService)
+    /**
+     * Search for questions based on query and options
+     *
+     * @param string $query
+     * @param array $options
+     * @return LengthAwarePaginator
+     */
+    public function search(string $query, array $options = []): LengthAwarePaginator
     {
-        $this->aiService = $aiService;
+        // Extract options with defaults
+        $categoryId = $options['category_id'] ?? null;
+        $bookGroupId = $options['book_group_id'] ?? null;
+        $threshold = $options['threshold'] ?? 0.5;
+        $limit = $options['limit'] ?? 10;
+        $page = $options['page'] ?? 1;
+        $useBasicSearch = $options['use_basic_search'] ?? false;
+
+        try {
+            // Use vector search if available and not using basic search
+            if (!$useBasicSearch && $this->hasEmbeddings()) {
+                return $this->vectorSearch($query, $categoryId, $bookGroupId, $threshold, $limit, $page);
+            } else {
+                // Fall back to basic search
+                return $this->basicSearch($query, $categoryId, $bookGroupId, $limit, $page);
+            }
+        } catch (\Exception $e) {
+            Log::error('Search error: ' . $e->getMessage(), [
+                'query' => $query,
+                'options' => $options,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Always fall back to basic search in case of error
+            return $this->basicSearch($query, $categoryId, $bookGroupId, $limit, $page);
+        }
     }
 
     /**
-     * Search for questions based on a query.
+     * Perform vector-based semantic search
+     *
+     * @param string $query
+     * @param int|null $categoryId
+     * @param int|null $bookGroupId
+     * @param float $threshold
+     * @param int $limit
+     * @param int $page
+     * @return LengthAwarePaginator
      */
-    public function search(string $query, array $options = []): \Illuminate\Pagination\LengthAwarePaginator
+    protected function vectorSearch(string $query, ?int $categoryId, ?int $bookGroupId, float $threshold, int $limit, int $page): LengthAwarePaginator
     {
-        $options = array_merge([
-            'threshold' => 0.7,
-            'limit' => 10,
-            'category_id' => null,
-            'book_group_id' => null,
-            'page' => null,
-        ], $options);
+        // First, generate embedding for the query
+        $embedding = $this->generateEmbeddingForQuery($query);
 
-        // Currently vector search not available
-
-//        // Check if vector search is enabled and available
-//        if ($this->isVectorSearchAvailable()) {
-//            return $this->vectorSearch($query, $options);
-//        }
-
-        // Fallback to basic search
-        return $this->basicSearch($query, $options);
-    }
-
-    /**
-     * Perform a vector search using embeddings.
-     */
-    protected function vectorSearch(string $query, array $options): \Illuminate\Pagination\LengthAwarePaginator
-    {
-        // Generate embedding for the search query
-        $queryEmbedding = $this->aiService->generateEmbeddingForText($query);
-
-        if (empty($queryEmbedding)) {
-            // Fallback to basic search if embedding generation fails
-            return $this->basicSearch($query, $options);
+        if (empty($embedding)) {
+            return $this->basicSearch($query, $categoryId, $bookGroupId, $limit, $page);
         }
 
-        $threshold = $options['threshold'];
-        $limit = $options['limit'];
-
         // Build the base query
-        $baseQuery = WikiQuestion::published()
-            ->with(['user', 'category', 'embedding']);
+        $baseQuery = DB::table('wiki_questions')
+            ->join('wiki_question_embeddings', 'wiki_questions.id', '=', 'wiki_question_embeddings.question_id')
+            ->where('wiki_questions.status', 'published');
 
         // Apply category filter if specified
-        if (!empty($options['category_id'])) {
-            $baseQuery->where('category_id', $options['category_id']);
+        if ($categoryId) {
+            $baseQuery->where('wiki_questions.category_id', $categoryId);
         }
 
         // Apply book group filter if specified
-        if (!empty($options['book_group_id'])) {
-            $baseQuery->where('book_group_id', $options['book_group_id']);
+        if ($bookGroupId) {
+            $baseQuery->where('wiki_questions.book_group_id', $bookGroupId);
         }
 
-        // Get questions with embeddings
-        $questions = $baseQuery->get();
+        // Calculate cosine similarity with the query embedding
+        $embeddingStr = json_encode($embedding);
+        $baseQuery->selectRaw('wiki_questions.*,
+            1 - (wiki_question_embeddings.embedding <=> ?::vector) as similarity',
+            [$embeddingStr]);
 
-        $results = $questions->filter(function ($question) {
-            return $question->embedding !== null;
-        })->map(function ($question) use ($queryEmbedding) {
-            $embedArray = $this->getEmbeddingArray($question->embedding->embedding);
+        // Apply similarity threshold
+        $baseQuery->where(DB::raw('1 - (wiki_question_embeddings.embedding <=> ?::vector)'), '>=', $threshold)
+            ->orderBy('similarity', 'desc');
 
-            if (empty($embedArray)) {
-                $question->similarity = 0;
-                return $question;
+        // Get total count for pagination
+        $total = $baseQuery->count();
+
+        // Execute query with pagination
+        $results = $baseQuery
+            ->skip(($page - 1) * $limit)
+            ->take($limit)
+            ->get();
+
+        // Load the actual WikiQuestion models
+        $questionIds = $results->pluck('id')->toArray();
+        $questions = WikiQuestion::with(['user:id,name', 'category:id,name,slug'])
+            ->whereIn('id', $questionIds)
+            ->get();
+
+        // Order questions based on similarity ranking
+        $orderedQuestions = collect();
+        foreach ($results as $result) {
+            $question = $questions->firstWhere('id', $result->id);
+            if ($question) {
+                $question->similarity = $result->similarity;
+                $orderedQuestions->push($question);
             }
+        }
 
-            $question->similarity = $this->cosineSimilarity($queryEmbedding, $embedArray);
-            return $question;
-        })->filter(function ($question) use ($threshold) {
-            return $question->similarity >= $threshold;
-        })->sortByDesc('similarity')->values();
-
-        // Create a custom paginator
-        $perPage = $limit;
-        $page = $options['page'] ?: request()->get('page', 1);
-
-        $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
-            $results->forPage($page, $perPage),
-            $results->count(),
-            $perPage,
+        // Create paginator manually
+        return new LengthAwarePaginator(
+            $orderedQuestions,
+            $total,
+            $limit,
             $page,
             ['path' => request()->url(), 'query' => request()->query()]
         );
-
-        return $paginator;
     }
 
     /**
-     * Calculate cosine similarity between two vectors.
+     * Perform basic keyword search when vector search is not available
+     *
+     * @param string $query
+     * @param int|null $categoryId
+     * @param int|null $bookGroupId
+     * @param int $limit
+     * @param int $page
+     * @return LengthAwarePaginator
      */
-    protected function cosineSimilarity(array $a, array $b): float
+    protected function basicSearch(string $query, ?int $categoryId, ?int $bookGroupId, int $limit, int $page): LengthAwarePaginator
     {
-        if (empty($a) || empty($b) || count($a) !== count($b)) {
-            return 0;
-        }
-
-        $dotProduct = 0;
-        $magnitudeA = 0;
-        $magnitudeB = 0;
-
-        foreach ($a as $i => $valueA) {
-            $valueB = $b[$i] ?? 0;
-            $dotProduct += $valueA * $valueB;
-            $magnitudeA += $valueA * $valueA;
-            $magnitudeB += $valueB * $valueB;
-        }
-
-        $magnitudeA = sqrt($magnitudeA);
-        $magnitudeB = sqrt($magnitudeB);
-
-        if ($magnitudeA == 0 || $magnitudeB == 0) {
-            return 0;
-        }
-
-        return $dotProduct / ($magnitudeA * $magnitudeB);
-    }
-
-    /**
-     * Convert embedding from string/JSON to array.
-     */
-    protected function getEmbeddingArray($embedding): array
-    {
-        if (is_array($embedding)) {
-            return $embedding;
-        }
-
-        if (is_string($embedding)) {
-            $decoded = json_decode($embedding, true);
-            return is_array($decoded) ? $decoded : [];
-        }
-
-        return [];
-    }
-
-    /**
-     * Perform a basic keyword search - Optimized for performance.
-     */
-    protected function basicSearch(string $query, array $options): \Illuminate\Pagination\LengthAwarePaginator
-    {
-        // Break the query into keywords for better matching
-        $keywords = explode(' ', $query);
-        $keywordConditions = [];
-
-        $questionQuery = WikiQuestion::published()->with(['user', 'category']);
-
-        // Build a more flexible search condition
-        $questionQuery->where(function ($q) use ($query, $keywords) {
-            // First try exact phrase match (higher relevance)
-            $q->where('title', 'like', "%{$query}%")
-                ->orWhere('content', 'like', "%{$query}%");
-
-            // Then try individual keyword matches
-            foreach ($keywords as $keyword) {
-                if (strlen($keyword) >= 3) { // Only use keywords with 3+ characters
-                    $q->orWhere('title', 'like', "%{$keyword}%")
-                        ->orWhere('content', 'like', "%{$keyword}%");
-                }
-            }
-        });
+        $searchQuery = WikiQuestion::with(['user:id,name', 'category:id,name,slug'])
+            ->published()
+            ->where(function ($q) use ($query) {
+                $q->where('title', 'like', "%{$query}%")
+                    ->orWhere('content', 'like', "%{$query}%");
+            });
 
         // Apply category filter if specified
-        if (!empty($options['category_id'])) {
-            $questionQuery->where('category_id', $options['category_id']);
+        if ($categoryId) {
+            $searchQuery->where('category_id', $categoryId);
         }
 
         // Apply book group filter if specified
-        if (!empty($options['book_group_id'])) {
-            $questionQuery->where('book_group_id', $options['book_group_id']);
+        if ($bookGroupId) {
+            $searchQuery->where('book_group_id', $bookGroupId);
         }
 
-        // Order by relevance (created date for now) and then by views
-        $questionQuery->orderBy('created_at', 'desc')
-            ->orderBy('views', 'desc');
+        // Order by relevance (first title matches, then content matches, then newest)
+        $searchQuery->orderByRaw("
+            CASE
+                WHEN title LIKE ? THEN 1
+                WHEN title LIKE ? THEN 2
+                WHEN content LIKE ? THEN 3
+                ELSE 4
+            END", [
+            "{$query}%",   // Title starts with query (highest priority)
+            "%{$query}%",  // Title contains query
+            "%{$query}%",  // Content contains query
+        ])
+            ->orderBy('created_at', 'desc');
 
-        return $questionQuery->paginate($options['limit'] ?? 10);
+        return $searchQuery->paginate($limit, ['*'], 'page', $page);
     }
 
     /**
-     * Check if vector search is available.
-     */
-    protected function isVectorSearchAvailable(): bool
-    {
-        try {
-            // Check if we have any embeddings
-            return WikiQuestionEmbedding::count() > 0;
-        } catch (\Exception $e) {
-            // Database error
-            return false;
-        }
-    }
-
-    /**
-     * Find related questions based on a given question.
+     * Find related questions based on a seed question
+     *
+     * @param WikiQuestion $question
+     * @param int $limit
+     * @return Collection
      */
     public function findRelated(WikiQuestion $question, int $limit = 5): Collection
     {
-        // Try to find related questions using vector similarity if available
-        if ($this->isVectorSearchAvailable() && $question->embedding) {
-            $questionEmbedding = $this->getEmbeddingArray($question->embedding->embedding);
+        try {
+            // If the question has an embedding, use vector similarity search
+            if ($question->embedding) {
+                // Fix: Check if embedding is already an array or needs to be decoded
+                $embedding = is_array($question->embedding->embedding) 
+                    ? $question->embedding->embedding 
+                    : json_decode($question->embedding->embedding, true);
 
-            if (empty($questionEmbedding)) {
-                // Fallback to category-based related questions
-                return $this->getRelatedByCategory($question, $limit);
+                if (!empty($embedding)) {
+                    $embeddingStr = json_encode($embedding);
+
+                    $relatedIds = DB::table('wiki_questions')
+                        ->join('wiki_question_embeddings', 'wiki_questions.id', '=', 'wiki_question_embeddings.question_id')
+                        ->where('wiki_questions.status', 'published')
+                        ->where('wiki_questions.id', '!=', $question->id)
+                        ->selectRaw('wiki_questions.id, 1 - (wiki_question_embeddings.embedding <=> ?::vector) as similarity', [$embeddingStr])
+                        ->orderBy('similarity', 'desc')
+                        ->limit($limit)
+                        ->pluck('id')
+                        ->toArray();
+
+                    if (!empty($relatedIds)) {
+                        return WikiQuestion::with(['user:id,name', 'category:id,name,slug'])
+                            ->whereIn('id', $relatedIds)
+                            ->get();
+                    }
+                }
             }
 
-            // Get all questions with embeddings
-            $questions = WikiQuestion::published()
-                ->with('embedding')
+            // Fall back to category and book group based matching
+            return WikiQuestion::with(['user:id,name', 'category:id,name,slug'])
+                ->published()
                 ->where('id', '!=', $question->id)
+                ->where(function ($query) use ($question) {
+                    $query->where('category_id', $question->category_id);
+
+                    if ($question->book_group_id) {
+                        $query->orWhere('book_group_id', $question->book_group_id);
+                    }
+                })
+                ->orderBy('views', 'desc')
+                ->limit($limit)
                 ->get();
 
-            // Calculate similarities and sort
-            $related = $questions->filter(function ($q) {
-                return $q->embedding !== null;
-            })->map(function ($q) use ($questionEmbedding) {
-                $embedArray = $this->getEmbeddingArray($q->embedding->embedding);
+        } catch (\Exception $e) {
+            Log::error('Error finding related questions: ' . $e->getMessage(), [
+                'question_id' => $question->id,
+                'trace' => $e->getTraceAsString()
+            ]);
 
-                if (empty($embedArray)) {
-                    $q->similarity = 0;
-                    return $q;
-                }
-
-                $q->similarity = $this->cosineSimilarity($questionEmbedding, $embedArray);
-                return $q;
-            })->sortByDesc('similarity')->take($limit)->values();
-
-            return $related;
+            // Final fallback to simply get newest questions
+            return WikiQuestion::with(['user:id,name', 'category:id,name,slug'])
+                ->published()
+                ->where('id', '!=', $question->id)
+                ->orderBy('created_at', 'desc')
+                ->limit($limit)
+                ->get();
         }
-
-        // Fallback to category-based related questions
-        return $this->getRelatedByCategory($question, $limit);
     }
 
     /**
-     * Get related questions by category.
+     * Generate embedding vector for a search query
+     *
+     * @param string $query
+     * @return array|null
      */
-    protected function getRelatedByCategory(WikiQuestion $question, int $limit): Collection
+    protected function generateEmbeddingForQuery(string $query): ?array
     {
-        return WikiQuestion::published()
-            ->where('category_id', $question->category_id)
-            ->where('id', '!=', $question->id)
-            ->orderBy('views', 'desc')
-            ->take($limit)
-            ->get();
+        try {
+            // Use the existing AI service to generate embedding
+            $wikiAIService = app(WikiAIService::class);
+            return $wikiAIService->generateEmbeddingForText($query);
+        } catch (\Exception $e) {
+            Log::error('Error generating embedding for query: ' . $e->getMessage(), [
+                'query' => $query,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return null;
+        }
     }
 
     /**
-     * Get trending questions based on views and recency.
+     * Check if embeddings are available in the system
+     *
+     * @return bool
      */
-    public function getTrendingQuestions(int $limit = 10): Collection
+    protected function hasEmbeddings(): bool
     {
-        return WikiQuestion::published()
-            ->orderByRaw('(views / (TIMESTAMPDIFF(HOUR, created_at, NOW()) + 1)) DESC')
-            ->limit($limit)
-            ->get();
+        return WikiQuestionEmbedding::count() > 0;
     }
 }

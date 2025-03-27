@@ -37,15 +37,6 @@
                 </div>
             @endif
         </div>
-
-        @if(count($categories) > 5)
-            <div class="p-3 bg-gray-50 border-t border-gray-100 text-center">
-                <a href="#" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 inline-flex items-center">
-                    Xem tất cả
-                    <span class="iconify ml-1" data-icon="mdi-chevron-right" data-width="14"></span>
-                </a>
-            </div>
-        @endif
     </div>
 
     <!-- Book Groups -->
@@ -86,15 +77,6 @@
                 </div>
             @endif
         </div>
-
-        @if(count($bookGroups) > 5)
-            <div class="p-3 bg-gray-50 border-t border-gray-100 text-center">
-                <a href="#" class="text-xs font-medium text-blue-600 hover:text-blue-800 inline-flex items-center">
-                    Xem tất cả
-                    <span class="iconify ml-1" data-icon="mdi-chevron-right" data-width="14"></span>
-                </a>
-            </div>
-        @endif
     </div>
 
     <!-- Stats Card -->
