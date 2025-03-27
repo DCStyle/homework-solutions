@@ -8,7 +8,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
             <!-- Left Sidebar: Categories & Filters -->
-            <div class="md:col-span-3">
+            <div class="md:col-span-3 hidden md:block">
                 <div class="bg-white rounded-lg shadow overflow-hidden">
                     <div class="px-4 py-5 sm:px-6 bg-gray-50">
                         <h2 class="text-base font-medium text-gray-900">Lọc kết quả</h2>
@@ -16,7 +16,7 @@
                     <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
                         <form action="{{ route('wiki.search') }}" method="GET">
                             <input type="hidden" name="q" value="{{ $query }}">
-                            
+
                             <!-- Category Filter -->
                             <div class="mb-4">
                                 <label for="category_id" class="block text-sm font-medium text-gray-700">Danh mục</label>
@@ -29,7 +29,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                            
+
                             <!-- Book Group Filter -->
                             <div class="mb-4">
                                 <label for="book_group_id" class="block text-sm font-medium text-gray-700">Bộ sách</label>
@@ -42,7 +42,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                            
+
                             <!-- Sort Filter -->
                             <div class="mb-4">
                                 <label for="sort" class="block text-sm font-medium text-gray-700">Sắp xếp theo</label>
@@ -53,14 +53,14 @@
                                     <option value="views_desc" @if(request('sort') == 'views_desc') selected @endif>Xem nhiều nhất</option>
                                 </select>
                             </div>
-                            
+
                             <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                 Áp dụng bộ lọc
                             </button>
                         </form>
                     </div>
                 </div>
-                
+
                 <!-- Ask Question Button -->
                 <div class="mt-4">
                     <a href="{{ route('wiki.questions.create') }}" class="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -68,7 +68,7 @@
                     </a>
                 </div>
             </div>
-            
+
             <!-- Main Content: Search Results -->
             <div class="md:col-span-9">
                 <div class="bg-white rounded-lg shadow overflow-hidden">
@@ -80,7 +80,7 @@
                             Tìm thấy {{ $questions->total() }} kết quả
                         </p>
                     </div>
-                    
+
                     <div class="divide-y divide-gray-200">
                         @forelse($questions as $question)
                             <div class="px-4 py-5 sm:p-6">
@@ -95,11 +95,11 @@
                                             {{ $question->category->name }}
                                         </span>
                                     </div>
-                                    
+
                                     <div class="text-sm text-gray-600">
                                         {!! Str::limit(strip_tags($question->content), 200) !!}
                                     </div>
-                                    
+
                                     <div class="flex items-center text-xs text-gray-500 space-x-4">
                                         <span>Người hỏi: {{ $question->user->name }}</span>
                                         <span>&bull;</span>
@@ -118,7 +118,7 @@
                             </div>
                         @endforelse
                     </div>
-                    
+
                     <!-- Pagination -->
                     @if($questions->hasPages())
                         <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 sm:px-6">
@@ -126,7 +126,7 @@
                         </div>
                     @endif
                 </div>
-                
+
                 <!-- Related Searches -->
                 <div class="mt-6 bg-white rounded-lg shadow overflow-hidden">
                     <div class="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
@@ -156,4 +156,4 @@
         </div>
     </div>
 </div>
-@endsection 
+@endsection

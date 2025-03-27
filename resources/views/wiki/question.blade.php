@@ -9,7 +9,7 @@
     <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
             <!-- Sidenav Content -->
-            <div class="lg:col-span-3 hidden md:block">
+            <div class="lg:col-span-3 hidden lg:block">
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 sticky top-8">
                     <div class="p-5 border-b border-gray-100">
                         <h2 class="text-lg font-semibold text-gray-800 flex items-center">
@@ -74,7 +74,7 @@
                 @include('wiki.partials.comments', ['question' => $question])
             </div>
 
-            <div class="lg:col-span-3 hidden md:block">
+            <div class="lg:col-span-3">
                 <div class="sticky top-8">
                     <!-- Related Questions -->
                     <div class="bg-white rounded-lg shadow overflow-hidden mb-6">

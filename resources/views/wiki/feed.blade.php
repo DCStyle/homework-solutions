@@ -17,7 +17,7 @@
 
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div class="lg:col-span-3">
+                <div class="lg:col-span-3 hidden lg:block">
                     <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 sticky top-8">
                         <div class="p-5 border-b border-gray-100">
                             <h2 class="text-lg font-semibold text-gray-800 flex items-center">

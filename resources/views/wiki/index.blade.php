@@ -19,7 +19,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <!-- Left Sidebar -->
-            <div class="lg:col-span-3">
+            <div class="lg:col-span-3 hidden lg:block">
                 <div class="sticky top-8 space-y-6">
                     <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
                         <div class="p-5 border-b border-gray-100">
