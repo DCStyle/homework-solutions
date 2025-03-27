@@ -93,6 +93,8 @@ class WikiController extends Controller
                 ])
                 ->firstOrFail();
 
+            $aiAnswer = $question->answers->where('is_ai', true)->first();
+
             // Increment view count
             $this->questionRepository->incrementViews($question);
 
@@ -109,6 +111,7 @@ class WikiController extends Controller
 
             return view('wiki.question', [
                 'question' => $question,
+                'aiAnswer' => $aiAnswer,
                 'relatedQuestions' => $relatedQuestions,
                 'latestQuestions' => $latestQuestions,
                 'trendingQuestions' => $trendingQuestions,

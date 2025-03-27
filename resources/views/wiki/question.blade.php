@@ -63,12 +63,6 @@
                                     Câu trả lời từ AI
                                 </div>
                                 @if(Auth::user()?->isAdmin())
-
-                                    @php
-                                        // Find the AI-generated answer
-                                        $aiAnswer = $question->answers->where('is_ai', true)->first();
-                                    @endphp
-
                                     @if(isset($aiAnswer))
                                     <button id="edit-ai-answer-btn" type="button" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
