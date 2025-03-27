@@ -71,7 +71,7 @@
         @include('layouts.header')
 
         <!-- Main Content -->
-        <main class="w-full overflow-x-hidden">
+        <main class="w-full">
             @yield('content')
         </main>
 

@@ -283,28 +283,53 @@ Route::get('/article-categories/{category_slug}.html', [App\Http\Controllers\Art
 Route::prefix('hoi-dap')->name('wiki.')->group(function () {
     // Main pages
     Route::get('/', [App\Http\Controllers\WikiController::class, 'index'])->name('index');
+    Route::get('/feed', [App\Http\Controllers\WikiFeedController::class, 'index'])->name('feed');
     Route::get('/tim-kiem', [App\Http\Controllers\WikiController::class, 'search'])->name('search');
 
-    // Questions
+    // Questions - Creation flow
     Route::prefix('cau-hoi')->name('questions.')->group(function() {
-        Route::get('/tao-moi', [App\Http\Controllers\WikiQuestionController::class, 'create'])->name('create');
-        Route::post('/', [App\Http\Controllers\WikiQuestionController::class, 'store'])->name('store');
-        Route::get('/{question}/thanh-cong', [App\Http\Controllers\WikiQuestionController::class, 'success'])->name('success');
+        // Create question form
+        Route::get('/tao-moi', [App\Http\Controllers\WikiQuestionController::class, 'create'])
+            ->name('create')
+            ->middleware('auth');
+
+        // Store a new question
+        Route::post('/', [App\Http\Controllers\WikiQuestionController::class, 'store'])
+            ->name('store')
+            ->middleware('auth');
+
+        // Success page after question submission
+        Route::get('/{question}/thanh-cong', [App\Http\Controllers\WikiQuestionController::class, 'success'])
+            ->name('success')
+            ->middleware('auth');
     });
 
-    // Comments (auth required)
+    // Comments - Authentication required for mutations
     Route::middleware('auth')->group(function () {
-        // Question comments
-        Route::post('/cau-hoi/{question}/binh-luan', [App\Http\Controllers\WikiCommentController::class, 'store'])->name('comments.store');
-        Route::get('/cau-hoi/{question}/binh-luan', [App\Http\Controllers\WikiCommentController::class, 'loadMore'])->name('comments.load-more');
+        // Store a new comment on a question
+        Route::post('/cau-hoi/{question}/binh-luan', [App\Http\Controllers\WikiCommentController::class, 'store'])
+            ->name('comments.store');
 
-        // Comment management
-        Route::put('/binh-luan/{comment}', [App\Http\Controllers\WikiCommentController::class, 'update'])->name('comments.update');
-        Route::delete('/binh-luan/{comment}', [App\Http\Controllers\WikiCommentController::class, 'destroy'])->name('comments.destroy');
+        // Update an existing comment
+        Route::put('/binh-luan/{comment}', [App\Http\Controllers\WikiCommentController::class, 'update'])
+            ->name('comments.update');
+
+        // Delete a comment
+        Route::delete('/binh-luan/{comment}', [App\Http\Controllers\WikiCommentController::class, 'destroy'])
+            ->name('comments.destroy');
     });
 
-    // Category pages
-    Route::get('/{categorySlug}/{questionSlug}', [App\Http\Controllers\WikiController::class, 'show'])->name('show');
+    // Load more comments - Public access
+    Route::get('/cau-hoi/{question}/binh-luan', [App\Http\Controllers\WikiCommentController::class, 'loadMore'])
+        ->name('comments.load-more');
+
+    // AJAX version of load more comments - Public access
+    Route::get('/cau-hoi/{question}/binh-luan', [App\Http\Controllers\WikiCommentController::class, 'loadMoreAjax'])
+        ->name('comments.load-more-ajax');
+
+    // Show a specific question by category and slug - Public access
+    Route::get('/{categorySlug}/{questionSlug}', [App\Http\Controllers\WikiController::class, 'show'])
+        ->name('show');
 });
 
 // Images

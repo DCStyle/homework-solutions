@@ -20,6 +20,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <!-- Left Sidebar -->
                 <div class="lg:col-span-3">
+                    <div class="sticky top-8 space-y-6">
                     <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
                         <div class="p-5 border-b border-gray-100">
                             <h2 class="text-lg font-semibold text-gray-800 flex items-center">
@@ -29,15 +30,8 @@
                         </div>
                         <div class="p-4">
                             @include('wiki.partials.sidebar')
-                        </div>
-                    </div>
-
-                    <!-- Call-to-action button -->
-                    <div class="mt-6 text-center">
-                        <a href="{{ route('wiki.questions.create') }}" class="inline-flex items-center justify-center w-full px-5 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 shadow-md hover:shadow-lg">
-                            <span class="iconify mr-2" data-icon="mdi-plus-circle" data-width="20"></span>
-                            Đặt Câu Hỏi Mới
-                        </a>
+                                            </div>
+                </div>
                     </div>
                 </div>
 
@@ -176,7 +170,8 @@
                                     Đặt câu hỏi ngay
                                     <span class="iconify ml-1" data-icon="mdi-arrow-right" data-width="16"></span>
                                 </a>
-                            </div>
+                                                </div>
+                </div>
                         </div>
                     </div>
                 </div>
