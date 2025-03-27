@@ -49,7 +49,7 @@
                 </a>
             </h1>
 
-            <div class="mt-4 text-lg">
+            <div class="mt-4 text-lg tiny-mce-content">
                 {!! $article->content !!}
             </div>
 

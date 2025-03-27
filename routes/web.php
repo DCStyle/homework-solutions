@@ -108,6 +108,7 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
             Route::put('/{questionId}/reject', [App\Http\Controllers\Admin\WikiSettingsController::class, 'rejectQuestion'])->name('reject');
         });
     });
+
     // Settings
     Route::prefix('settings')->group(function() {
         Route::get('/', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('admin.settings.index');
@@ -284,7 +285,12 @@ Route::get('/article-categories/{category_slug}.html', [App\Http\Controllers\Art
 Route::prefix('hoi-dap')->name('wiki.')->group(function () {
     // Main pages
     Route::get('/', [App\Http\Controllers\WikiController::class, 'index'])->name('index');
-    Route::get('/feed', [App\Http\Controllers\WikiFeedController::class, 'index'])->name('feed');
+
+    // Feed
+    Route::get('feed', [App\Http\Controllers\WikiFeedController::class, 'index'])->name('feed');
+    Route::get('feed/{categorySlug}', [App\Http\Controllers\WikiFeedController::class, 'categoryFeed'])->name('feed.category');
+    Route::get('feed/{categorySlug}/{bookGroupSlug}', [App\Http\Controllers\WikiFeedController::class, 'bookGroupFeed'])->name('feed.bookGroup');
+
     Route::get('/tim-kiem', [App\Http\Controllers\WikiController::class, 'search'])->name('search');
 
     // Questions - Creation flow

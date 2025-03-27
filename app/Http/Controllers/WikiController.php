@@ -158,47 +158,34 @@ class WikiController extends Controller
             // Perform the search
             $questions = $this->searchService->search($query, $options);
 
-            // For AJAX requests, return JSON response
-            if ($request->ajax() || $request->input('ajax') == 1) {
-                $formattedQuestions = [];
-
-                foreach ($questions as $question) {
-                    $formattedQuestions[] = [
-                        'id' => $question->id,
-                        'title' => $question->title,
-                        'slug' => $question->slug,
-                        'content' => strip_tags($question->content),
-                        'views' => $question->views,
-                        'category' => $question->category ? [
-                            'id' => $question->category->id,
-                            'name' => $question->category->name,
-                            'slug' => $question->category->slug,
-                        ] : null,
-                        'category_slug' => $question->category ? $question->category->slug : 'uncategorized',
-                        'user' => $question->user ? [
-                            'id' => $question->user->id,
-                            'name' => $question->user->name,
-                        ] : null,
-                        'created_at' => $question->created_at->format('Y-m-d H:i:s'),
-                        'updated_at' => $question->updated_at->format('Y-m-d H:i:s'),
-                    ];
-                }
-
-                return response()->json([
-                    'success' => true,
-                    'results' => $formattedQuestions,
-                    'total' => $questions->total(),
-                    'query' => $query
-                ]);
+            $formattedQuestions = [];
+            foreach ($questions as $question) {
+                $formattedQuestions[] = [
+                    'id' => $question->id,
+                    'title' => $question->title,
+                    'slug' => $question->slug,
+                    'content' => strip_tags($question->content),
+                    'views' => $question->views,
+                    'category' => $question->category ? [
+                        'id' => $question->category->id,
+                        'name' => $question->category->name,
+                        'slug' => $question->category->slug,
+                    ] : null,
+                    'category_slug' => $question->category ? $question->category->slug : 'uncategorized',
+                    'user' => $question->user ? [
+                        'id' => $question->user->id,
+                        'name' => $question->user->name,
+                    ] : null,
+                    'created_at' => $question->created_at->format('Y-m-d H:i:s'),
+                    'updated_at' => $question->updated_at->format('Y-m-d H:i:s'),
+                ];
             }
 
-            // For regular page visits, return the view
-            return view('wiki.search', [
-                'query' => $query,
-                'questions' => $questions,
-                'categories' => Category::all(),
-                'bookGroups' => BookGroup::all(),
-                'sort' => $sort
+            return response()->json([
+                'success' => true,
+                'results' => $formattedQuestions,
+                'total' => $questions->total(),
+                'query' => $query
             ]);
         } catch (\Exception $e) {
             Log::error('Error performing search: ' . $e->getMessage(), [
@@ -207,21 +194,11 @@ class WikiController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
-            if ($request->ajax() || $request->input('ajax') == 1) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Đã xảy ra lỗi khi tìm kiếm. Vui lòng thử lại sau.',
-                    'query' => $query
-                ], 500);
-            }
-
-            return view('wiki.search', [
-                'query' => $query,
-                'questions' => collect(),
-                'categories' => Category::all(),
-                'bookGroups' => BookGroup::all(),
-                'error' => 'Đã xảy ra lỗi khi tìm kiếm. Vui lòng thử lại sau.'
-            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Đã xảy ra lỗi khi tìm kiếm. Vui lòng thử lại sau.',
+                'query' => $query
+            ], 500);
         }
     }
 }

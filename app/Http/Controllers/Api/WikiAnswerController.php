@@ -63,11 +63,11 @@ class WikiAnswerController extends Controller
     public function update(StoreAnswerRequest $request, WikiQuestion $question, int $answerId): JsonResponse
     {
         try {
-            // Find the answer
-            $answer = $question->answers()->findOrFail($answerId);
+            $answer = \App\Models\WikiAnswer::findOrFail($answerId);
 
-            // Check if user owns this answer
-            if (Auth::id() !== $answer->user_id) {
+            // Check if user owns this answer or is an admin
+            $user = Auth::user();
+            if (!$user || ($user->id !== $answer->user_id && !$user->isAdmin())) {
                 return response()->json(['message' => 'Unauthorized.'], 403);
             }
 
@@ -96,11 +96,11 @@ class WikiAnswerController extends Controller
     {
         try {
             // Find the answer
-            $answer = $question->answers()->findOrFail($answerId);
+            $answer = \App\Models\WikiAnswer::findOrFail($answerId);
 
             // Check if user owns this answer or is admin
             $user = Auth::user();
-            if ($user->id !== $answer->user_id && !$user->is_admin) {
+            if ($user->id !== $answer->user_id && !$user->isAdmin()) {
                 return response()->json(['message' => 'Unauthorized.'], 403);
             }
 

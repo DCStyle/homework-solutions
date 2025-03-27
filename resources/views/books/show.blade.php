@@ -91,7 +91,7 @@
 
             <div class="mt-4 bg-white p-4 text-md text-green-700 border shadow-md">
                 @if($book->description && strlen(trim($book->description)) > 0)
-                    <div id="post-content">{!! $book->description !!}</div>
+                    <div id="post-content" class="tiny-mce-content">{!! $book->description !!}</div>
                 @else
                     <h2 class="text-xl">{!! "Dưới đây là toàn bộ bài giải <b class='text-black'>$book->name</b>.
                            Cách hướng dẫn, trình bày lời giải chi tiết, dễ hiểu.

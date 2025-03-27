@@ -85,7 +85,7 @@ class WikiFeedController extends Controller
                 foreach ($feedQuestions as $question) {
                     $html .= view('wiki.partials.feed-item', ['question' => $question])->render();
                 }
-                
+
                 return response()->json([
                     'success' => true,
                     'html' => $html,
@@ -183,7 +183,7 @@ class WikiFeedController extends Controller
                 foreach ($feedQuestions as $question) {
                     $html .= view('wiki.partials.feed-item', ['question' => $question])->render();
                 }
-                
+
                 return response()->json([
                     'success' => true,
                     'html' => $html,
@@ -234,11 +234,16 @@ class WikiFeedController extends Controller
      * @param Request $request
      * @return View|\Illuminate\Http\JsonResponse
      */
-    public function bookGroupFeed(string $bookGroupSlug, Request $request)
+    public function bookGroupFeed(string $categorySlug, string $bookGroupSlug, Request $request)
     {
         try {
+            // Find the category by slug
+            $category = Category::where('slug', $categorySlug)->firstOrFail();
+
             // Find the book group by slug
-            $bookGroup = BookGroup::where('slug', $bookGroupSlug)->firstOrFail();
+            $bookGroup = BookGroup::where('category_id', $category->id)
+                ->where('slug', $bookGroupSlug)
+                ->firstOrFail();
 
             // Get page and limit from request
             $page = $request->input('page', 1);
@@ -272,7 +277,7 @@ class WikiFeedController extends Controller
                 foreach ($feedQuestions as $question) {
                     $html .= view('wiki.partials.feed-item', ['question' => $question])->render();
                 }
-                
+
                 return response()->json([
                     'success' => true,
                     'html' => $html,

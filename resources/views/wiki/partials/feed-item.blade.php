@@ -9,7 +9,10 @@
             <p class="text-xs text-gray-500">
                 {{ $question->created_at->diffForHumans() }}
                 @if($question->category)
-                    · <a href="{{ route('wiki.search', ['category_id' => $question->category->id]) }}" class="text-blue-600 hover:underline">{{ $question->category->name }}</a>
+                    · <a href="{{ route('wiki.feed.category', $question->category->slug) }}"
+                    class="text-blue-600 hover:underline">
+                        {{ $question->category->name }}
+                    </a>
                 @endif
             </p>
         </div>
@@ -94,10 +97,10 @@
                     <div class="flex-grow-0 flex-shrink-0" style="width: calc(100% - 28px)">
                         <p class="font-semibold text-gray-800 text-sm mb-1">Câu trả lời từ AI</p>
                         <div x-data="{ aiExpanded: false }" class="relative">
-                            <div x-show="!aiExpanded" class="prose prose-sm max-w-none text-gray-700 line-clamp-3">
+                            <div x-show="!aiExpanded" class="tiny-mce-content prose prose-sm max-w-none text-gray-700 line-clamp-3">
                                 {!! $aiAnswer->content !!}
                             </div>
-                            <div x-show="aiExpanded" class="prose prose-sm max-w-none text-gray-700" style="display: none;">
+                            <div x-show="aiExpanded" class="tiny-mce-content prose prose-sm max-w-none text-gray-700" style="display: none;">
                                 {!! $aiAnswer->content !!}
                             </div>
                             <button x-show="!aiExpanded"

@@ -65,7 +65,7 @@
                         !!}
                     </h2>
                 @else
-                    <div id="post-content">{!! $category->description !!}</div>
+                    <div id="post-content" class="tiny-mce-content">{!! $category->description !!}</div>
                 @endif
             </div>
 

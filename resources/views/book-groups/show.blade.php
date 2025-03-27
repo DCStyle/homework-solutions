@@ -59,7 +59,7 @@
 
             <div class="mt-4 bg-white p-4 text-md text-green-700 border shadow-md">
                 @if($group->description && strlen(trim($group->description)) > 0)
-                    <div id="post-content">{!! $group->description !!}</div>
+                    <div id="post-content" class="tiny-mce-content">{!! $group->description !!}</div>
                 @else
                     <h2 class="text-xl">{!! "Dưới đây là toàn bộ bài giải <b class='text-black'>$group->name</b>.
                            Cách hướng dẫn, trình bày lời giải chi tiết, dễ hiểu.

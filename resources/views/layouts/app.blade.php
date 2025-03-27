@@ -44,7 +44,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     @include('layouts.externalStylesheets')
-    @vite('resources/css/app.css')
+    @vite(['resources/css/app.css', 'resources/css/tinymce-display.css'])
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">

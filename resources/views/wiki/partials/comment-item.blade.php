@@ -93,8 +93,8 @@
                     <form class="reply-form flex items-start space-x-2">
                         <div class="w-7 h-7 flex-shrink-0">
                             <img class="h-full w-full rounded-full object-cover"
-                                 src="{{ Auth::user()->avatar ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=6366f1&color=fff' }}"
-                                 alt="{{ Auth::user()->name }}">
+                                 src="{{ Auth::user()?->avatar ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()?->name ?? 'Unknown') . '&background=6366f1&color=fff' }}"
+                                 alt="{{ Auth::user()?->name ?? 'Ảnh đại diện' }}">
                         </div>
                         <div class="flex-1">
                             <textarea class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"

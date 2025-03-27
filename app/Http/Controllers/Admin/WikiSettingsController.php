@@ -254,6 +254,7 @@ class WikiSettingsController extends Controller
             $question = $this->questionRepository->updateStatus($question, 'published');
 
             // Generate AI answer if needed
+            $aiAnswer = true;
             if (!$question->answers()->where('is_ai', true)->exists()) {
                 try {
                     // Generate answer synchronously for immediate feedback
@@ -265,8 +266,6 @@ class WikiSettingsController extends Controller
                     $answer->content = $content;
                     $answer->is_ai = true;
                     $answer->save();
-
-                    $aiAnswer = true;
                 } catch (\Exception $answerError) {
                     Log::error('Error generating AI answer: ' . $answerError->getMessage(), [
                         'question_id' => $question->id,
@@ -275,8 +274,6 @@ class WikiSettingsController extends Controller
 
                     $aiAnswer = false;
                 }
-            } else {
-                $aiAnswer = true;
             }
 
             // Track status change for notifications/events
@@ -284,7 +281,7 @@ class WikiSettingsController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Question approved and published',
+                'message' => 'Câu hỏi đã được phê duyệt và xuất bản thành công.',
                 'ai_answer_status' => $aiAnswer ? 'success' : 'failed',
                 'question' => [
                     'id' => $question->id,
@@ -299,7 +296,7 @@ class WikiSettingsController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error approving question: ' . $e->getMessage()
+                'message' => 'Lỗi khi phê duyệt câu hỏi: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -328,7 +325,7 @@ class WikiSettingsController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Question rejected',
+                'message' => 'Câu hỏi đã bị từ chối thành công.',
                 'question' => [
                     'id' => $question->id,
                     'status' => $question->status
@@ -342,7 +339,7 @@ class WikiSettingsController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error rejecting question: ' . $e->getMessage()
+                'message' => 'Lỗi khi từ chối câu hỏi: ' . $e->getMessage()
             ], 500);
         }
     }

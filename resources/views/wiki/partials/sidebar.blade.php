@@ -17,8 +17,7 @@
                 <ul class="divide-y divide-gray-50">
                     @foreach($categories as $category)
                         <li>
-                            <a href="{{ route('wiki.search', ['category_id' => $category->id]) }}"
-                               class="flex items-center px-2 py-2.5 rounded-lg hover:bg-gray-50 group transition-colors">
+                            <a href="{{ route('wiki.feed.category', $category->slug) }}" class="flex items-center px-2 py-2.5 rounded-lg hover:bg-gray-50 group transition-colors">
                                 <span class="iconify text-gray-400 group-hover:text-indigo-500 mr-2.5 transition-colors" data-icon="mdi-folder-outline" data-width="18"></span>
                                 <span class="text-gray-700 group-hover:text-indigo-600 text-sm transition-colors">{{ $category->name }}</span>
                                 @if(isset($category->count) && $category->count > 0)
@@ -57,8 +56,7 @@
                 <ul class="divide-y divide-gray-50 max-h-[250px] overflow-y-auto">
                     @foreach($bookGroups as $bookGroup)
                         <li>
-                            <a href="{{ route('wiki.search', ['book_group_id' => $bookGroup->id]) }}"
-                               class="flex items-center px-2 py-2.5 rounded-lg hover:bg-gray-50 group transition-colors">
+                            <a href="{{ route('wiki.feed.bookGroup', [$bookGroup->category->slug, $bookGroup->slug]) }}" class="flex items-center px-2 py-2.5 rounded-lg hover:bg-gray-50 group transition-colors">
                                 <span class="iconify text-gray-400 group-hover:text-blue-500 mr-2.5 transition-colors" data-icon="mdi-book-outline" data-width="18"></span>
                                 <span class="text-gray-700 group-hover:text-blue-600 text-sm transition-colors">{{ $bookGroup->name }}</span>
                                 @if(isset($bookGroup->count) && $bookGroup->count > 0)

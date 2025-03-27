@@ -7,6 +7,7 @@ export default defineConfig({
             input: [
                 // CSS - main
                 'resources/css/app.css',
+                'resources/css/tinymce-display.css',
 
                 // CSS - admin - AI dashboard
                 'resources/css/admin/ai-dashboard/index_main.css',
@@ -39,6 +40,7 @@ export default defineConfig({
                 'resources/js/public/wiki/feed.js',
                 'resources/js/public/wiki/live_search.js',
                 'resources/js/public/wiki/wiki-utils.js',
+                'resources/js/public/wiki/question.js',
             ],
             refresh: true,
         }),

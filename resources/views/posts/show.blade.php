@@ -135,7 +135,7 @@
 
             <div class="mt-4 bg-white p-4 text-md text-green-700 border shadow-md">
                 @if($post->meta_description && strlen(trim($post->meta_description)) > 0)
-                    <div id="post-content">{!! $post->meta_description !!}</div>
+                    <div id="post-content" class="tiny-mce-content">{!! $post->meta_description !!}</div>
                 @else
                     <h2 class="text-xl">{!! "Hướng dẫn học bài: <b>$post->title - {$post->chapter->book->group->name} {$post->chapter->book->group->category->name}</b>.
                         Đây là sách giáo khoa nằm trong bộ sách <b>'{$post->chapter->book->name} {$post->chapter->book->group->category->name}'</b> được biên soạn theo chương trình đổi mới của Bộ giáo dục.
@@ -145,7 +145,7 @@
             </div>
 
             <!-- Main content -->
-            <div class="mt-4 text-lg" id="post-content">
+            <div class="mt-4 text-lg tiny-mce-content" id="post-content">
                 {!! $content !!}
             </div>
 
