@@ -78,7 +78,9 @@
                     <div class="px-4 py-5 sm:p-6">
                         <div id="answer-content" class="prose max-w-none tiny-mce-content">
                             @if(isset($aiAnswer))
-                                <div id="ai-content-container"></div>
+                                <div id="sanitized-ai-content" class="prose max-w-none" data-content="{{ htmlspecialchars($aiAnswer->content) }}">
+                                    {!! $aiAnswer->content !!}
+                                </div>
                             @else
                                 <p class="text-gray-500 italic">Chưa có câu trả lời AI cho câu hỏi này.</p>
                             @endif
@@ -201,16 +203,57 @@
 
 @push('scripts')
     @vite('resources/js/public/wiki/question.js')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js" integrity="sha512-H+vwHI+KwQl7usF9JYBfv8m+JRIp7gJZv5NQ2xCp5YpS2A/YpwGk3PAFKgvrXGiCMV9SL67rMn7cVJEyG1hSQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const container = document.getElementById('ai-content-container');
-            // Use DOMPurify as an additional safety net
-            const sanitizedContent = DOMPurify.sanitize('{!! addslashes($aiAnswer->content) !!}', {
-                USE_PROFILES: { html: true },
-                ADD_ATTR: ['target']
-            });
-            container.innerHTML = sanitizedContent;
-        });
+        // Only run this if there's a JavaScript error in the content
+        window.addEventListener('error', function(event) {
+            // Check if the error is related to our content
+            if (event.filename && event.filename.includes(window.location.host)) {
+                console.log('Detected JavaScript error, switching to protected view');
+
+                // Get the content from our data attribute
+                const container = document.getElementById('sanitized-ai-content');
+                const content = container.getAttribute('data-content');
+
+                // Clear the potentially problematic content
+                container.innerHTML = '';
+
+                // Create an iframe for isolation
+                const iframe = document.createElement('iframe');
+                iframe.style.width = '100%';
+                iframe.style.border = 'none';
+                iframe.style.overflow = 'hidden';
+                iframe.setAttribute('sandbox', 'allow-same-origin');
+                iframe.title = 'AI Answer Content';
+                container.appendChild(iframe);
+
+                // Set iframe content with safe HTML
+                const iframeContent = `
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <style>
+                                body { font-family: system-ui, sans-serif; line-height: 1.6; margin: 0; padding: 0; }
+                                img { max-width: 100%; }
+                                pre { background: #f5f5f5; padding: 1rem; overflow-x: auto; }
+                            </style>
+                        </head>
+                        <body>
+                            <div>${content}</div>
+                        </body>
+                        </html>
+                    `;
+
+                // Use a timeout to ensure this happens after the error
+                setTimeout(() => {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    iframeDoc.open();
+                    iframeDoc.write(iframeContent);
+                    iframeDoc.close();
+
+                    // Set iframe height
+                    iframe.style.height = (iframeDoc.body.scrollHeight + 20) + 'px';
+                }, 0);
+            }
+        }, true);
     </script>
 @endpush
