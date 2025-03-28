@@ -148,6 +148,26 @@
                               data-icon="mdi-cog"></span>
                     </a>
                 @endif
+
+                <!-- Login / Register menu -->
+                @if(auth()->check())
+                    <div class="inline-flex items-center space-x-2">
+                        <span class="text-sm">{{ auth()->user()->name }}</span>
+
+                        <form action="{{ route('logout') }}" method="POST" class="inline-flex items-center">
+                            @csrf
+                            <button type="submit" class="text-white">
+                            <span class="iconify text-2xl cursor-pointer"
+                                  data-icon="mdi-logout"></span>
+                            </button>
+                        </form>
+                    </div>
+                @else
+                    <a href="{{ route('login') }}" class="text-white">
+                        <span class="iconify text-2xl cursor-pointer"
+                              data-icon="mdi-login"></span>
+                    </a>
+                @endif
             </div>
         </div>
     </div>

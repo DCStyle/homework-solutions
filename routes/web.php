@@ -27,6 +27,29 @@ Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('ho
 
 Auth::routes();
 
+// Google login
+Route::get('login/google', [App\Http\Controllers\Auth\LoginController::class, 'redirectToGoogle'])
+    ->name('login.google');
+Route::get('login/google/callback', [App\Http\Controllers\Auth\LoginController::class, 'handleGoogleCallback']);
+
+// Facebook login
+Route::get('login/facebook', [App\Http\Controllers\Auth\LoginController::class, 'redirectToFacebook'])
+    ->name('login.facebook');
+Route::get('login/facebook/callback', [App\Http\Controllers\Auth\LoginController::class, 'handleFacebookCallback']);
+
+// Twitter login
+Route::get('login/twitter', [App\Http\Controllers\Auth\LoginController::class, 'redirectToTwitter'])
+    ->name('login.twitter');
+Route::get('login/twitter/callback', [App\Http\Controllers\Auth\LoginController::class, 'handleTwitterCallback']);
+
+// User type selection routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/user-type', [App\Http\Controllers\Auth\UserTypeController::class, 'showUserTypeForm'])
+        ->name('user-type.show');
+    Route::post('/user-type', [App\Http\Controllers\Auth\UserTypeController::class, 'updateUserType'])
+        ->name('user-type.update');
+});
+
 // Admin
 Route::prefix('admin')->middleware(['admin'])->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');

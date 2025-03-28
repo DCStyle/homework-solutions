@@ -53,6 +53,8 @@ class RegisterController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'user_type' => ['required', 'string', 'in:student,teacher'],
+            'terms' => ['required', 'accepted'],
         ]);
     }
 
@@ -68,6 +70,7 @@ class RegisterController extends Controller
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'user_type' => $data['user_type'],
         ]);
 
         // Assign the "Registered" role to the newly registered user
