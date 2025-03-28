@@ -100,7 +100,7 @@
                     </div>
                 </div>
 
-                {{-- Right Sidebar (Copied from wiki.index) --}}
+                {{-- Right Sidebar --}}
                 <div class="lg:col-span-3">
                     <div class="space-y-6 sticky top-8"> {{-- Added sticky top and spacing --}}
                         {{-- Latest Questions --}}
