@@ -10,6 +10,7 @@
         "cviebrock/eloquent-sluggable": "^10.0",
         "deepseek-php/deepseek-laravel": "^2.0",
         "doctrine/dbal": "^3.9",
+        "ezyang/htmlpurifier": "^4.18",
         "google-gemini-php/laravel": "^1.0",
         "grok-php/laravel": "^1.1",
         "guzzlehttp/guzzle": "^7.2",

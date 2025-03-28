@@ -95,6 +95,18 @@ class WikiController extends Controller
 
             $aiAnswer = $question->answers->where('is_ai', true)->first();
 
+            // Sanitize AI answer content if it exists
+            if (isset($aiAnswer) && $aiAnswer->content) {
+                // Make sure HTMLPurifier is installed: composer require ezyang/htmlpurifier
+                $config = \HTMLPurifier_Config::createDefault();
+                $config->set('HTML.Allowed', 'p,b,i,strong,em,u,a[href|title|target],ul,ol,li,br,span[style],h1,h2,h3,h4,h5,h6,blockquote,code,pre,table,tr,td,th,thead,tbody,img[src|alt|width|height],hr,div');
+                $config->set('CSS.AllowedProperties', 'font,font-size,font-weight,font-style,text-decoration,padding-left,color,background-color,text-align,margin,margin-left,margin-right');
+                $config->set('HTML.SafeIframe', true);
+                $config->set('URI.SafeIframeRegexp', '%^(https?:)?//(www\.youtube\.com/embed/|player\.vimeo\.com/video/)%');
+                $purifier = new \HTMLPurifier($config);
+                $aiAnswer->content = $purifier->purify($aiAnswer->content);
+            }
+
             // Increment view count
             $this->questionRepository->incrementViews($question);
 

@@ -78,7 +78,7 @@
                     <div class="px-4 py-5 sm:p-6">
                         <div id="answer-content" class="prose max-w-none tiny-mce-content">
                             @if(isset($aiAnswer))
-                                {!! $aiAnswer->content !!}
+                                <div id="ai-content-container"></div>
                             @else
                                 <p class="text-gray-500 italic">Chưa có câu trả lời AI cho câu hỏi này.</p>
                             @endif
@@ -201,4 +201,16 @@
 
 @push('scripts')
     @vite('resources/js/public/wiki/question.js')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js" integrity="sha512-H+vwHI+KwQl7usF9JYBfv8m+JRIp7gJZv5NQ2xCp5YpS2A/YpwGk3PAFKgvrXGiCMV9SL67rMn7cVJEyG1hSQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('ai-content-container');
+            // Use DOMPurify as an additional safety net
+            const sanitizedContent = DOMPurify.sanitize('{!! addslashes($aiAnswer->content) !!}', {
+                USE_PROFILES: { html: true },
+                ADD_ATTR: ['target']
+            });
+            container.innerHTML = sanitizedContent;
+        });
+    </script>
 @endpush
