@@ -97,14 +97,33 @@ class WikiController extends Controller
 
             // Sanitize AI answer content if it exists
             if (isset($aiAnswer) && $aiAnswer->content) {
-                // Make sure HTMLPurifier is installed: composer require ezyang/htmlpurifier
-                $config = \HTMLPurifier_Config::createDefault();
-                $config->set('HTML.Allowed', 'p,b,i,strong,em,u,a[href|title|target],ul,ol,li,br,span[style],h1,h2,h3,h4,h5,h6,blockquote,code,pre,table,tr,td,th,thead,tbody,img[src|alt|width|height],hr,div');
-                $config->set('CSS.AllowedProperties', 'font,font-size,font-weight,font-style,text-decoration,padding-left,color,background-color,text-align,margin,margin-left,margin-right');
-                $config->set('HTML.SafeIframe', true);
-                $config->set('URI.SafeIframeRegexp', '%^(https?:)?//(www\.youtube\.com/embed/|player\.vimeo\.com/video/)%');
-                $purifier = new \HTMLPurifier($config);
-                $aiAnswer->content = $purifier->purify($aiAnswer->content);
+                try {
+                    // Create a custom cache directory in Laravel's storage
+                    $cachePath = storage_path('app/htmlpurifier');
+                    if (!file_exists($cachePath)) {
+                        mkdir($cachePath, 0755, true);
+                    }
+
+                    $config = \HTMLPurifier_Config::createDefault();
+                    // Set custom cache path
+                    $config->set('Cache.SerializerPath', $cachePath);
+                    // Configure allowed elements
+                    $config->set('HTML.Allowed', 'p,b,i,strong,em,u,a[href|title|target],ul,ol,li,br,span[style],h1,h2,h3,h4,h5,h6,blockquote,code,pre,table,tr,td,th,thead,tbody,img[src|alt|width|height],hr,div');
+                    $config->set('CSS.AllowedProperties', 'font,font-size,font-weight,font-style,text-decoration,padding-left,color,background-color,text-align,margin,margin-left,margin-right');
+
+                    $purifier = new \HTMLPurifier($config);
+                    $aiAnswer->content = $purifier->purify($aiAnswer->content);
+                } catch (\Exception $e) {
+                    // Fallback to disable caching if there's still an issue
+                    Log::warning('HTMLPurifier cache error: ' . $e->getMessage() . '. Falling back to disabled cache.');
+
+                    $config = \HTMLPurifier_Config::createDefault();
+                    $config->set('Cache.DefinitionImpl', null); // Disable caching entirely
+                    $config->set('HTML.Allowed', 'p,b,i,strong,em,u,a[href|title|target],ul,ol,li,br,span[style],h1,h2,h3,h4,h5,h6,blockquote,code,pre');
+
+                    $purifier = new \HTMLPurifier($config);
+                    $aiAnswer->content = $purifier->purify($aiAnswer->content);
+                }
             }
 
             // Increment view count
