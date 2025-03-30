@@ -210,17 +210,6 @@
                         </div>
                         <svg class="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" viewBox="0 0 24 24"><path fill="currentColor" d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
                     </a>
-
-                    <a href="{{ route('admin.ai-dashboard.vision') }}" class="group flex items-center rounded-xl border border-stroke p-4 hover:border-primary hover:bg-primary/5 transition-all duration-200 transform hover:-translate-x-1">
-                        <div class="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 group-hover:bg-amber-200 transition-all duration-200">
-                            <span class="iconify text-2xl text-amber-600" data-icon="mdi-eye-outline"></span>
-                        </div>
-                        <div class="ml-4 flex-1">
-                            <h5 class="text-md font-medium text-black group-hover:text-primary transition-colors">Phân Tích Hình Ảnh</h5>
-                            <p class="text-sm text-gray-500">Phân tích hình ảnh bằng AI</p>
-                        </div>
-                        <svg class="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" viewBox="0 0 24 24"><path fill="currentColor" d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
-                    </a>
                 </div>
             </div>
         </div>

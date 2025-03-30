@@ -97,10 +97,6 @@ Route::prefix('admin')->middleware(['admin'])->group(function () {
         Route::post('/jobs/{jobId}/retry', [App\Http\Controllers\Admin\AIDashboardController::class, 'retryFailedItems'])->name('admin.ai-dashboard.retry-job');
         Route::post('/jobs/{jobId}/cancel', [App\Http\Controllers\Admin\AIDashboardController::class, 'cancelJob'])->name('admin.ai-dashboard.cancel-job');
 
-        // Vision Analysis (Optional)
-        Route::get('/vision', [App\Http\Controllers\Admin\VisionAnalysisController::class, 'index'])->name('admin.ai-dashboard.vision');
-        Route::post('/vision/analyze', [App\Http\Controllers\Admin\VisionAnalysisController::class, 'analyze'])->name('admin.ai-dashboard.vision.analyze');
-        Route::post('/vision/analyze-api', [App\Http\Controllers\Admin\VisionAnalysisController::class, 'analyzeApi'])->name('admin.ai-dashboard.vision.analyze-api');
     });
 
     // AI API Keys management
