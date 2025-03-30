@@ -54,16 +54,89 @@
             scrollbar-color: #cbd5e1 #f1f1f1;
         }
 
-        /* Transition for sidebar */
-        .sidebar-transition {
-            transition: transform 0.3s ease, width 0.3s ease;
+        /* Sidebar Styling for Collapsed/Expanded states */
+        .sidebar-container {
+            transition: width 0.3s ease, transform 0.3s ease;
+        }
+
+        .sidebar-container.collapsed .sidebar-text {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .sidebar-container:not(.collapsed) .sidebar-text {
+            display: inline;
+            opacity: 1;
+            transition: opacity 0.2s ease, display 0s linear 0.2s;
+        }
+
+        .sidebar-container.collapsed .sidebar-section {
+            text-align: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .sidebar-container.collapsed .sidebar-logo {
+            justify-content: center;
+        }
+
+        /* Ensure menu icons maintain position when sidebar is collapsed */
+        .menu-icon {
+            min-width: 1.25rem;
+        }
+
+        /* Main content adjustment */
+        @media (min-width: 1024px) {
+            .sidebar-container.collapsed + .flex-1 {
+                margin-left: 4rem; /* w-16 */
+                transition: margin-left 0.3s ease;
+            }
+
+            .sidebar-container:not(.collapsed) + .flex-1 {
+                margin-left: 18rem; /* w-64/w-72 */
+                transition: margin-left 0.3s ease;
+            }
+        }
+
+        /* Media queries for responsive design */
+        @media (max-width: 1023px) {
+            .sidebar-container.collapsed,
+            .sidebar-container:not(.collapsed) {
+                transform: translateX(-100%);
+            }
+
+            .sidebar-container.collapsed + .flex-1,
+            .sidebar-container:not(.collapsed) + .flex-1 {
+                margin-left: 0;
+            }
+
+            .sidebar-container.collapsed.translate-x-0,
+            .sidebar-container:not(.collapsed).translate-x-0 {
+                transform: translateX(0);
+            }
+        }
+
+        /* Tooltip styling */
+        #sidebar-tooltip {
+            position: fixed;
+            z-index: 9999;
+            padding: 0.25rem 0.5rem;
+            background-color: #1f2937;
+            color: white;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-in-out;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
     </style>
 </head>
 <body class="h-full bg-gray-50 antialiased text-slate-700">
 <div id="app" class="min-h-screen flex">
     <!-- Sidebar -->
-    <div class="sidebar-transition" id="sidebar-container">
+    <div id="sidebar-container">
         @include('admin_layouts.sidebar')
     </div>
 
@@ -124,29 +197,6 @@
                     </div>
                 @endif
 
-                <!-- Breadcrumbs (optional) -->
-                <div class="mb-4 hidden sm:block">
-                    <nav class="flex" aria-label="Breadcrumb">
-                        <ol class="flex items-center space-x-2">
-                            <li>
-                                <div class="flex items-center">
-                                    <a href="{{ route('admin.dashboard') }}" class="text-sm font-medium text-slate-500 hover:text-slate-700">
-                                        Dashboard
-                                    </a>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="flex items-center">
-                                    <svg class="h-4 w-4 flex-shrink-0 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                                    </svg>
-                                    <span class="ml-2 text-sm font-medium text-slate-700" id="current-page-title">Current Page</span>
-                                </div>
-                            </li>
-                        </ol>
-                    </nav>
-                </div>
-
                 @yield('content')
             </div>
         </main>
@@ -161,6 +211,9 @@
         </footer>
     </div>
 </div>
+
+<!-- Tooltip Container -->
+<div id="sidebar-tooltip" class="fixed z-50 px-2 py-1 text-sm text-white bg-gray-900 rounded-md shadow-lg opacity-0 pointer-events-none transition-opacity duration-200"></div>
 
 <!-- Include external scripts -->
 @include('layouts.externalScripts')

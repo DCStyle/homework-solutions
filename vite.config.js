@@ -25,6 +25,7 @@ export default defineConfig({
                 // JS - admin - AI dashboard
                 'resources/js/admin/ai-dashboard/index_main.js',
                 'resources/js/admin/ai-dashboard/playground_main.js',
+                'resources/js/admin/ai-dashboard/playground_generate.js',
                 'resources/js/admin/ai-dashboard/playground_prompt_selector.js',
                 'resources/js/admin/ai-dashboard/stats_main.js',
                 'resources/js/admin/ai-dashboard/jobs_main.js',

@@ -419,5 +419,6 @@
 
 @push('scripts')
     @vite('resources/js/admin/ai-dashboard/playground_main.js')
+    @vite('resources/js/admin/ai-dashboard/playground_generate.js')
     @vite('resources/js/admin/ai-dashboard/playground_prompt_selector.js')
 @endpush

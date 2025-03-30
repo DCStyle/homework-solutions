@@ -3,9 +3,9 @@
     <div class="px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 justify-between">
             <!-- Left side: Menu button and logo -->
-            <div class="flex items-center">
+            <div class="flex items-center lg:ml-16">
                 <!-- Mobile menu button -->
-                <button type="button" id="sidebar-toggle" class="inline-flex items-center justify-center rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 lg:hidden">
+                <button type="button" id="mobile-sidebar-toggle" class="inline-flex items-center justify-center rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 lg:hidden">
                     <span class="sr-only">Mở rộng</span>
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -120,8 +120,8 @@
             }
 
             // Toggle sidebar on mobile
-            $('#sidebar-toggle').on('click', function() {
-                const sidebarContainer = $('#sidebar-container');
+            $('#mobile-sidebar-toggle').on('click', function() {
+                const sidebarContainer = $('#sidebar');
 
                 if (sidebarContainer.hasClass('-translate-x-full')) {
                     sidebarContainer.removeClass('-translate-x-full').addClass('translate-x-0');

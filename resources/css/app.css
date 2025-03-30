@@ -1826,3 +1826,110 @@ ins {
 #post-content p {
     max-width: none;
 }
+
+/* Pagination Container */
+#pagination-container {
+    margin-top: 1.5rem;
+}
+
+/* Pagination List */
+.pagination {
+    display: flex;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+/* Pagination Items */
+.pagination .page-item {
+    margin: 0;
+}
+
+/* Pagination Links */
+.pagination .page-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    padding: 0.5rem 0.75rem;
+    color: #4b5563;
+    background-color: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Hover state */
+.pagination .page-item:not(.disabled):not(.active) .page-link:hover {
+    background-color: #f3f4f6;
+    color: #1f2937;
+    border-color: #d1d5db;
+    z-index: 2;
+}
+
+/* Active state */
+.pagination .page-item.active .page-link {
+    background-color: #4f46e5;
+    color: white;
+    border-color: #4f46e5;
+    z-index: 3;
+}
+
+/* Disabled state */
+.pagination .page-item.disabled .page-link {
+    color: #9ca3af;
+    background-color: #f9fafb;
+    border-color: #e5e7eb;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+/* Previous/Next icons */
+.pagination .page-item:first-child .page-link,
+.pagination .page-item:last-child .page-link {
+    font-weight: bold;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .pagination {
+        gap: 0.125rem;
+    }
+
+    .pagination .page-link {
+        min-width: 2rem;
+        height: 2rem;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    /* Hide some page numbers on small screens */
+    .pagination .page-item:not(:first-child):not(:last-child):not(.active):not(.disabled) {
+        display: none;
+    }
+
+    /* But always show adjacent pages to active one */
+    .pagination .page-item.active + .page-item,
+    .pagination .page-item.active + .page-item + .page-item,
+    .pagination .page-item:nth-last-child(3) {
+        display: block;
+    }
+}
+
+/* Focus styles for accessibility */
+.pagination .page-link:focus {
+    outline: 2px solid #818cf8;
+    outline-offset: 2px;
+}
+
+/* Optional hover effect */
+.pagination .page-link:active {
+    transform: scale(0.97);
+}

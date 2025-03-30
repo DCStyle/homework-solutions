@@ -43,9 +43,7 @@ class GrokAdapter implements AIServiceInterface
             $chatOptions = new ChatOptions(
                 model: $this->getGrokModel($model),
                 temperature: $options['temperature'] ?? 0.7,
-                stream: $options['stream'] ?? false,
-                maxTokens: $options['max_tokens'] ?? 1024,
-                topP: $options['top_p'] ?? 1
+                stream: $options['stream'] ?? false
             );
 
             // Handle streaming response
@@ -55,10 +53,10 @@ class GrokAdapter implements AIServiceInterface
 
             // Handle regular response
             $response = GrokAI::chat($messages, $chatOptions);
-            $content = is_object($response) && method_exists($response, 'content') 
-                ? $response->content() 
-                : (is_array($response) && isset($response['content']) 
-                    ? $response['content'] 
+            $content = is_object($response) && method_exists($response, 'content')
+                ? $response->content()
+                : (is_array($response) && isset($response['content'])
+                    ? $response['content']
                     : (string)$response);
 
             if (empty($content)) {
@@ -105,7 +103,7 @@ class GrokAdapter implements AIServiceInterface
 
             foreach ($response as $chunk) {
                 $chunkContent = $chunk->content() ?? '';
-                
+
                 // Handle stream callback if provided
                 if ($streamCallback && is_callable($streamCallback)) {
                     $streamCallback($chunkContent);
