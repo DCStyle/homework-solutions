@@ -1,16 +1,27 @@
 @extends('admin_layouts.admin')
 
 @section('content')
-    <div class="container px-6 mx-auto">
-        <!-- Page Header -->
-        <div class="mb-8">
-            <a href="{{ route('admin.users.index') }}" class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-900">
-                <span class="iconify mr-1" data-icon="mdi-arrow-left"></span>
-                Back to Users
-            </a>
-            <h1 class="mt-2 text-3xl font-bold text-gray-900">
-                {{ isset($user) ? 'Edit User: ' . $user->name : 'Create New User' }}
-            </h1>
+    <div class="container-fluid px-4 py-5">
+        <!-- Header Section with Gradient Background -->
+        <div class="relative overflow-hidden rounded-xl bg-primary p-6 shadow-lg mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 relative z-10">
+                <div>
+                    <h2 class="text-3xl font-bold text-white">
+                        {{ isset($user) ? 'Chỉnh Sửa: ' . $user->name : 'Tạo Người Dùng Mới' }}
+                    </h2>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <a href="{{ route('admin.users.index') }}" class="inline-flex items-center justify-center gap-2 rounded-lg bg-white/20 py-2.5 px-4 text-center font-medium text-white hover:bg-white/30 transition-all duration-200">
+                        <span class="iconify" data-icon="mdi-arrow-left"></span>
+                        Quay Lại Danh Sách
+                    </a>
+                </div>
+            </div>
+
+            <!-- Decorative Elements -->
+            <div class="absolute top-0 right-0 -mt-8 -mr-8 h-40 w-40 rounded-full bg-white/10"></div>
+            <div class="absolute bottom-0 left-0 -mb-12 -ml-12 h-64 w-64 rounded-full bg-white/5"></div>
         </div>
 
         @php
@@ -20,39 +31,6 @@
             $currentUserIsAdmin = isset($user) && $user->id === auth()->id() && $user->isAdmin();
         @endphp
 
-        <div class="mb-6">
-            <nav class="flex" aria-label="Progress">
-                <ol role="list" class="space-y-4 md:flex md:space-y-0">
-                    <li class="md:flex-1">
-                        <a href="#basic-info" class="group md:flex pl-4 py-2 flex items-center text-sm font-medium">
-                        <span class="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-indigo-600 text-indigo-600 step-active">
-                            <span class="iconify" data-icon="mdi-account"></span>
-                        </span>
-                            <span class="ml-3 text-sm font-medium text-indigo-600">Basic Information</span>
-                        </a>
-                    </li>
-
-                    <li class="md:flex-1">
-                        <a href="#roles-section" class="group md:flex pl-4 py-2 flex items-center text-sm font-medium">
-                        <span class="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-gray-300 text-gray-500 step">
-                            <span class="iconify" data-icon="mdi-shield"></span>
-                        </span>
-                            <span class="ml-3 text-sm font-medium text-gray-500">Roles & Permissions</span>
-                        </a>
-                    </li>
-
-                    <li class="md:flex-1">
-                        <a href="#avatar-section" class="group md:flex pl-4 py-2 flex items-center text-sm font-medium">
-                        <span class="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-gray-300 text-gray-500 step">
-                            <span class="iconify" data-icon="mdi-image-outline"></span>
-                        </span>
-                            <span class="ml-3 text-sm font-medium text-gray-500">Profile Picture</span>
-                        </a>
-                    </li>
-                </ol>
-            </nav>
-        </div>
-
         <form action="{{ route($routeName, $routeParams) }}" method="POST" enctype="multipart/form-data" class="space-y-8" id="user-form">
             @csrf
             @if(isset($user))
@@ -60,14 +38,14 @@
             @endif
 
             <!-- Basic Information Section -->
-            <div class="bg-white shadow overflow-hidden sm:rounded-lg" id="basic-info">
+            <div class="bg-white shadow overflow-hidden rounded-lg" id="basic-info">
                 <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
                     <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
-                        <span class="iconify text-indigo-500 mr-2" data-icon="mdi-account"></span>
-                        Basic Information
+                        <span class="iconify text-primary mr-2" data-icon="mdi-account"></span>
+                        Thông Tin Cơ Bản
                     </h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                        User details and contact information
+                        Thông tin chi tiết và liên hệ của người dùng
                     </p>
                 </div>
                 <div class="px-4 py-5 sm:p-6">
@@ -75,7 +53,7 @@
                         <!-- Name -->
                         <div class="sm:col-span-3">
                             <label for="name" class="block text-sm font-medium text-gray-700">
-                                Full Name <span class="text-red-500">*</span>
+                                Họ Tên <span class="text-red-500">*</span>
                             </label>
                             <div class="mt-1 relative rounded-md shadow-sm">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -86,8 +64,8 @@
                                     name="name"
                                     id="name"
                                     value="{{ old('name', isset($user) ? $user->name : '') }}"
-                                    class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md @error('name') border-red-300 text-red-900 placeholder-red-300 focus:outline-none focus:ring-red-500 focus:border-red-500 @enderror"
-                                    placeholder="John Doe"
+                                    class="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-gray-300 rounded-md @error('name') border-red-300 text-red-900 placeholder-red-300 focus:outline-none focus:ring-red-500 focus:border-red-500 @enderror"
+                                    placeholder="Nguyễn Văn A"
                                     required
                                 >
                                 @error('name')
@@ -104,7 +82,7 @@
                         <!-- Email -->
                         <div class="sm:col-span-3">
                             <label for="email" class="block text-sm font-medium text-gray-700">
-                                Email Address <span class="text-red-500">*</span>
+                                Địa Chỉ Email <span class="text-red-500">*</span>
                             </label>
                             <div class="mt-1 relative rounded-md shadow-sm">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -115,8 +93,8 @@
                                     name="email"
                                     id="email"
                                     value="{{ old('email', isset($user) ? $user->email : '') }}"
-                                    class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md @error('email') border-red-300 text-red-900 placeholder-red-300 focus:outline-none focus:ring-red-500 focus:border-red-500 @enderror"
-                                    placeholder="john.doe@example.com"
+                                    class="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-gray-300 rounded-md @error('email') border-red-300 text-red-900 placeholder-red-300 focus:outline-none focus:ring-red-500 focus:border-red-500 @enderror"
+                                    placeholder="email@example.com"
                                     required
                                 >
                                 @error('email')
@@ -133,7 +111,7 @@
                         <!-- Password -->
                         <div class="sm:col-span-3">
                             <label for="password" class="block text-sm font-medium text-gray-700">
-                                Password {{ isset($user) ? '(Leave blank to keep current)' : '<span class="text-red-500">*</span>' }}
+                                Mật Khẩu {{ isset($user) ? '(Để trống nếu không thay đổi)' : '<span class="text-red-500">*</span>' }}
                             </label>
                             <div class="mt-1 relative rounded-md shadow-sm">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -143,7 +121,7 @@
                                     type="password"
                                     name="password"
                                     id="password"
-                                    class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md @error('password') border-red-300 text-red-900 placeholder-red-300 focus:outline-none focus:ring-red-500 focus:border-red-500 @enderror"
+                                    class="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-gray-300 rounded-md @error('password') border-red-300 text-red-900 placeholder-red-300 focus:outline-none focus:ring-red-500 focus:border-red-500 @enderror"
                                     placeholder="••••••••"
                                     {{ isset($user) ? '' : 'required' }}
                                     autocomplete="new-password"
@@ -159,14 +137,14 @@
                             </div>
                             @error('password')
                             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @endif
+                            @enderror
                             <div class="mt-1 text-xs text-gray-500" id="password-strength"></div>
                         </div>
 
                         <!-- Confirm Password -->
                         <div class="sm:col-span-3">
                             <label for="password_confirmation" class="block text-sm font-medium text-gray-700">
-                                Confirm Password {{ isset($user) ? '' : '<span class="text-red-500">*</span>' }}
+                                Xác Nhận Mật Khẩu {{ isset($user) ? '' : '<span class="text-red-500">*</span>' }}
                             </label>
                             <div class="mt-1 relative rounded-md shadow-sm">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -176,7 +154,7 @@
                                     type="password"
                                     name="password_confirmation"
                                     id="password_confirmation"
-                                    class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
+                                    class="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
                                     placeholder="••••••••"
                                     {{ isset($user) ? '' : 'required' }}
                                     autocomplete="new-password"
@@ -187,26 +165,26 @@
                             </div>
                             <div id="password-match" class="mt-1 hidden text-xs text-green-500">
                                 <span class="iconify inline-block" data-icon="mdi-check-circle"></span>
-                                Passwords match
+                                Mật khẩu khớp
                             </div>
                         </div>
 
                         <!-- User Type -->
                         <div class="sm:col-span-3">
                             <label for="user_type" class="block text-sm font-medium text-gray-700">
-                                User Type <span class="text-red-500">*</span>
+                                Loại Người Dùng <span class="text-red-500">*</span>
                             </label>
                             <div class="mt-1 relative rounded-md shadow-sm">
                                 <select
                                     id="user_type"
                                     name="user_type"
-                                    class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none sm:text-sm rounded-md @error('user_type') border-red-300 text-red-900 focus:outline-none focus:ring-red-500 focus:border-red-500 @enderror"
+                                    class="focus:ring-primary focus:border-primary block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none sm:text-sm rounded-md @error('user_type') border-red-300 text-red-900 focus:outline-none focus:ring-red-500 focus:border-red-500 @enderror"
                                     required
                                 >
-                                    <option value="" disabled {{ old('user_type', isset($user) ? $user->user_type : '') ? '' : 'selected' }}>Select user type</option>
-                                    <option value="student" {{ old('user_type', isset($user) ? $user->user_type : '') == 'student' ? 'selected' : '' }}>Student</option>
-                                    <option value="teacher" {{ old('user_type', isset($user) ? $user->user_type : '') == 'teacher' ? 'selected' : '' }}>Teacher</option>
-                                    <option value="parent" {{ old('user_type', isset($user) ? $user->user_type : '') == 'parent' ? 'selected' : '' }}>Parent</option>
+                                    <option value="" disabled {{ old('user_type', isset($user) ? $user->user_type : '') ? '' : 'selected' }}>Chọn loại người dùng</option>
+                                    <option value="student" {{ old('user_type', isset($user) ? $user->user_type : '') == 'student' ? 'selected' : '' }}>Học Sinh</option>
+                                    <option value="teacher" {{ old('user_type', isset($user) ? $user->user_type : '') == 'teacher' ? 'selected' : '' }}>Giáo Viên</option>
+                                    <option value="parent" {{ old('user_type', isset($user) ? $user->user_type : '') == 'parent' ? 'selected' : '' }}>Phụ Huynh</option>
                                 </select>
                                 <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                                     <span class="iconify text-gray-400" data-icon="mdi-chevron-down"></span>
@@ -216,27 +194,19 @@
                             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
-
-                        <!-- Next Step Button -->
-                        <div class="sm:col-span-6 flex justify-end">
-                            <button type="button" class="next-step inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                Next: Roles & Permissions
-                                <span class="iconify ml-2" data-icon="mdi-arrow-right"></span>
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Roles & Permissions Section -->
-            <div class="bg-white shadow overflow-hidden sm:rounded-lg" id="roles-section">
+            <div class="bg-white shadow overflow-hidden rounded-lg" id="roles-section">
                 <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
                     <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
-                        <span class="iconify text-indigo-500 mr-2" data-icon="mdi-shield"></span>
-                        Roles & Permissions
+                        <span class="iconify text-primary mr-2" data-icon="mdi-shield"></span>
+                        Vai Trò & Quyền Hạn
                     </h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                        Assign roles and access levels
+                        Gán vai trò và cấp quyền truy cập
                     </p>
                 </div>
                 <div class="px-4 py-5 sm:p-6">
@@ -244,12 +214,12 @@
                         <!-- Roles Selection -->
                         <div class="sm:col-span-6">
                             <fieldset>
-                                <legend class="text-base font-medium text-gray-900">User Roles</legend>
-                                <p class="text-sm text-gray-500">Select roles to assign to this user</p>
+                                <legend class="text-base font-medium text-gray-900">Vai Trò Người Dùng</legend>
+                                <p class="text-sm text-gray-500">Chọn vai trò để gán cho người dùng này</p>
                                 <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     @foreach($roles as $role)
-                                        <div class="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-indigo-500 hover:bg-indigo-50 transition-colors
-                                        {{ (isset($user) && $user->roles->contains($role->id)) ? 'bg-indigo-50 border-indigo-500' : '' }}
+                                        <div class="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary-lighter transition-colors
+                                        {{ (isset($user) && $user->roles->contains($role->id)) ? 'bg-primary-lighter border-primary' : '' }}
                                         {{ ($currentUserIsAdmin && $role->id === $adminRole->id) ? 'opacity-75' : '' }}"
                                         >
                                             <div class="flex items-center h-5">
@@ -258,25 +228,25 @@
                                                     name="roles[]"
                                                     type="checkbox"
                                                     value="{{ $role->id }}"
-                                                    class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                                                    class="focus:ring-primary h-4 w-4 text-primary border-gray-300 rounded"
                                                     {{ (isset($user) && $user->roles->contains($role->id)) ? 'checked' : '' }}
                                                     {{ ($currentUserIsAdmin && $role->id === $adminRole->id) ? 'disabled' : '' }}
                                                 >
                                             </div>
                                             <div class="ml-3 flex-1">
                                                 <label for="role_{{ $role->id }}" class="font-medium text-gray-700">{{ $role->name }}</label>
-                                                <p class="text-sm text-gray-500">{{ $role->permissions->count() }} permissions included</p>
+                                                <p class="text-sm text-gray-500">{{ $role->permissions->count() }} quyền hạn bao gồm</p>
 
                                                 @if($role->permissions->count() > 0)
                                                     <div class="mt-2 flex flex-wrap gap-1">
                                                         @foreach($role->permissions->take(3) as $permission)
-                                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-light text-primary">
                                                             {{ $permission->name }}
                                                         </span>
                                                         @endforeach
                                                         @if($role->permissions->count() > 3)
                                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                                                            +{{ $role->permissions->count() - 3 }} more
+                                                            +{{ $role->permissions->count() - 3 }} quyền khác
                                                         </span>
                                                         @endif
                                                     </div>
@@ -294,10 +264,10 @@
                                                 <span class="iconify text-yellow-400" data-icon="mdi-alert-circle"></span>
                                             </div>
                                             <div class="ml-3">
-                                                <h3 class="text-sm font-medium text-yellow-800">Administrator Access Locked</h3>
+                                                <h3 class="text-sm font-medium text-yellow-800">Quyền quản trị viên bị khóa</h3>
                                                 <div class="mt-2 text-sm text-yellow-700">
                                                     <p>
-                                                        You cannot remove your own administrator privileges. This is for security reasons.
+                                                        Bạn không thể xóa quyền quản trị viên của chính mình. Điều này là vì lý do bảo mật.
                                                     </p>
                                                 </div>
                                             </div>
@@ -310,31 +280,19 @@
                             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
-
-                        <!-- Next/Prev Buttons -->
-                        <div class="sm:col-span-6 flex justify-between">
-                            <button type="button" class="prev-step inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                <span class="iconify mr-2" data-icon="mdi-arrow-left"></span>
-                                Back to Basic Info
-                            </button>
-                            <button type="button" class="next-step inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                Next: Profile Picture
-                                <span class="iconify ml-2" data-icon="mdi-arrow-right"></span>
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Avatar Section -->
-            <div class="bg-white shadow overflow-hidden sm:rounded-lg" id="avatar-section">
+            <div class="bg-white shadow overflow-hidden rounded-lg" id="avatar-section">
                 <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
                     <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
-                        <span class="iconify text-indigo-500 mr-2" data-icon="mdi-image-outline"></span>
-                        Profile Picture
+                        <span class="iconify text-primary mr-2" data-icon="mdi-image-outline"></span>
+                        Ảnh Đại Diện
                     </h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                        Upload a profile image for this user
+                        Tải lên ảnh đại diện cho người dùng này
                     </p>
                 </div>
                 <div class="px-4 py-5 sm:p-6">
@@ -342,7 +300,7 @@
                         <!-- Current Avatar Display -->
                         <div class="md:col-span-4 flex flex-col items-center justify-center">
                             @if(isset($user) && $user->avatar)
-                                <div class="relative mb-4 w-40 h-40 rounded-full overflow-hidden border-4 border-indigo-200 shadow-lg image-container">
+                                <div class="relative mb-4 w-40 h-40 rounded-full overflow-hidden border-4 border-primary-light shadow-lg image-container">
                                     <img
                                         src="{{ asset('storage/avatars/' . $user->avatar) }}"
                                         alt="{{ $user->name }}"
@@ -350,12 +308,12 @@
                                         id="current-avatar"
                                     />
                                 </div>
-                                <p class="text-sm text-gray-500">Current profile picture</p>
+                                <p class="text-sm text-gray-500">Ảnh đại diện hiện tại</p>
                             @else
-                                <div class="mb-4 flex w-40 h-40 rounded-full overflow-hidden border-4 border-indigo-200 shadow-lg bg-indigo-50 text-indigo-500 items-center justify-center image-container">
+                                <div class="mb-4 flex w-40 h-40 rounded-full overflow-hidden border-4 border-primary-light shadow-lg bg-primary-lighter text-primary items-center justify-center image-container">
                                     <span class="iconify text-6xl" data-icon="mdi-account"></span>
                                 </div>
-                                <p class="text-sm text-gray-500">No current profile picture</p>
+                                <p class="text-sm text-gray-500">Chưa có ảnh đại diện</p>
                             @endif
                         </div>
 
@@ -363,15 +321,15 @@
                         <div class="md:col-span-8">
                             <div class="space-y-6">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Profile Photo</label>
+                                    <label class="block text-sm font-medium text-gray-700">Ảnh Đại Diện</label>
                                     <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md" id="dropzone">
                                         <div class="space-y-1 text-center">
                                             <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                                                 <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg>
                                             <div class="flex text-sm text-gray-600">
-                                                <label for="avatar" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
-                                                    <span>Upload a file</span>
+                                                <label for="avatar" class="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary-dark focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary">
+                                                    <span>Tải tệp lên</span>
                                                     <input
                                                         id="avatar"
                                                         name="avatar"
@@ -380,10 +338,10 @@
                                                         accept="image/*"
                                                     >
                                                 </label>
-                                                <p class="pl-1">or drag and drop</p>
+                                                <p class="pl-1">hoặc kéo thả</p>
                                             </div>
                                             <p class="text-xs text-gray-500">
-                                                PNG, JPG, GIF up to 2MB
+                                                PNG, JPG, GIF tối đa 2MB
                                             </p>
                                         </div>
                                     </div>
@@ -396,20 +354,20 @@
                                 <div id="avatar-preview" class="hidden">
                                     <div class="bg-gray-50 p-4 rounded-lg">
                                         <div class="flex items-center">
-                                            <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-indigo-300 mr-4">
+                                            <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-primary-light mr-4">
                                                 <img id="preview-image" src="#" alt="Preview" class="h-full w-full object-cover">
                                             </div>
                                             <div class="flex-1">
-                                                <h4 class="font-medium text-gray-900">Preview</h4>
-                                                <p class="text-sm text-gray-500" id="file-details">Filename: <span id="filename"></span>, Size: <span id="filesize"></span></p>
+                                                <h4 class="font-medium text-gray-900">Xem trước</h4>
+                                                <p class="text-sm text-gray-500" id="file-details">Tên tệp: <span id="filename"></span>, Kích thước: <span id="filesize"></span></p>
                                                 <div class="mt-2 flex">
                                                     <button
                                                         type="button"
                                                         id="remove-avatar"
-                                                        class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                        class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-150"
                                                     >
                                                         <span class="iconify mr-1" data-icon="mdi-close"></span>
-                                                        Remove
+                                                        Xóa
                                                     </button>
                                                 </div>
                                             </div>
@@ -421,29 +379,22 @@
 
                         <!-- Submit Buttons -->
                         <div class="md:col-span-12 flex flex-wrap justify-between">
-                            <button
-                                type="button"
-                                class="prev-step inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                            >
-                                <span class="iconify mr-2" data-icon="mdi-arrow-left"></span>
-                                Back to Roles
-                            </button>
-
+                            <div></div>
                             <div class="flex flex-col md:flex-row md:space-x-3 mt-3 md:mt-0">
                                 <a
                                     href="{{ route('admin.users.index') }}"
-                                    class="inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    class="inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-150"
                                 >
                                     <span class="iconify mr-2" data-icon="mdi-cancel"></span>
-                                    Cancel
+                                    Hủy
                                 </a>
 
                                 <button
                                     type="submit"
-                                    class="mt-3 md:mt-0 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    class="mt-3 md:mt-0 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-150"
                                 >
                                     <span class="iconify mr-2" data-icon="{{ isset($user) ? 'mdi-content-save' : 'mdi-account-plus' }}"></span>
-                                    {{ isset($user) ? 'Update User' : 'Create User' }}
+                                    {{ isset($user) ? 'Cập Nhật' : 'Tạo Người Dùng' }}
                                 </button>
                             </div>
                         </div>
@@ -546,10 +497,10 @@
                 if (password && confirmPassword) {
                     if (password === confirmPassword) {
                         $('#password-match').removeClass('hidden text-red-500').addClass('text-green-500');
-                        $('#password-match').html('<span class="iconify inline-block" data-icon="mdi-check-circle"></span> Passwords match');
+                        $('#password-match').html('<span class="iconify inline-block" data-icon="mdi-check-circle"></span> Mật khẩu khớp');
                     } else {
                         $('#password-match').removeClass('hidden text-green-500').addClass('text-red-500');
-                        $('#password-match').html('<span class="iconify inline-block" data-icon="mdi-alert-circle"></span> Passwords do not match');
+                        $('#password-match').html('<span class="iconify inline-block" data-icon="mdi-alert-circle"></span> Mật khẩu không khớp');
                     }
                 } else {
                     $('#password-match').addClass('hidden');
@@ -579,82 +530,28 @@
                 switch(strength) {
                     case 0:
                     case 1:
-                        message = 'Very Weak';
+                        message = 'Rất yếu';
                         color = 'text-red-500';
                         break;
                     case 2:
-                        message = 'Weak';
+                        message = 'Yếu';
                         color = 'text-orange-500';
                         break;
                     case 3:
-                        message = 'Medium';
+                        message = 'Trung bình';
                         color = 'text-yellow-500';
                         break;
                     case 4:
-                        message = 'Strong';
+                        message = 'Mạnh';
                         color = 'text-green-500';
                         break;
                     case 5:
-                        message = 'Very Strong';
+                        message = 'Rất mạnh';
                         color = 'text-green-600';
                         break;
                 }
 
-                $('#password-strength').html(`<span class="iconify inline-block mr-1" data-icon="mdi-shield-check"></span> Password strength: <span class="${color}">${message}</span>`);
-            });
-
-            // Multi-step navigation
-            $('.next-step').on('click', function() {
-                const currentSection = $(this).closest('div[id$="-section"], div[id$="-info"]');
-                const currentSectionId = currentSection.attr('id');
-                let nextSectionId;
-
-                if (currentSectionId === 'basic-info') {
-                    nextSectionId = 'roles-section';
-                } else if (currentSectionId === 'roles-section') {
-                    nextSectionId = 'avatar-section';
-                }
-
-                if (nextSectionId) {
-                    $('html, body').animate({
-                        scrollTop: $('#' + nextSectionId).offset().top - 20
-                    }, 500);
-
-                    // Update step indicators
-                    $('.step').each(function(index) {
-                        if (index <= $('.step').index($('#' + nextSectionId).find('.step'))) {
-                            $(this).removeClass('border-gray-300 text-gray-500').addClass('border-indigo-600 text-indigo-600');
-                        }
-                    });
-                }
-            });
-
-            $('.prev-step').on('click', function() {
-                const currentSection = $(this).closest('div[id$="-section"]');
-                const currentSectionId = currentSection.attr('id');
-                let prevSectionId;
-
-                if (currentSectionId === 'roles-section') {
-                    prevSectionId = 'basic-info';
-                } else if (currentSectionId === 'avatar-section') {
-                    prevSectionId = 'roles-section';
-                }
-
-                if (prevSectionId) {
-                    $('html, body').animate({
-                        scrollTop: $('#' + prevSectionId).offset().top - 20
-                    }, 500);
-                }
-            });
-
-            // Navigation links in steps
-            $('nav a').on('click', function(e) {
-                e.preventDefault();
-                const targetId = $(this).attr('href');
-
-                $('html, body').animate({
-                    scrollTop: $(targetId).offset().top - 20
-                }, 500);
+                $('#password-strength').html(`<span class="iconify inline-block mr-1" data-icon="mdi-shield-check"></span> Độ mạnh mật khẩu: <span class="${color}">${message}</span>`);
             });
 
             // Avatar upload preview
@@ -719,12 +616,12 @@
             });
 
             function highlight() {
-                dropzone.classList.add('border-indigo-500', 'bg-indigo-50');
+                dropzone.classList.add('border-primary', 'bg-primary-lighter');
                 dropzone.classList.remove('border-gray-300');
             }
 
             function unhighlight() {
-                dropzone.classList.remove('border-indigo-500', 'bg-indigo-50');
+                dropzone.classList.remove('border-primary', 'bg-primary-lighter');
                 dropzone.classList.add('border-gray-300');
             }
 
@@ -745,8 +642,8 @@
 
             // Additional animations
             $('.image-container').hover(
-                function() { $(this).addClass('ring-4 ring-indigo-300 transform scale-105').css('transition', 'all 0.3s'); },
-                function() { $(this).removeClass('ring-4 ring-indigo-300 transform scale-105'); }
+                function() { $(this).addClass('ring-4 ring-primary-light transform scale-105').css('transition', 'all 0.3s'); },
+                function() { $(this).removeClass('ring-4 ring-primary-light transform scale-105'); }
             );
         });
     </script>

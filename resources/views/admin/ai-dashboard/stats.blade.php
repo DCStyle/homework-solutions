@@ -253,19 +253,24 @@
         </div>
     </div>
 
-    <!-- Bulk Generate Modal - Updated design -->
-    <div class="modal fade" id="bulk-generate-modal" tabindex="-1" aria-labelledby="bulkGenerateModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-gradient-to-r from-indigo-50 to-indigo-100 border-b">
-                    <h5 class="modal-title text-indigo-800 font-medium" id="bulkGenerateModalLabel">Tạo Nội Dung Hàng Loạt</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+    <!-- Custom Modal - Bulk Generate Modal - Updated design -->
+    <div id="bulk-generate-modal" class="modal fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="bulkGenerateModalLabel" aria-hidden="true" data-toggle="modal">
+        <div class="modal-backdrop fixed inset-0 bg-black bg-opacity-50"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="modal-content bg-white rounded-lg shadow-xl max-w-4xl w-full transform transition-all opacity-0 scale-95">
+                <div class="modal-header bg-gradient-to-r from-indigo-50 to-indigo-100 border-b p-4 flex justify-between items-center rounded-t-lg">
+                    <h5 class="modal-title text-indigo-800 font-medium text-lg" id="bulkGenerateModalLabel">Tạo Nội Dung Hàng Loạt</h5>
+                    <button type="button" class="text-gray-500 hover:text-gray-700" data-dismiss="modal" aria-label="Đóng">
+                        <span class="iconify text-xl" data-icon="mdi-close"></span>
+                    </button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-6">
                     <div class="mb-4">
-                        <div class="alert alert-warning d-flex align-items-center rounded-lg" role="alert">
-                            <span class="iconify me-2" data-icon="mdi-alert"></span>
-                            <p id="bulk-selected-count">Chưa chọn mục nào</p>
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg" role="alert">
+                            <div class="flex items-center">
+                                <span class="iconify text-yellow-500 mr-2" data-icon="mdi-alert"></span>
+                                <p id="bulk-selected-count" class="text-yellow-700">Chưa chọn mục nào</p>
+                            </div>
                         </div>
                     </div>
 
@@ -299,7 +304,7 @@
                     </div>
 
                     <!-- Saved Prompts Dropdown (Hidden by default) -->
-                    <div id="bulk-saved-prompts-container" class="mb-4 d-none">
+                    <div id="bulk-saved-prompts-container" class="mb-4 hidden">
                         <label for="bulk-saved-prompt" class="mb-2.5 block font-medium text-gray-700">Chọn Prompt Đã Lưu</label>
                         <div class="relative bg-white">
                             <select id="bulk-saved-prompt" class="form-select w-full rounded-lg border border-gray-300 py-3 px-5 outline-none transition focus:border-indigo-600">
@@ -314,13 +319,13 @@
                     </div>
 
                     <!-- System Message for DeepSeek (Hidden by default) -->
-                    <div id="bulk-system-message-container" class="mb-4 d-none">
+                    <div id="bulk-system-message-container" class="mb-4 hidden">
                         <label for="bulk-system-message" class="mb-2.5 block font-medium text-gray-700">Thông Điệp Hệ Thống (cho DeepSeek)</label>
                         <textarea id="bulk-system-message" rows="3" class="form-control w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-indigo-600"></textarea>
                     </div>
 
                     <!-- Custom Prompt Editor (Hidden by default) -->
-                    <div id="bulk-prompt-editor" class="mb-4 d-none">
+                    <div id="bulk-prompt-editor" class="mb-4 hidden">
                         <label for="bulk-prompt" class="mb-2.5 block font-medium text-gray-700">Prompt Tùy Chỉnh</label>
                         <textarea id="bulk-prompt" rows="6" class="form-control w-full rounded-lg border border-gray-300 bg-transparent py-3 px-5 font-medium outline-none transition focus:border-indigo-600"></textarea>
                         <div class="mt-2 text-xs text-gray-500">
@@ -333,7 +338,7 @@
                         <div>
                             <label for="bulk-temperature" class="mb-2.5 block font-medium text-gray-700">Nhiệt Độ</label>
                             <div class="flex items-center gap-3">
-                                <input type="range" id="bulk-temperature" min="0" max="1" step="0.1" value="0.7" class="form-range w-full cursor-pointer h-6">
+                                <input type="range" id="bulk-temperature" min="0" max="1" step="0.1" value="0.7" class="form-range w-full cursor-pointer h-6" data-custom-range>
                                 <span id="bulk-temperature-value" class="w-10 text-right text-sm font-medium">0.7</span>
                             </div>
                         </div>
@@ -342,40 +347,25 @@
                         </div>
                     </div>
 
-{{--                    <div class="mb-4">--}}
-{{--                        <label class="mb-2.5 block font-medium text-gray-700">HTML cho Mô Tả Meta</label>--}}
-{{--                        <div class="flex items-center space-x-2">--}}
-{{--                            <input--}}
-{{--                                type="checkbox"--}}
-{{--                                id="bulk-use-html-meta"--}}
-{{--                                class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"--}}
-{{--                            >--}}
-{{--                            <label for="bulk-use-html-meta" class="text-sm text-gray-600">--}}
-{{--                                Sử dụng định dạng HTML cho mô tả meta--}}
-{{--                            </label>--}}
-{{--                        </div>--}}
-{{--                        <p class="mt-1 text-xs text-gray-500">Phù hợp cho TinyMCE và hiển thị trực tiếp trên frontend</p>--}}
-{{--                    </div>--}}
-
                     <!-- Progress (Hidden initially) -->
-                    <div id="bulk-progress-container" class="mb-4 d-none">
+                    <div id="bulk-progress-container" class="mb-4 hidden">
                         <div class="mb-2 flex items-center justify-between">
                             <h5 class="text-lg font-semibold text-gray-800">Tiến Trình</h5>
                             <div id="bulk-progress-percentage" class="text-sm font-medium">0%</div>
                         </div>
-                        <div class="progress">
-                            <div id="bulk-progress-bar" class="progress-bar bg-indigo-600" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="bg-gray-200 rounded-full h-2.5 mb-2">
+                            <div id="bulk-progress-bar" class="bg-indigo-600 h-2.5 rounded-full" style="width: 0%" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                         <div class="mt-2 text-center text-sm text-gray-500">
                             <span id="bulk-processed">0</span> / <span id="bulk-total">0</span> mục đã xử lý
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-t">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                <div class="modal-footer bg-gray-50 border-t p-4 flex justify-end space-x-2 rounded-b-lg">
+                    <button type="button" class="px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" data-dismiss="modal">
                         Hủy
                     </button>
-                    <button type="button" id="bulk-generate-start-btn" class="btn btn-indigo bg-indigo-600 text-white hover:bg-indigo-700">
+                    <button type="button" id="bulk-generate-start-btn" class="px-4 py-2 rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Bắt Đầu Tạo
                     </button>
                 </div>

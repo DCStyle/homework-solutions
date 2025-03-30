@@ -136,9 +136,7 @@
                                             <option value="">-- Chọn nội dung --</option>
                                         </select>
                                         <div class="absolute inset-y-0 right-2 flex items-center">
-                                            <div id="content-selector-spinner" class="spinner-border spinner-border-sm text-indigo-500" role="status" style="display:none">
-                                                <span class="visually-hidden">Loading...</span>
-                                            </div>
+                                            <div id="content-selector-spinner" class="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" style="display:none"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -238,6 +236,9 @@
                                     <div class="relative z-20 bg-white">
                                         <select data-plugin-select2 id="provider" class="relative z-20 w-full appearance-none rounded-lg border border-stroke bg-transparent py-2 px-4 outline-none transition focus:border-primary active:border-primary">
                                             <option value="">Chọn nhà cung cấp AI</option>
+                                            @foreach($aiProviders as $key => $value)
+                                                <option value="{{ $key }}">{{ $value }}</option>
+                                            @endforeach
                                         </select>
                                         <span class="absolute top-1/2 right-4 z-10 -translate-y-1/2">
                                             <span class="iconify" data-icon="mdi-chevron-down"></span>
@@ -285,22 +286,6 @@
                                     <p class="text-sm text-gray-500">Luôn sử dụng giới hạn token tối đa cho mô hình</p>
                                 </div>
                             </div>
-
-                            <!-- HTML Option -->
-                            <!-- <div>
-                                <label for="use-html-meta" class="mb-2.5 block text-sm font-medium text-black">HTML cho Mô Tả Meta</label>
-                                <div class="flex items-center space-x-2">
-                                    <input
-                                        type="checkbox"
-                                        id="use-html-meta"
-                                        class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                    >
-                                    <label for="use-html-meta" class="text-sm text-gray-600">
-                                        Sử dụng định dạng HTML cho mô tả meta
-                                    </label>
-                                </div>
-                                <p class="mt-1 text-xs text-gray-500">Phù hợp cho TinyMCE và hiển thị trực tiếp trên frontend</p>
-                            </div> -->
 
                             <!-- Prompt Editor -->
                             <div class="mb-4">
@@ -384,15 +369,16 @@
         </div>
     </div>
 
-    <!-- Prompt saving modal -->
-    <div class="fixed top-0 left-0 z-50 flex h-full min-h-screen w-full items-center justify-center bg-black/50 px-4 py-5 hidden" id="save-prompt-modal">
-        <div class="w-full max-w-xl rounded-lg bg-white shadow-xl">
+    <!-- Prompt saving modal - Custom implementation -->
+    <div id="save-prompt-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="modal-backdrop fixed inset-0 bg-black bg-opacity-50"></div>
+        <div class="modal-content transform transition-all opacity-0 scale-95 w-full max-w-xl rounded-lg bg-white shadow-xl z-50">
             <div class="border-b border-stroke px-6 py-4">
                 <div class="flex items-center justify-between">
                     <h3 class="font-medium text-black">
                         Lưu Prompt
                     </h3>
-                    <button type="button" class="close-modal text-gray-500 hover:text-black">
+                    <button type="button" class="close-modal text-gray-500 hover:text-black focus:outline-none">
                         <span class="iconify" data-icon="mdi-close"></span>
                     </button>
                 </div>

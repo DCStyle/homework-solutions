@@ -12,6 +12,10 @@
     }
 }
 
+.iconify {
+    display: inline-block;
+}
+
 a {
     color: inherit;
 }

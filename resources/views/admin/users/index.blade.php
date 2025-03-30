@@ -1,65 +1,71 @@
 @extends('admin_layouts.admin')
 
 @section('content')
-    <div class="container px-6 mx-auto">
+    <div class="container-fluid px-4 py-5">
         <!-- Page Header -->
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between py-4 mb-6">
-            <div>
-                <h1 class="text-3xl font-semibold text-gray-800">User Management</h1>
-                <p class="mt-1 text-sm text-gray-500">Manage your users, roles, and permissions</p>
+        <div class="relative overflow-hidden rounded-xl bg-primary p-6 shadow-lg mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 relative z-10">
+                <div>
+                    <h1 class="text-3xl font-semibold text-white">Quản Lý Người Dùng</h1>
+                    <p class="mt-1 text-sm text-white/90">Quản lý người dùng, vai trò và quyền hạn</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <a href="{{ route('admin.users.create') }}" class="inline-flex items-center justify-center gap-2 rounded-lg bg-white py-2.5 px-4 text-center font-medium text-primary hover:bg-gray-100 transition-all duration-200 shadow-sm">
+                        <span class="iconify mr-2" data-icon="mdi-account-plus"></span>
+                        Thêm Người Dùng
+                    </a>
+                </div>
             </div>
-            <div class="mt-4 md:mt-0">
-                <a href="{{ route('admin.users.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:border-indigo-800 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150 shadow-lg">
-                    <span class="iconify mr-2 text-lg" data-icon="mdi-account-plus"></span>
-                    Add New User
-                </a>
-            </div>
+
+            <!-- Decorative Elements -->
+            <div class="absolute top-0 right-0 -mt-8 -mr-8 h-40 w-40 rounded-full bg-white/10"></div>
+            <div class="absolute bottom-0 left-0 -mb-12 -ml-12 h-64 w-64 rounded-full bg-white/5"></div>
         </div>
 
         <!-- Stats Overview -->
         <div class="grid grid-cols-1 gap-5 mt-6 sm:grid-cols-2 lg:grid-cols-4">
             <!-- Total Users -->
-            <div class="p-4 transition-shadow bg-white rounded-lg shadow-sm hover:shadow-lg">
-                <div class="flex items-start justify-between">
-                    <div class="p-3 rounded-full bg-indigo-50 text-indigo-500">
+            <div class="p-5 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between">
+                    <div class="p-3 rounded-full bg-primary-light text-primary">
                         <span class="iconify text-2xl" data-icon="mdi-account-group"></span>
                     </div>
                     <div class="flex flex-col items-end">
                         <span class="text-2xl font-bold text-gray-800">{{ $users->total() }}</span>
-                        <span class="text-sm text-gray-500">Total Users</span>
+                        <span class="text-sm text-gray-500">Tổng Người Dùng</span>
                     </div>
                 </div>
             </div>
 
             <!-- Admin Users -->
-            <div class="p-4 transition-shadow bg-white rounded-lg shadow-sm hover:shadow-lg">
-                <div class="flex items-start justify-between">
+            <div class="p-5 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between">
                     <div class="p-3 rounded-full bg-green-50 text-green-500">
                         <span class="iconify text-2xl" data-icon="mdi-shield-account"></span>
                     </div>
                     <div class="flex flex-col items-end">
                         <span class="text-2xl font-bold text-gray-800">{{ $users->filter(function($user) { return $user->isAdmin(); })->count() }}</span>
-                        <span class="text-sm text-gray-500">Administrators</span>
+                        <span class="text-sm text-gray-500">Quản Trị Viên</span>
                     </div>
                 </div>
             </div>
 
             <!-- New Users -->
-            <div class="p-4 transition-shadow bg-white rounded-lg shadow-sm hover:shadow-lg">
-                <div class="flex items-start justify-between">
+            <div class="p-5 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between">
                     <div class="p-3 rounded-full bg-blue-50 text-blue-500">
                         <span class="iconify text-2xl" data-icon="mdi-account-plus"></span>
                     </div>
                     <div class="flex flex-col items-end">
                         <span class="text-2xl font-bold text-gray-800">{{ $users->where('created_at', '>=', now()->subDays(30))->count() }}</span>
-                        <span class="text-sm text-gray-500">New This Month</span>
+                        <span class="text-sm text-gray-500">Mới Trong Tháng</span>
                     </div>
                 </div>
             </div>
 
             <!-- User Types Distribution -->
-            <div class="p-4 transition-shadow bg-white rounded-lg shadow-sm hover:shadow-lg">
-                <div class="flex items-start justify-between">
+            <div class="p-5 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between">
                     <div class="p-3 rounded-full bg-purple-50 text-purple-500">
                         <span class="iconify text-2xl" data-icon="mdi-account-details"></span>
                     </div>
@@ -67,18 +73,18 @@
                         <div class="flex items-center space-x-2">
                             <div class="flex items-center space-x-1">
                                 <div class="w-3 h-3 rounded-full bg-green-400"></div>
-                                <span class="text-xs text-gray-500">Student</span>
+                                <span class="text-xs text-gray-500">Học Sinh</span>
                             </div>
                             <div class="flex items-center space-x-1">
                                 <div class="w-3 h-3 rounded-full bg-blue-400"></div>
-                                <span class="text-xs text-gray-500">Teacher</span>
+                                <span class="text-xs text-gray-500">Giáo Viên</span>
                             </div>
                             <div class="flex items-center space-x-1">
                                 <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
-                                <span class="text-xs text-gray-500">Parent</span>
+                                <span class="text-xs text-gray-500">Phụ Huynh</span>
                             </div>
                         </div>
-                        <span class="text-sm text-gray-500 mt-1">User Types</span>
+                        <span class="text-sm text-gray-500 mt-1">Loại Người Dùng</span>
                     </div>
                 </div>
             </div>
@@ -89,7 +95,7 @@
             <div class="p-6 bg-white rounded-lg shadow-sm">
                 <form method="GET" action="{{ route('admin.users.index') }}" class="grid gap-4 md:grid-cols-4">
                     <div>
-                        <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                        <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Tìm kiếm</label>
                         <div class="relative rounded-md shadow-sm">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <span class="iconify text-gray-400" data-icon="mdi-magnify"></span>
@@ -98,21 +104,21 @@
                                 type="text"
                                 id="search"
                                 name="search"
-                                class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
-                                placeholder="Search users..."
+                                class="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
+                                placeholder="Tìm người dùng..."
                                 value="{{ request('search') }}"
                             >
                         </div>
                     </div>
 
                     <div>
-                        <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                        <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Vai trò</label>
                         <select
                             id="role"
                             name="role"
-                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
                         >
-                            <option value="">All Roles</option>
+                            <option value="">Tất cả vai trò</option>
                             @foreach($roles as $role)
                                 <option value="{{ $role->id }}" {{ request('role') == $role->id ? 'selected' : '' }}>{{ $role->name }}</option>
                             @endforeach
@@ -120,23 +126,23 @@
                     </div>
 
                     <div>
-                        <label for="user_type" class="block text-sm font-medium text-gray-700 mb-1">User Type</label>
+                        <label for="user_type" class="block text-sm font-medium text-gray-700 mb-1">Loại người dùng</label>
                         <select
                             id="user_type"
                             name="user_type"
-                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
                         >
-                            <option value="">All Types</option>
-                            <option value="student" {{ request('user_type') == 'student' ? 'selected' : '' }}>Student</option>
-                            <option value="teacher" {{ request('user_type') == 'teacher' ? 'selected' : '' }}>Teacher</option>
-                            <option value="parent" {{ request('user_type') == 'parent' ? 'selected' : '' }}>Parent</option>
+                            <option value="">Tất cả loại</option>
+                            <option value="student" {{ request('user_type') == 'student' ? 'selected' : '' }}>Học Sinh</option>
+                            <option value="teacher" {{ request('user_type') == 'teacher' ? 'selected' : '' }}>Giáo Viên</option>
+                            <option value="parent" {{ request('user_type') == 'parent' ? 'selected' : '' }}>Phụ Huynh</option>
                         </select>
                     </div>
 
                     <div class="self-end">
-                        <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-150">
                             <span class="iconify mr-2" data-icon="mdi-filter-variant"></span>
-                            Apply Filters
+                            Áp Dụng Bộ Lọc
                         </button>
                     </div>
                 </form>
@@ -148,9 +154,9 @@
             <!-- Table Header -->
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                 <div class="flex flex-col md:flex-row justify-between">
-                    <h3 class="text-lg font-medium text-gray-900">Users ({{ $users->total() }})</h3>
+                    <h3 class="text-lg font-medium text-gray-900">Người Dùng ({{ $users->total() }})</h3>
                     <div class="mt-2 md:mt-0 flex items-center text-sm text-gray-500">
-                        <span>Showing {{ $users->firstItem() ?? 0 }} - {{ $users->lastItem() ?? 0 }} of {{ $users->total() }} users</span>
+                        <span>Hiển thị {{ $users->firstItem() ?? 0 }} - {{ $users->lastItem() ?? 0 }} của {{ $users->total() }} người dùng</span>
                     </div>
                 </div>
             </div>
@@ -167,7 +173,7 @@
                             </a>
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            User
+                            Người Dùng
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <a href="{{ route('admin.users.index', ['sort' => 'email', 'direction' => request('sort') == 'email' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->except(['sort', 'direction'])) }}" class="flex items-center group">
@@ -176,22 +182,22 @@
                             </a>
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Roles & Type
+                            Vai Trò & Loại
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <a href="{{ route('admin.users.index', ['sort' => 'created_at', 'direction' => request('sort') == 'created_at' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->except(['sort', 'direction'])) }}" class="flex items-center group">
-                                <span>Joined</span>
+                                <span>Tham Gia</span>
                                 <span class="iconify ml-1 text-gray-400 opacity-0 group-hover:opacity-100 {{ request('sort') == 'created_at' || !request('sort') ? 'opacity-100' : '' }}" data-icon="{{ (request('direction') == 'asc' || !request('direction')) ? 'mdi-arrow-up' : 'mdi-arrow-down' }}"></span>
                             </a>
                         </th>
                         <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
+                            Thao Tác
                         </th>
                     </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($users as $user)
-                        <tr class="hover:bg-gray-50 transition">
+                        <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 #{{ $user->id }}
                             </td>
@@ -201,42 +207,42 @@
                                         @if($user->avatar)
                                             <img class="h-10 w-10 rounded-full object-cover" src="{{ asset('storage/avatars/' . $user->avatar) }}" alt="{{ $user->name }}">
                                         @else
-                                            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
+                                            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center text-white font-bold text-lg">
                                                 {{ strtoupper(substr($user->name, 0, 1)) }}
                                             </div>
                                         @endif
                                     </div>
                                     <div class="ml-4">
-                                        <a href="{{ route('admin.users.show', $user) }}" class="text-sm font-medium text-gray-900 hover:text-indigo-600">{{ $user->name }}</a>
+                                        <a href="{{ route('admin.users.show', $user) }}" class="text-sm font-medium text-gray-900 hover:text-primary">{{ $user->name }}</a>
                                         @if($user->email_verified_at)
                                             <div class="text-xs text-green-500 flex items-center mt-0.5">
                                                 <span class="iconify mr-1" data-icon="mdi-check-circle"></span>
-                                                Verified
+                                                Đã xác thực
                                             </div>
                                         @else
                                             <div class="text-xs text-amber-500 flex items-center mt-0.5">
                                                 <span class="iconify mr-1" data-icon="mdi-alert-circle-outline"></span>
-                                                Unverified
+                                                Chưa xác thực
                                             </div>
                                         @endif
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <a href="mailto:{{ $user->email }}" class="hover:text-indigo-600">{{ $user->email }}</a>
+                                <a href="mailto:{{ $user->email }}" class="hover:text-primary">{{ $user->email }}</a>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="space-y-1">
                                     <div class="flex flex-wrap gap-1">
                                         @foreach($user->roles as $role)
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-light text-primary">
                                             {{ $role->name }}
                                         </span>
                                         @endforeach
 
                                         @if($user->roles->isEmpty())
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                            Basic User
+                                            Người Dùng Cơ Bản
                                         </span>
                                         @endif
                                     </div>
@@ -250,7 +256,9 @@
                                         {{ $user->user_type == 'teacher' ? 'bg-blue-400' : '' }}
                                         {{ $user->user_type == 'parent' ? 'bg-amber-400' : '' }}
                                     "></span>
-                                    {{ ucfirst($user->user_type) }}
+                                    {{ $user->user_type == 'student' ? 'Học Sinh' : '' }}
+                                        {{ $user->user_type == 'teacher' ? 'Giáo Viên' : '' }}
+                                        {{ $user->user_type == 'parent' ? 'Phụ Huynh' : '' }}
                                 </span>
                                 </div>
 
@@ -262,10 +270,10 @@
                                             <button
                                                 type="submit"
                                                 class="inline-flex items-center px-2 py-1 text-xs font-medium rounded {{ $user->isAdmin() ? 'text-rose-700 hover:bg-rose-100' : 'text-emerald-700 hover:bg-emerald-100' }} transition-colors"
-                                                title="{{ $user->isAdmin() ? 'Remove admin rights' : 'Grant admin rights' }}"
+                                                title="{{ $user->isAdmin() ? 'Hủy quyền quản trị' : 'Cấp quyền quản trị' }}"
                                             >
                                                 <span class="iconify mr-1" data-icon="{{ $user->isAdmin() ? 'mdi-shield-off' : 'mdi-shield' }}"></span>
-                                                {{ $user->isAdmin() ? 'Remove Admin' : 'Make Admin' }}
+                                                {{ $user->isAdmin() ? 'Hủy Quyền Admin' : 'Cấp Quyền Admin' }}
                                             </button>
                                         </form>
                                     @endif
@@ -273,25 +281,25 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 <div class="flex flex-col">
-                                    <span>{{ $user->created_at->format('M d, Y') }}</span>
+                                    <span>{{ $user->created_at->format('d/m/Y') }}</span>
                                     <span class="text-xs text-gray-400">{{ $user->created_at->diffForHumans() }}</span>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div class="flex items-center justify-end space-x-3">
-                                    <a href="{{ route('admin.users.show', $user) }}" class="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-transform" title="View details">
+                                    <a href="{{ route('admin.users.show', $user) }}" class="text-primary hover:text-primary-dark transition-colors" title="Xem chi tiết">
                                         <span class="iconify text-xl" data-icon="mdi-eye"></span>
                                     </a>
-                                    <a href="{{ route('admin.users.edit', $user) }}" class="text-emerald-600 hover:text-emerald-900 transform hover:scale-110 transition-transform" title="Edit user">
+                                    <a href="{{ route('admin.users.edit', $user) }}" class="text-emerald-600 hover:text-emerald-700 transition-colors" title="Chỉnh sửa">
                                         <span class="iconify text-xl" data-icon="mdi-pencil"></span>
                                     </a>
                                     @if(auth()->id() !== $user->id)
                                         <button
                                             type="button"
-                                            class="text-rose-600 hover:text-rose-900 transform hover:scale-110 transition-transform delete-btn"
+                                            class="text-rose-600 hover:text-rose-700 transition-colors delete-btn"
                                             data-user-id="{{ $user->id }}"
                                             data-user-name="{{ $user->name }}"
-                                            title="Delete user"
+                                            title="Xóa người dùng"
                                         >
                                             <span class="iconify text-xl" data-icon="mdi-delete"></span>
                                         </button>
@@ -304,11 +312,11 @@
                             <td colspan="6" class="px-6 py-10 text-center text-sm text-gray-500">
                                 <div class="flex flex-col items-center justify-center">
                                     <span class="iconify text-4xl text-gray-300 mb-3" data-icon="mdi-account-search"></span>
-                                    <p class="text-lg font-medium text-gray-600 mb-1">No users found</p>
-                                    <p class="text-gray-400 max-w-md">No users match your current filter criteria. Try adjusting your search parameters or clear filters to see all users.</p>
-                                    <a href="{{ route('admin.users.index') }}" class="mt-3 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    <p class="text-lg font-medium text-gray-600 mb-1">Không tìm thấy người dùng</p>
+                                    <p class="text-gray-400 max-w-md">Không có người dùng phù hợp với tiêu chí tìm kiếm. Hãy điều chỉnh các tham số tìm kiếm hoặc xóa bộ lọc để xem tất cả người dùng.</p>
+                                    <a href="{{ route('admin.users.index') }}" class="mt-3 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
                                         <span class="iconify mr-2" data-icon="mdi-refresh"></span>
-                                        Reset Filters
+                                        Đặt Lại Bộ Lọc
                                     </a>
                                 </div>
                             </td>
@@ -340,11 +348,11 @@
                         </div>
                         <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                             <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                Delete User
+                                Xóa Người Dùng
                             </h3>
                             <div class="mt-2">
                                 <p class="text-sm text-gray-500">
-                                    Are you sure you want to delete <span id="delete-user-name" class="font-medium text-gray-700"></span>? This action cannot be undone and all data associated with this user will be permanently removed.
+                                    Bạn có chắc chắn muốn xóa <span id="delete-user-name" class="font-medium text-gray-700"></span>? Hành động này không thể hoàn tác và tất cả dữ liệu liên quan đến người dùng này sẽ bị xóa vĩnh viễn.
                                 </p>
                             </div>
                         </div>
@@ -355,11 +363,11 @@
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
-                            Delete
+                            Xóa
                         </button>
                     </form>
-                    <button type="button" id="cancelDelete" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                        Cancel
+                    <button type="button" id="cancelDelete" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Hủy
                     </button>
                 </div>
             </div>
@@ -450,12 +458,6 @@
             $('#role, #user_type').on('change', function() {
                 $(this).closest('form').submit();
             });
-
-            // Add animation to table rows on hover
-            $('tbody tr').hover(
-                function() { $(this).addClass('shadow-sm'); },
-                function() { $(this).removeClass('shadow-sm'); }
-            );
         });
     </script>
 @endpush

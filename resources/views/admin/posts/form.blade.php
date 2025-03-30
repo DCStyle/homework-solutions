@@ -1,203 +1,404 @@
 @extends('admin_layouts.admin')
 
+@section('title', isset($post) ? 'Sửa Bài Viết' : 'Tạo Bài Viết')
+
 @section('content')
-    <div>
-        <div class="flex flex-wrap items-center justify-between mb-4">
-            <h2 class="text-3xl font-bold mb-2">
-                {{ isset($post) ? 'Sửa bài viết' : 'Tạo bài viết' }}
-            </h2>
-
-            @if(isset($post))
-                <div class="flex items-center gap-2 whitespace-nowrap">
-                    <a href="{{ route('posts.show', $post->slug) }}"
-                       class="px-4 py-2 rounded bg-primary text-white hover:!bg-blue-600"
-                       target="_blank"
-                    >
-                        Xem bài viết
-                    </a>
-
-                    <form action="{{ route('admin.posts.destroy', $post->id) }}" method="POST">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600"
-                            onclick="return confirm('Bạn có chắc chắn muốn xóa bài viết này?')"
-                        >
-                            Xóa bài viết
-                        </button>
-                    </form>
+    <div class="container-fluid px-4 py-5">
+        <!-- Header Section with Gradient Background -->
+        <div class="relative overflow-hidden rounded-xl bg-primary p-6 shadow-lg mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 relative z-10">
+                <div>
+                    <h2 class="text-3xl font-bold text-white">
+                        {{ isset($post) ? 'Sửa Bài Viết' : 'Tạo Bài Viết' }}
+                    </h2>
+                    <p class="mt-1 text-white/90">
+                        {{ isset($post) ? 'Chỉnh sửa nội dung bài viết' : 'Tạo bài viết mới cho chương ' . $chapter->name }}
+                    </p>
                 </div>
-            @endif
+
+                <div class="flex flex-wrap items-center gap-3">
+                    @if(isset($post))
+                        <a href="{{ route('posts.show', $post->slug) }}"
+                           class="inline-flex items-center justify-center gap-2 rounded-lg bg-white py-2.5 px-4 text-center font-medium text-primary hover:bg-gray-100 transition-all duration-200 shadow-sm"
+                           target="_blank">
+                            <span class="iconify" data-icon="mdi-eye"></span>
+                            Xem Bài Viết
+                        </a>
+                        <form action="{{ route('admin.posts.destroy', $post->id) }}" method="POST" class="inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit"
+                                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 py-2.5 px-4 text-center font-medium text-white hover:bg-red-700 transition-all duration-200 shadow-sm"
+                                    onclick="return confirm('Bạn có chắc chắn muốn xóa bài viết này?')">
+                                <span class="iconify" data-icon="mdi-trash-can-outline"></span>
+                                Xóa Bài Viết
+                            </button>
+                        </form>
+                    @endif
+                    <a href="{{ route('admin.bookChapters.posts', $chapter->id) }}" class="inline-flex items-center justify-center gap-2 rounded-lg bg-white/20 py-2.5 px-4 text-center font-medium text-white hover:bg-white/30 transition-all duration-200">
+                        <span class="iconify" data-icon="mdi-arrow-left"></span>
+                        Quay Lại Danh Sách
+                    </a>
+                </div>
+            </div>
+
+            <!-- Decorative Elements -->
+            <div class="absolute top-0 right-0 -mt-8 -mr-8 h-40 w-40 rounded-full bg-white/10"></div>
+            <div class="absolute bottom-0 left-0 -mb-12 -ml-12 h-64 w-64 rounded-full bg-white/5"></div>
         </div>
 
-        <p class="mb-6">
-            @include('layouts.badge-primary', ['content' => "<a href='" . route('admin.categories.edit', $chapter->book->group->category->id) . "' data-bs-toggle='tooltip' data-bs-placement='top' title='Chỉnh sửa' target='_blank'>" . $chapter->book->group->category->name  . "</a>"])
-            @include('layouts.badge-secondary', ['content' => "<a href='" . route('admin.bookGroups.edit', $chapter->book->group->id) . "' data-bs-toggle='tooltip' data-bs-placement='top' title='Chỉnh sửa' target='_blank'>" . $chapter->book->group->name  . "</a>"])
-            @include('layouts.badge-green', ['content' => "<a href='" . route('admin.books.edit', $chapter->book->id) . "' data-bs-toggle='tooltip' data-bs-placement='top' title='Chỉnh sửa' target='_blank'>" . $chapter->book->name  . "</a>"])
-            <span class="font-medium">
+        <!-- Breadcrumb Navigation -->
+        <div class="flex flex-wrap items-center gap-2 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
+            <div class="flex items-center">
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-500 mr-2">
+                <span class="iconify" data-icon="mdi-folder-outline"></span>
+            </span>
+                <div>
+                    @include('layouts.badge-primary', ['content' => "<a href='" . route('admin.categories.edit', $chapter->book->group->category->id) . "' data-bs-toggle='tooltip' data-bs-placement='top' title='Chỉnh sửa' target='_blank' class='hover:underline'>" . $chapter->book->group->category->name  . "</a>"])
+                </div>
+            </div>
+
+            <span class="text-gray-400">
+            <span class="iconify" data-icon="mdi-chevron-right"></span>
+        </span>
+
+            <div class="flex items-center">
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-500 mr-2">
+                <span class="iconify" data-icon="mdi-bookshelf"></span>
+            </span>
+                <div>
+                    @include('layouts.badge-secondary', ['content' => "<a href='" . route('admin.bookGroups.edit', $chapter->book->group->id) . "' data-bs-toggle='tooltip' data-bs-placement='top' title='Chỉnh sửa' target='_blank' class='hover:underline'>" . $chapter->book->group->name  . "</a>"])
+                </div>
+            </div>
+
+            <span class="text-gray-400">
+            <span class="iconify" data-icon="mdi-chevron-right"></span>
+        </span>
+
+            <div class="flex items-center">
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600 mr-2">
+                <span class="iconify" data-icon="mdi-book-outline"></span>
+            </span>
+                <div>
+                    @include('layouts.badge-green', ['content' => "<a href='" . route('admin.books.edit', $chapter->book->id) . "' data-bs-toggle='tooltip' data-bs-placement='top' title='Chỉnh sửa' target='_blank' class='hover:underline'>" . $chapter->book->name  . "</a>"])
+                </div>
+            </div>
+
+            <span class="text-gray-400">
+            <span class="iconify" data-icon="mdi-chevron-right"></span>
+        </span>
+
+            <div class="flex items-center">
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600 mr-2">
+                <span class="iconify" data-icon="mdi-bookmark-outline"></span>
+            </span>
                 <a href="{{ route('admin.bookChapters.edit', $chapter->id) }}"
                    data-bs-toggle="tooltip"
                    data-bs-placement="top"
                    title="Chỉnh sửa"
                    target="_blank"
-                   class="hover:underline"
-                >
+                   class="font-medium text-gray-700 hover:text-primary hover:underline transition-colors">
                     {{ $chapter->name }}
                 </a>
-            </span>
-        </p>
+            </div>
+        </div>
 
-        <form class="rounded-sm border bg-white shadow"
-              method="POST"
-              action="{{ isset($post)
-                ? route('admin.posts.update', $post->id)
-                : route('admin.bookChapters.storePost', $chapter->id)
-              }}"
-        >
-            @csrf
-            @if(isset($post))
-                @method('PUT')
-            @endif
-
-            <div class="flex flex-col gap-4 p-6">
-                <!-- Title Field -->
-                @include('layouts.form-input', ['name' => 'title', 'label' => 'Tiêu đề', 'value' => old('title', $post->title ?? ''), 'required' => true])
-
-                <!-- Slug Field -->
-                @include('layouts.form-input', ['name' => 'slug', 'label' => 'Đường dẫn', 'value' => old('slug', $post->slug ?? '')])
-
-                <!-- Meta Title Field -->
-                @include('layouts.form-input', ['name' => 'meta_title', 'label' => 'Tiêu đề meta (SEO)', 'value' => old('meta_title', $post->meta_title ?? '')])
-
-                <!-- Meta Description Field -->
-                <div class="mb-4">
-                    <label for="meta_description" class="mb-3 block text-sm font-medium text-[#1c2434]">Mô tả meta (SEO)</label>
-                    <x-form.editor
-                        :name="'meta_description'"
-                        value="{{ old('meta_description', $post->meta_description ?? '') }}"
-                    />
+        @if($errors->any())
+            <div class="mb-6 rounded-lg bg-red-100 p-4 text-red-700 shadow-md animate-fadeIn">
+                <div class="flex items-center mb-2">
+                    <span class="iconify mr-2 text-xl" data-icon="mdi-alert-circle"></span>
+                    <span class="font-medium">Vui lòng kiểm tra lại thông tin nhập liệu:</span>
                 </div>
+                <ul class="list-disc pl-5 space-y-1 text-sm">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-                <!-- Content Field -->
-                <div>
-                    <label for="message" class="mb-3 block text-sm font-medium text-[#1c2434]">Nội dung</label>
-                    <x-form.editor :name="'message'" value="{{ old('message', $post->content ?? '') }}" />
+        <!-- Form Card -->
+        <div class="rounded-xl border border-stroke bg-white shadow-md">
+            <form method="POST"
+                  action="{{ isset($post) ? route('admin.posts.update', $post->id) : route('admin.bookChapters.storePost', $chapter->id) }}">
+                @csrf
+                @if(isset($post))
+                    @method('PUT')
+                @endif
 
-                    <input type="hidden" name="uploaded_image_ids" id="uploaded_image_ids" value="{{ isset($post) ? json_encode($post->images->pluck('id')) : '[]' }}">
-                </div>
+                <div class="p-6 space-y-6">
+                    <!-- Post Information -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Post Title -->
+                        <div class="form-group md:col-span-2">
+                            <label for="title" class="mb-2.5 block font-medium text-black">
+                                Tiêu Đề <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                                <span class="iconify" data-icon="mdi-format-title"></span>
+                            </span>
+                                <input type="text" name="title" id="title"
+                                       value="{{ old('title', $post->title ?? '') }}"
+                                       class="w-full rounded-lg border border-stroke bg-white py-3 pl-10 pr-4 outline-none focus:border-primary focus-visible:shadow-none"
+                                       placeholder="Nhập tiêu đề bài viết" required>
+                            </div>
+                            @error('title')
+                            <p class="mt-1 text-sm text-red-600 flex items-center">
+                                <span class="iconify mr-1" data-icon="mdi-alert-circle"></span>
+                                {{ $message }}
+                            </p>
+                            @enderror
+                        </div>
 
-                <!-- Attachment Field -->
-                <div class="mb-6">
-                    <label class="mb-2 block text-sm font-medium text-[#1c2434]">Tệp đính kèm</label>
+                        <!-- Post Slug -->
+                        <div class="form-group">
+                            <label for="slug" class="mb-2.5 block font-medium text-black">
+                                Đường Dẫn <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                                <span class="iconify" data-icon="mdi-link-variant"></span>
+                            </span>
+                                <input type="text" name="slug" id="slug"
+                                       value="{{ old('slug', $post->slug ?? '') }}"
+                                       class="w-full rounded-lg border border-stroke bg-white py-3 pl-10 pr-4 outline-none focus:border-primary focus-visible:shadow-none"
+                                       placeholder="duong-dan-bai-viet" required>
+                            </div>
+                            @error('slug')
+                            <p class="mt-1 text-sm text-red-600 flex items-center">
+                                <span class="iconify mr-1" data-icon="mdi-alert-circle"></span>
+                                {{ $message }}
+                            </p>
+                            @enderror
+                            <p class="mt-1 text-xs text-gray-500 flex items-center">
+                                <span class="iconify mr-1" data-icon="mdi-information-outline"></span>
+                                Đường dẫn sẽ xuất hiện trên URL: example.com/posts/<span class="font-mono text-primary">duong-dan-bai-viet</span>
+                            </p>
+                        </div>
 
-                    <!-- Existing Attachments Section -->
-                    @if(isset($post) && $post->attachments->count() > 0)
-                        <div class="mb-4">
-                            <h4 class="text-base font-medium text-gray-900 mb-3">Tệp đính kèm hiện tại</h4>
-                            <ul class="divide-y divide-gray-200 border rounded-lg">
-                                @foreach($post->attachments as $attachment)
-                                    <li class="p-4 flex items-center justify-between" id="existing-file-{{ $attachment->id }}">
-                                        <div class="flex items-center flex-1">
-                                            <!-- File Icon -->
-                                            <svg class="h-6 w-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
-                                            </svg>
+                        <!-- Meta Title -->
+                        <div class="form-group">
+                            <label for="meta_title" class="mb-2.5 block font-medium text-black">
+                                Tiêu Đề Meta (SEO)
+                            </label>
+                            <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                                <span class="iconify" data-icon="mdi-search-web"></span>
+                            </span>
+                                <input type="text" name="meta_title" id="meta_title"
+                                       value="{{ old('meta_title', $post->meta_title ?? '') }}"
+                                       class="w-full rounded-lg border border-stroke bg-white py-3 pl-10 pr-4 outline-none focus:border-primary focus-visible:shadow-none"
+                                       placeholder="Tiêu đề hiển thị trên kết quả tìm kiếm">
+                            </div>
+                            @error('meta_title')
+                            <p class="mt-1 text-sm text-red-600 flex items-center">
+                                <span class="iconify mr-1" data-icon="mdi-alert-circle"></span>
+                                {{ $message }}
+                            </p>
+                            @enderror
+                        </div>
+                    </div>
 
-                                            <!-- File Details -->
-                                            <div class="ml-4 flex-1">
-                                                <div class="flex items-center justify-between">
-                                                    <p class="text-base font-medium text-gray-900">{{ $attachment->original_filename }}</p>
-                                                    <p class="ml-2 text-sm text-gray-500">
-                                                        {{ number_format($attachment->file_size / 1024, 2) }} KB
+                    <!-- Meta Description Field -->
+                    <div class="form-group">
+                        <label for="meta_description" class="mb-2.5 block font-medium text-black flex items-center">
+                            Mô Tả Meta (SEO)
+                            <span class="ml-2 text-xs text-gray-500 font-normal">Hiển thị trên kết quả tìm kiếm</span>
+                        </label>
+                        <x-form.editor :name="'meta_description'" value="{{ old('meta_description', $post->meta_description ?? '') }}" />
+                        @error('meta_description')
+                        <p class="mt-1 text-sm text-red-600 flex items-center">
+                            <span class="iconify mr-1" data-icon="mdi-alert-circle"></span>
+                            {{ $message }}
+                        </p>
+                        @enderror
+                    </div>
+
+                    <!-- Content Field -->
+                    <div class="form-group">
+                        <label for="message" class="mb-2.5 block font-medium text-black">
+                            Nội Dung <span class="text-red-500">*</span>
+                        </label>
+                        <x-form.editor :name="'message'" value="{{ old('message', $post->content ?? '') }}" />
+                        <input type="hidden" name="uploaded_image_ids" id="uploaded_image_ids" value="{{ isset($post) ? json_encode($post->images->pluck('id')) : '[]' }}">
+                        @error('message')
+                        <p class="mt-1 text-sm text-red-600 flex items-center">
+                            <span class="iconify mr-1" data-icon="mdi-alert-circle"></span>
+                            {{ $message }}
+                        </p>
+                        @enderror
+                    </div>
+
+                    <!-- Attachment Field -->
+                    <div class="form-group">
+                        <label class="mb-2.5 block font-medium text-black flex items-center">
+                            Tệp Đính Kèm
+                            <span class="ml-2 text-xs text-gray-500 font-normal">PDF, ZIP, RAR tối đa 10MB</span>
+                        </label>
+
+                        <!-- Existing Attachments Section -->
+                        @if(isset($post) && $post->attachments->count() > 0)
+                            <div class="mb-4">
+                                <h4 class="text-base font-medium text-gray-900 mb-3 flex items-center">
+                                    <span class="iconify mr-2 text-primary" data-icon="mdi-attachment"></span>
+                                    Tệp Đính Kèm Hiện Tại
+                                </h4>
+                                <ul class="divide-y divide-gray-200 border rounded-lg overflow-hidden">
+                                    @foreach($post->attachments as $attachment)
+                                        <li class="p-4 flex items-center justify-between bg-white hover:bg-gray-50 transition-all duration-200" id="existing-file-{{ $attachment->id }}">
+                                            <div class="flex items-center flex-1">
+                                                <!-- File Icon -->
+                                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+                                                    <span class="iconify" data-icon="mdi-file-outline"></span>
+                                                </div>
+
+                                                <!-- File Details -->
+                                                <div class="ml-4 flex-1">
+                                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                                                        <p class="text-base font-medium text-gray-900">{{ $attachment->original_filename }}</p>
+                                                        <p class="text-sm text-gray-500">
+                                                            {{ number_format($attachment->file_size / 1024, 2) }} KB
+                                                        </p>
+                                                    </div>
+                                                    <p class="text-xs text-gray-500 flex items-center">
+                                                    <span class="inline-flex items-center justify-center px-2 py-0.5 rounded bg-gray-100 text-gray-800 mr-2">
+                                                        {{ strtoupper($attachment->extension) }}
+                                                    </span>
+                                                        <span class="inline-flex items-center text-gray-500">
+                                                        <span class="iconify mr-1" data-icon="mdi-calendar"></span>
+                                                        {{ $attachment->created_at->format('d/m/Y H:i') }}
+                                                    </span>
                                                     </p>
                                                 </div>
-                                                <p class="text-sm text-gray-500">
-                                                    {{ strtoupper($attachment->extension) }}
-                                                </p>
                                             </div>
-                                        </div>
 
-                                        <!-- Action Buttons -->
-                                        <div class="ml-4 flex items-center space-x-3">
-                                            <a href="{{ route('attachments.download', $attachment->id) }}"
-                                               class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
-                                                Tải xuống
-                                            </a>
-                                            <button type="button"
-                                                    onclick="deleteExistingFile({{ $attachment->id }})"
-                                                    class="text-red-500 hover:text-red-700 text-sm font-medium">
-                                                Xóa
-                                            </button>
-                                        </div>
-                                    </li>
-                                @endforeach
-                            </ul>
+                                            <!-- Action Buttons -->
+                                            <div class="ml-4 flex items-center space-x-3">
+                                                <a href="{{ route('attachments.download', $attachment->id) }}"
+                                                   class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                                                    <span class="iconify mr-1" data-icon="mdi-download"></span>
+                                                    Tải Xuống
+                                                </a>
+                                                <button type="button"
+                                                        onclick="deleteExistingFile({{ $attachment->id }})"
+                                                        class="inline-flex items-center px-2.5 py-1.5 border border-transparent shadow-sm text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 transition-colors">
+                                                    <span class="iconify mr-1" data-icon="mdi-trash-can-outline"></span>
+                                                    Xóa
+                                                </button>
+                                            </div>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        <!-- File Upload Area -->
+                        <div class="mt-4 flex justify-center rounded-lg border-2 border-dashed border-gray-300 px-6 py-8 transition-all duration-300 hover:border-primary/70 hover:bg-gray-50">
+                            <div class="text-center">
+                                <!-- Upload Icon -->
+                                <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
+                                    <span class="iconify text-primary text-2xl" data-icon="mdi-cloud-upload-outline"></span>
+                                </div>
+
+                                <h4 class="mb-2 text-base font-medium text-gray-700">Tải Tệp Lên</h4>
+                                <p class="mb-4 text-sm text-gray-500">Kéo và thả tệp vào đây hoặc nhấp để chọn tệp</p>
+
+                                <div class="flex justify-center">
+                                    <label for="attachments" class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary py-2.5 px-4 text-center font-medium text-white hover:bg-primary/90 transition-all duration-200 cursor-pointer">
+                                        <span class="iconify" data-icon="mdi-file-plus-outline"></span>
+                                        Chọn Tệp
+                                        <input
+                                            id="attachments"
+                                            name="attachments[]"
+                                            type="file"
+                                            multiple
+                                            class="sr-only"
+                                            accept=".pdf,.zip,.rar"
+                                        >
+                                    </label>
+                                </div>
+                                <p class="mt-3 text-xs text-gray-500">PDF, ZIP, RAR tối đa 10MB</p>
+                            </div>
+                        </div>
+
+                        <!-- Selected Files Preview -->
+                        <div id="selected-files" class="mt-4 space-y-2 hidden">
+                            <h4 class="text-base font-medium text-gray-900 flex items-center">
+                                <span class="iconify mr-2 text-primary" data-icon="mdi-file-multiple-outline"></span>
+                                Tệp Đã Chọn
+                            </h4>
+                            <ul id="file-list" class="divide-y divide-gray-200 border rounded-lg overflow-hidden"></ul>
+                        </div>
+
+                        <!-- Hidden input to store uploaded file IDs -->
+                        <input type="hidden" name="uploaded_attachment_ids" id="uploaded_attachment_ids"
+                               value="{{ isset($post) ? json_encode($post->attachments->pluck('id')) : '[]' }}">
+                    </div>
+
+                    <!-- Source URL field (Uneditable) -->
+                    @if(isset($post) && $post->source_url)
+                        <div class="form-group">
+                            <label for="source_url" class="mb-2.5 block font-medium text-black">URL Nguồn</label>
+
+                            <div class="flex flex-col sm:flex-row items-center gap-4">
+                                <div class="relative flex-1 w-full">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                                    <span class="iconify" data-icon="mdi-earth"></span>
+                                </span>
+                                    <input type="text" id="source_url" name="source_url" value="{{ $post->source_url }}"
+                                           class="w-full rounded-lg border border-stroke bg-gray-100 py-3 pl-10 pr-4 outline-none text-gray-700"
+                                           readonly>
+                                </div>
+
+                                <a href="{{ $post->source_url }}" target="_blank" rel="noopener noreferrer nofollow"
+                                   class="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 py-2.5 px-4 text-center font-medium text-white hover:bg-indigo-700 transition-all duration-200">
+                                    <span class="iconify" data-icon="mdi-open-in-new"></span>
+                                    Mở URL
+                                </a>
+                            </div>
                         </div>
                     @endif
 
-                    <!-- File Upload Area -->
-                    <div class="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
-                        <div class="text-center">
-                            <!-- Upload Icon -->
-                            <span class="iconify text-gray-300 inline-block mx-auto text-3xl"
-                                  data-icon="mdi-tray-arrow-up">
-                            </span>
-
-                            <div class="mt-4 flex text-sm leading-6 text-gray-600">
-                                <label for="attachments" class="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500">
-                                    <span class="text-base">Tải tệp lên</span>
-                                    <input
-                                        id="attachments"
-                                        name="attachments[]"
-                                        type="file"
-                                        multiple
-                                        class="sr-only"
-                                        accept=".pdf,.zip,.rar"
-                                    >
-                                </label>
-                                <p class="pl-1 text-base">hoặc kéo và thả</p>
-                            </div>
-
-                            <p class="text-sm leading-5 text-gray-600">PDF, ZIP, RAR tối đa 10MB</p>
-                        </div>
+                    <!-- Submit Button -->
+                    <div class="flex items-center justify-end gap-4 pt-4 border-t border-gray-100">
+                        <a href="{{ route('admin.bookChapters.posts', $chapter->id) }}" class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white py-3 px-6 text-center font-medium text-gray-700 hover:bg-gray-100 transition-all duration-200 shadow-sm">
+                            <span class="iconify" data-icon="mdi-close"></span>
+                            Hủy Bỏ
+                        </a>
+                        <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary py-3 px-6 text-center font-medium text-white hover:bg-primary/90 transition-all duration-200 shadow-sm">
+                            <span class="iconify" data-icon="mdi-{{ isset($post) ? 'content-save' : 'plus' }}"></span>
+                            {{ isset($post) ? 'Cập Nhật' : 'Tạo Bài Viết' }}
+                        </button>
                     </div>
-
-                    <!-- Selected Files Preview -->
-                    <div id="selected-files" class="mt-4 space-y-2 hidden">
-                        <h4 class="text-base font-medium text-gray-900">Tệp đã chọn</h4>
-                        <ul id="file-list" class="divide-y divide-gray-200"></ul>
-                    </div>
-
-                    <!-- Hidden input to store uploaded file IDs -->
-                    <input type="hidden" name="uploaded_attachment_ids" id="uploaded_attachment_ids"
-                           value="{{ isset($post) ? json_encode($post->attachments->pluck('id')) : '[]' }}">
                 </div>
-
-                <!-- Source URL field (Uneditable) -->
-                @if(isset($post) && $post->source_url)
-                    <div class="mb-4">
-                        <label for="source_url" class="mb-3 block text-sm font-medium text-[#1c2434]">URL nguồn</label>
-
-                        <div class="flex items-center gap-4">
-                            <input type="text" id="source_url" name="source_url" value="{{ $post->source_url }}"
-                                   class="flex-1 px-3 py-2 border rounded-md text-gray-900 bg-gray-100"
-                                   readonly>
-
-                            <a href="{{ $post->source_url }}" target="_blank" rel="noopener noreferrer nofollow"
-                               class="whitespace-nowrap bg-indigo-600 hover:bg-indigo-900 p-2 rounded text-white text-sm font-medium">
-                                Mở URL
-                            </a>
-                        </div>
-                    </div>
-                @endif
-
-                <!-- Submit Button -->
-                <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md shadow-sm hover:bg-indigo-700 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none focus:ring-2">
-                    {{ isset($post) ? 'Cập nhật' : 'Tạo' }}
-                </button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 @endsection
+
+@push('styles')
+    <style>
+        .animate-fadeIn {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group:hover label {
+            color: rgb(99 102 241);
+            transition: all 0.2s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            border-color: rgb(99 102 241);
+            box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.2);
+        }
+    </style>
+@endpush
 
 @push('scripts')
     <script>
@@ -252,7 +453,33 @@
             const fileList = document.getElementById('file-list');
             const selectedFiles = document.getElementById('selected-files');
             const uploadedIdsInput = document.getElementById('uploaded_attachment_ids');
+            const dropZone = document.querySelector('.border-dashed');
             let uploadedIds = [];
+
+            // Auto-generate slug from title
+            const titleInput = document.getElementById('title');
+            const slugInput = document.getElementById('slug');
+
+            if (titleInput && slugInput) {
+                titleInput.addEventListener('input', function() {
+                    // Only auto-generate if slug field is empty or hasn't been manually edited
+                    if (!slugInput.dataset.manuallyEdited) {
+                        const slugValue = titleInput.value
+                            .toLowerCase()
+                            .replace(/đ/g, 'd')
+                            .replace(/[^\w\s-]/g, '')
+                            .replace(/[\s_-]+/g, '-')
+                            .replace(/^-+|-+$/g, '');
+
+                        slugInput.value = slugValue;
+                    }
+                });
+
+                // Mark slug as manually edited when user types in it
+                slugInput.addEventListener('input', function() {
+                    slugInput.dataset.manuallyEdited = 'true';
+                });
+            }
 
             function updateFileList(file, progress = 0, uploadId = null) {
                 const fileId = `file-${Date.now()}-${file.name}`;
@@ -285,7 +512,7 @@
                 // If no existing file was found, create a new list item
                 const li = document.createElement('li');
                 li.id = fileId;
-                li.className = 'py-4 flex items-center justify-between opacity-0 transform translate-y-2';
+                li.className = 'py-4 px-4 flex items-center justify-between opacity-0 transform translate-y-2 bg-white hover:bg-gray-50 transition-all duration-200';
 
                 // Format file size
                 const size = file.size < 1024000
@@ -293,26 +520,27 @@
                     : `${(file.size / 1024 / 1024).toFixed(2)} MB`;
 
                 li.innerHTML = `
-                    <div class="flex items-center flex-1">
-                        <svg class="h-6 w-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
-                        </svg>
-                        <div class="ml-4 flex-1">
-                            <div class="flex items-center justify-between">
-                                <p class="text-base font-medium text-gray-900">${file.name}</p>
-                                <p class="ml-2 text-sm text-gray-500">${size}</p>
-                            </div>
-                            <div class="mt-1 w-full bg-gray-200 rounded-full h-2.5">
-                                <div class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: ${progress}%"></div>
-                            </div>
+                <div class="flex items-center flex-1">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+                        <span class="iconify" data-icon="mdi-file-outline"></span>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <div class="flex items-center justify-between">
+                            <p class="text-base font-medium text-gray-900">${file.name}</p>
+                            <p class="ml-2 text-sm text-gray-500">${size}</p>
+                        </div>
+                        <div class="mt-1 w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: ${progress}%"></div>
                         </div>
                     </div>
-                    <div class="ml-4 flex-shrink-0">
-                        <button type="button" class="text-red-500 hover:text-red-700 text-sm font-medium" onclick="removeFile('${fileId}', ${uploadId})">
-                            Xóa
-                        </button>
-                    </div>
-                `;
+                </div>
+                <div class="ml-4 flex-shrink-0">
+                    <button type="button" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 transition-colors" onclick="removeFile('${fileId}', ${uploadId})">
+                        <span class="iconify mr-1" data-icon="mdi-trash-can-outline"></span>
+                        Xóa
+                    </button>
+                </div>
+            `;
 
                 fileList.appendChild(li);
 
@@ -416,8 +644,6 @@
             });
 
             // Drag and drop handlers
-            const dropZone = document.querySelector('.border-dashed');
-
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 dropZone.addEventListener(eventName, preventDefaults, false);
             });
@@ -436,17 +662,28 @@
             });
 
             function highlight(e) {
-                dropZone.classList.add('border-indigo-600', 'bg-indigo-50', 'transition-colors', 'duration-300');
+                dropZone.classList.add('border-primary', 'bg-primary/5');
             }
 
             function unhighlight(e) {
-                dropZone.classList.remove('border-indigo-600', 'bg-indigo-50');
+                dropZone.classList.remove('border-primary', 'bg-primary/5');
             }
 
             dropZone.addEventListener('drop', (e) => {
                 const files = Array.from(e.dataTransfer.files);
                 handleFiles(files);
             });
+
+            // Try to parse the existing attachment IDs
+            try {
+                // Only try to parse if the input exists and has a value
+                if (uploadedIdsInput && uploadedIdsInput.value) {
+                    uploadedIds = JSON.parse(uploadedIdsInput.value) || [];
+                }
+            } catch (e) {
+                console.error('Failed to parse existing attachment IDs:', e);
+                uploadedIds = [];
+            }
         });
     </script>
 @endpush

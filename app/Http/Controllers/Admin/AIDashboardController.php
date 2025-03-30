@@ -241,6 +241,10 @@ class AIDashboardController extends Controller
      */
     public function playground(Request $request)
     {
+        // AI Providers
+        $aiService = new AIServiceFactory();
+        $aiProviders = $aiService->getAvailableProviders();
+
         // Get preset content ID and type if provided
         $presetType = $request->input('content_type');
         $presetId = $request->input('content_id');
@@ -267,8 +271,12 @@ class AIDashboardController extends Controller
         }
 
         return view('admin.ai-dashboard.playground', compact(
-            'defaultPrompts', 'customPrompts', 'presetContent',
-            'presetType', 'selectedPrompt'
+            'aiProviders',
+            'defaultPrompts',
+            'customPrompts',
+            'presetContent',
+            'presetType',
+            'selectedPrompt'
         ));
     }
 
