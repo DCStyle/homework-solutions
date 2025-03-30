@@ -96,6 +96,24 @@
             </div>
 
             <!-- Menu Group -->
+            <div class="mt-4">
+                <h3 class="mb-4 text-sm font-medium text-[#8a99af] px-6">Quản lý người dùng</h3>
+                <ul class="mb-6 flex flex-col gap-1.5">
+                    @include('admin_layouts.sidebar_menu_item', [
+                        'itemTitle' => "Tất cả người dùng",
+                        'itemIcon' => 'mdi-account-multiple',
+                        'itemLink' => route('admin.users.index')
+                    ])
+
+                    @include('admin_layouts.sidebar_menu_item', [
+                        'itemTitle' => "Thêm người dùng mới",
+                        'itemIcon' => 'mdi-account-plus',
+                        'itemLink' => route('admin.users.create')
+                    ])
+                </ul>
+            </div>
+
+            <!-- Menu Group -->
             <div class="mt-auto">
                 <ul class="mb-6 flex flex-col gap-1.5 opacity-60">
                     @include('admin_layouts.sidebar_menu_item', ['itemTitle' => __('Home'), 'itemIcon' => 'mdi-arrow-left', 'itemLink' => route('home')])
