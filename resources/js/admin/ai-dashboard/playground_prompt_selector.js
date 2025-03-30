@@ -1,280 +1,446 @@
-$(document).ready(function() {
-    // Variables for storing prompts
-    let availablePrompts = [];
-    let defaultPrompts = {}; // Store default prompts
+/**
+ * AI Content Playground - Prompt Management
+ * This module handles saved prompts and prompt templates
+ * for different content types.
+ */
 
-    // Load default prompts on initialization
-    function loadDefaultPrompts() {
-        $.ajax({
-            url: '/admin/ai-dashboard/prompts/default',
-            type: 'GET',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(prompts) {
-                // Store default prompts globally
-                defaultPrompts = prompts;
+$(function() {
+    // Prompt management functionality
+    const promptManager = (function() {
+        // Variables for storing prompts
+        let availablePrompts = [];
+        let defaultPrompts = {}; // Store default prompts by content type
 
-                // Initialize with default prompt for current content type
-                const contentType = $('.content-type-btn.border-indigo-300').data('type');
-                if (contentType && defaultPrompts[contentType]) {
-                    $('#prompt').val(defaultPrompts[contentType]);
-                }
-            },
-            error: function(error) {
-                console.error('Error loading default prompts:', error);
-            }
-        });
-    }
-
-    // Function to load saved prompts for the current content type
-    function loadSavedPrompts(contentType) {
+        // DOM elements as jQuery objects
         const $savedPromptsSelect = $('#saved-prompts');
+        const $promptTextarea = $('#prompt');
+        const $systemMessage = $('#system-message');
+        const $systemMessageContainer = $('#system-message-container');
+        const $modelSelect = $('#model');
+        const $resetPromptBtn = $('#reset-prompt-btn');
+        const $contentTypeButtons = $('.content-type-btn');
+        const $savePromptBtn = $('#save-prompt-btn');
+        const $savePromptModal = $('#save-prompt-modal');
+        const $promptNameInput = $('#prompt-name');
+        const $promptDescriptionInput = $('#prompt-description');
+        const $saveSystemMessage = $('#save-system-message');
+        const $saveSystemMessageContainer = $('#save-system-message-container');
+        const $savePromptConfirmBtn = $('#save-prompt-confirm-btn');
+        const $closeModalButtons = $('.close-modal');
 
-        // Clear existing options
-        $savedPromptsSelect.empty().append($('<option>', {
-            value: '',
-            text: '-- Chọn prompt đã lưu --'
-        }));
+        /**
+         * Initialize the prompt manager
+         */
+        function init() {
+            // Load default prompts on initialization
+            loadDefaultPrompts();
 
-        // Show loading indicator
-        $savedPromptsSelect.append($('<option>', {
-            disabled: true,
-            text: 'Đang tải prompts...'
-        }));
+            // Load prompts for the initial content type
+            updatePromptSelector();
 
-        // Fetch prompts via AJAX
-        $.ajax({
-            url: '/admin/ai-dashboard/prompts/by-type',
-            type: 'GET',
-            data: {
-                content_type: contentType
-            },
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(prompts) {
-                // Store prompts for later use
-                availablePrompts = prompts;
+            // Set up event handlers
+            bindEvents();
+        }
 
-                // Remove loading indicator
-                $savedPromptsSelect.find('option:disabled').remove();
+        /**
+         * Bind all event handlers
+         */
+        function bindEvents() {
+            // Handle prompt selection
+            $savedPromptsSelect.on('change', handlePromptSelection);
 
-                // Add prompts to the selector
-                if (prompts.length === 0) {
-                    $savedPromptsSelect.append($('<option>', {
-                        disabled: true,
-                        text: 'Không có prompt nào'
-                    }));
-                } else {
-                    // Add prompts to dropdown
-                    prompts.forEach(prompt => {
+            // Reset prompt button handler
+            $resetPromptBtn.on('click', handleResetPrompt);
+
+            // Content type change handler
+            $contentTypeButtons.on('click', function() {
+                // After the content type button click handler runs
+                setTimeout(updatePromptSelector, 100);
+            });
+
+            // Save prompt button handler
+            $savePromptBtn.on('click', openSavePromptModal);
+
+            // Close modal handlers
+            $closeModalButtons.on('click', closeSavePromptModal);
+
+            // Save prompt confirmation handler
+            $savePromptConfirmBtn.on('click', savePrompt);
+
+            // Handle clicking outside modal to close
+            $savePromptModal.on('click', function(e) {
+                if (e.target === this) {
+                    closeSavePromptModal();
+                }
+            });
+
+            // Prevent clicks inside modal content from closing the modal
+            $savePromptModal.find('.modal-content').on('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+
+        /**
+         * Load default prompts via AJAX
+         */
+        function loadDefaultPrompts() {
+            $.ajax({
+                url: '/admin/ai-dashboard/prompts/default',
+                type: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(prompts) {
+                    // Store default prompts globally
+                    defaultPrompts = prompts;
+
+                    // Make available to other parts of the application
+                    window.promptTemplates = defaultPrompts;
+
+                    // Initialize with default prompt for current content type
+                    const contentType = getActiveContentType();
+                    if (contentType && defaultPrompts[contentType]) {
+                        $promptTextarea.val(defaultPrompts[contentType]);
+                    }
+                },
+                error: function(error) {
+                    console.error('Error loading default prompts:', error);
+                }
+            });
+        }
+
+        /**
+         * Get the currently active content type
+         */
+        function getActiveContentType() {
+            return $('.content-type-btn.border-indigo-300').data('type');
+        }
+
+        /**
+         * Load saved prompts for the current content type
+         */
+        function loadSavedPrompts(contentType) {
+            // Ensure content type is provided
+            contentType = contentType || getActiveContentType();
+
+            // Clear existing options
+            $savedPromptsSelect.empty().append($('<option>', {
+                value: '',
+                text: '-- Chọn prompt đã lưu --'
+            }));
+
+            // Show loading indicator
+            $savedPromptsSelect.append($('<option>', {
+                disabled: true,
+                text: 'Đang tải prompts...'
+            }));
+
+            // Fetch prompts via AJAX
+            $.ajax({
+                url: '/admin/ai-dashboard/prompts/by-type',
+                type: 'GET',
+                data: {
+                    content_type: contentType
+                },
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(prompts) {
+                    // Store prompts for later use
+                    availablePrompts = prompts;
+
+                    // Remove loading indicator
+                    $savedPromptsSelect.find('option:disabled').remove();
+
+                    // Add prompts to the selector
+                    if (prompts.length === 0) {
                         $savedPromptsSelect.append($('<option>', {
-                            value: prompt.id,
-                            text: prompt.name,
-                            'data-model': prompt.ai_model || '',
-                            'data-system-message': prompt.system_message || '',
-                            'data-prompt-text': prompt.prompt_text || ''
+                            disabled: true,
+                            text: 'Không có prompt nào'
                         }));
-                    });
+                    } else {
+                        // Add prompts to dropdown
+                        $.each(prompts, function(index, prompt) {
+                            $savedPromptsSelect.append($('<option>', {
+                                value: prompt.id,
+                                text: prompt.name,
+                                'data-model': prompt.ai_model || '',
+                                'data-system-message': prompt.system_message || '',
+                                'data-prompt-text': prompt.prompt_text || ''
+                            }));
+                        });
+                    }
+
+                    // Reset prompt selector to use default prompt
+                    $savedPromptsSelect.val('');
+
+                    // Apply default prompt if one exists for this content type
+                    if (defaultPrompts[contentType]) {
+                        $promptTextarea.val(defaultPrompts[contentType]);
+                    }
+
+                    // Refresh Select2 if available
+                    if ($.fn.select2 && $savedPromptsSelect.data('select2')) {
+                        $savedPromptsSelect.trigger('change');
+                    }
+                },
+                error: function(error) {
+                    console.error('Error loading prompts:', error);
+                    $savedPromptsSelect.find('option:disabled').text('Lỗi khi tải prompts');
                 }
+            });
+        }
 
-                // Reset prompt selector to use default prompt
-                $savedPromptsSelect.val('');
+        /**
+         * Handle prompt selection from dropdown
+         */
+        function handlePromptSelection() {
+            const promptId = $savedPromptsSelect.val();
+            const contentType = getActiveContentType();
 
-                // Apply default prompt if one exists for this content type
+            if (!promptId) {
+                // If no prompt selected, use default prompt for current content type
                 if (defaultPrompts[contentType]) {
-                    $('#prompt').val(defaultPrompts[contentType]);
+                    $promptTextarea.val(defaultPrompts[contentType]);
                 }
-            },
-            error: function(error) {
-                console.error('Error loading prompts:', error);
-                $savedPromptsSelect.find('option:disabled').text('Lỗi khi tải prompts');
+                return;
             }
-        });
-    }
 
-    // Handle prompt selection
-    $('#saved-prompts').on('change', function() {
-        const promptId = $(this).val();
-        const contentType = $('.content-type-btn.border-indigo-300').data('type');
+            // Find the selected prompt using jQuery's grep function
+            const selectedPrompt = $.grep(availablePrompts, function(p) {
+                return p.id == promptId;
+            })[0];
 
-        if (!promptId) {
-            // If no prompt selected, use default prompt for current content type
+            if (selectedPrompt) {
+                // Update the prompt textarea
+                $promptTextarea.val(selectedPrompt.prompt_text);
+
+                // Update model if specified
+                if (selectedPrompt.ai_model) {
+                    $modelSelect.val(selectedPrompt.ai_model).trigger('change');
+                }
+
+                // Update system message if specified
+                if (selectedPrompt.system_message) {
+                    $systemMessage.val(selectedPrompt.system_message);
+
+                    // If the model is not DeepSeek but system message exists, switch to DeepSeek
+                    const currentModel = $modelSelect.val();
+                    if (currentModel && !currentModel.startsWith('deepseek') && selectedPrompt.system_message) {
+                        // Try to select any DeepSeek model
+                        const $deepseekOption = $modelSelect.find('option[value^="deepseek"]').first();
+                        if ($deepseekOption.length) {
+                            $modelSelect.val($deepseekOption.val()).trigger('change');
+                        }
+                    }
+
+                    // Show system message container
+                    $systemMessageContainer.removeClass('hidden');
+                }
+            }
+        }
+
+        /**
+         * Handle reset prompt button click
+         */
+        function handleResetPrompt() {
+            const contentType = getActiveContentType();
+
+            // Reset prompt selector
+            $savedPromptsSelect.val('').trigger('change');
+
+            // Reset to default prompt
             if (defaultPrompts[contentType]) {
-                $('#prompt').val(defaultPrompts[contentType]);
-            }
-            return;
-        }
-
-        // Find the selected prompt
-        const selectedPrompt = availablePrompts.find(p => p.id == promptId);
-
-        if (selectedPrompt) {
-            // Update the prompt textarea
-            $('#prompt').val(selectedPrompt.prompt_text);
-
-            // Update model if specified
-            if (selectedPrompt.ai_model) {
-                $('#model').val(selectedPrompt.ai_model).trigger('change');
+                $promptTextarea.val(defaultPrompts[contentType]);
+            } else {
+                $promptTextarea.val('');
             }
 
-            // Update system message if specified
-            if (selectedPrompt.system_message) {
-                $('#system-message').val(selectedPrompt.system_message);
+            // Reset system message
+            $systemMessage.val('');
 
-                // If the model is not DeepSeek but system message exists, switch to DeepSeek
-                if (!$('#model').val().startsWith('deepseek') && selectedPrompt.system_message) {
-                    $('#model').val('deepseek-v3').trigger('change');
-                }
+            // Hide system message container if it's visible
+            if (!$systemMessageContainer.hasClass('hidden') && !$modelSelect.val().startsWith('deepseek')) {
+                $systemMessageContainer.addClass('hidden');
             }
         }
-    });
 
-    // Reset prompt button handler
-    $('#reset-prompt-btn').on('click', function() {
-        const contentType = $('.content-type-btn.border-indigo-300').data('type');
-
-        // Reset prompt selector
-        $('#saved-prompts').val('');
-
-        // Reset to default prompt
-        if (defaultPrompts[contentType]) {
-            $('#prompt').val(defaultPrompts[contentType]);
-        } else {
-            $('#prompt').val('');
+        /**
+         * Update the prompt selector when content type changes
+         */
+        function updatePromptSelector() {
+            const contentType = getActiveContentType();
+            if (contentType) {
+                loadSavedPrompts(contentType);
+            }
         }
 
-        // Reset system message
-        $('#system-message').val('');
-    });
+        /**
+         * Open the save prompt modal
+         */
+        function openSavePromptModal() {
+            // Get current content type
+            const contentType = getActiveContentType();
+            const promptText = $promptTextarea.val();
+            const aiModel = $modelSelect.val();
+            const systemMessage = $systemMessage.val();
 
-    // Load prompts when content type changes
-    function updatePromptSelector() {
-        const contentType = $('.content-type-btn.border-indigo-300').data('type');
-        if (contentType) {
-            loadSavedPrompts(contentType);
-        }
-    }
-
-    // Call updatePromptSelector when content type changes
-    $('.content-type-btn').on('click', function() {
-        // After the content type button click handler runs
-        setTimeout(updatePromptSelector, 100);
-    });
-
-    // Load default prompts on page load
-    loadDefaultPrompts();
-
-    // Initial load of prompts
-    updatePromptSelector();
-
-    // Save Prompt Modal Functionality
-    const savePromptModal = document.getElementById('save-prompt-modal');
-
-    // Open modal when save button is clicked
-    $('#save-prompt-btn').on('click', function() {
-        // Get current content type
-        const contentType = $('.content-type-btn.border-indigo-300').data('type');
-        const promptText = $('#prompt').val();
-        const aiModel = $('#model').val();
-        const systemMessage = $('#system-message').val();
-
-        // Validate prompt text
-        if (!promptText.trim()) {
-            alert('Vui lòng nhập nội dung prompt trước khi lưu');
-            return;
-        }
-
-        // Populate the save prompt modal
-        $('#prompt-name').val('');
-        $('#prompt-description').val('');
-        $('#save-system-message').val(systemMessage);
-
-        // Show/hide system message field based on model
-        if (aiModel.startsWith('deepseek') && systemMessage) {
-            $('#save-system-message-container').removeClass('hidden');
-        } else {
-            $('#save-system-message-container').addClass('hidden');
-        }
-
-        // Show the modal
-        $(savePromptModal).removeClass('hidden');
-    });
-
-    // Close modal functionality
-    $('.close-modal').on('click', function() {
-        $(savePromptModal).addClass('hidden');
-    });
-
-    // Save prompt button click handler
-    $('#save-prompt-confirm-btn').on('click', function() {
-        const name = $('#prompt-name').val();
-        const description = $('#prompt-description').val();
-        const promptText = $('#prompt').val();
-        const aiModel = $('#model').val();
-        const systemMessage = $('#save-system-message').val();
-        const contentType = $('.content-type-btn.border-indigo-300').data('type');
-
-        // Validate
-        if (!name.trim()) {
-            alert('Vui lòng nhập tên cho prompt');
-            return;
-        }
-
-        // Prepare data for submission
-        const data = {
-            name: name,
-            description: description,
-            prompt_text: promptText,
-            content_type: contentType,
-            ai_model: aiModel,
-            system_message: systemMessage
-        };
-
-        // Show a loading indicator on the button
-        const $saveBtn = $('#save-prompt-confirm-btn');
-        const originalText = $saveBtn.html();
-        $saveBtn.html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Đang lưu...');
-        $saveBtn.prop('disabled', true);
-
-        // Send AJAX request to save the prompt
-        $.ajax({
-            url: '/admin/ai-dashboard/save-prompt',
-            type: 'POST',
-            data: data,
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    // Close the modal
-                    $(savePromptModal).addClass('hidden');
-
-                    // Show success message
-                    alert('Prompt đã được lưu thành công!');
-
-                    // Reload prompts for the current content type
-                    loadSavedPrompts(contentType);
+            // Validate prompt text
+            if (!$.trim(promptText)) {
+                if (window.createAlert) {
+                    window.createAlert('Vui lòng nhập nội dung prompt trước khi lưu', 'warning', $('#content-details-card'), true);
                 } else {
-                    alert('Lỗi khi lưu prompt: ' + (response.error || 'Không xác định'));
+                    alert('Vui lòng nhập nội dung prompt trước khi lưu');
                 }
-            },
-            error: function(xhr) {
-                let errorMessage = 'Đã xảy ra lỗi khi lưu prompt.';
-
-                if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    const errors = xhr.responseJSON.errors;
-                    errorMessage = Object.values(errors).flat().join('\n');
-                }
-
-                alert(errorMessage);
-            },
-            complete: function() {
-                // Restore button state
-                $saveBtn.html(originalText);
-                $saveBtn.prop('disabled', false);
+                return;
             }
-        });
-    });
+
+            // Populate the save prompt modal
+            $promptNameInput.val('');
+            $promptDescriptionInput.val('');
+            $saveSystemMessage.val(systemMessage);
+
+            // Show/hide system message field based on model
+            if (aiModel && aiModel.startsWith('deepseek') && systemMessage) {
+                $saveSystemMessageContainer.removeClass('hidden');
+            } else {
+                $saveSystemMessageContainer.addClass('hidden');
+            }
+
+            // Show the modal with animation
+            $savePromptModal.removeClass('hidden');
+            setTimeout(function() {
+                $savePromptModal.find('.modal-content')
+                    .removeClass('opacity-0 scale-95')
+                    .addClass('opacity-100 scale-100');
+            }, 10);
+
+            // Focus the name input
+            setTimeout(function() {
+                $promptNameInput.focus();
+            }, 200);
+        }
+
+        /**
+         * Close the save prompt modal
+         */
+        function closeSavePromptModal() {
+            // Animate out
+            $savePromptModal.find('.modal-content')
+                .removeClass('opacity-100 scale-100')
+                .addClass('opacity-0 scale-95');
+
+            // Hide after animation
+            setTimeout(function() {
+                $savePromptModal.addClass('hidden');
+            }, 200);
+        }
+
+        /**
+         * Save the prompt
+         */
+        function savePrompt() {
+            const name = $promptNameInput.val();
+            const description = $promptDescriptionInput.val();
+            const promptText = $promptTextarea.val();
+            const aiModel = $modelSelect.val();
+            const systemMessage = $saveSystemMessage.val();
+            const contentType = getActiveContentType();
+
+            // Validate name
+            if (!$.trim(name)) {
+                if (window.createAlert) {
+                    window.createAlert('Vui lòng nhập tên cho prompt', 'warning', $savePromptModal.find('.modal-content'), true);
+                } else {
+                    alert('Vui lòng nhập tên cho prompt');
+                }
+                return;
+            }
+
+            // Prepare data for submission
+            const data = {
+                name: name,
+                description: description,
+                prompt_text: promptText,
+                content_type: contentType,
+                ai_model: aiModel,
+                system_message: systemMessage
+            };
+
+            // Show a loading indicator on the button
+            const $saveBtn = $savePromptConfirmBtn;
+            const originalText = $saveBtn.html();
+            $saveBtn.html('<span class="mr-2"><span class="iconify animate-spin" data-icon="mdi-loading"></span></span> Đang lưu...');
+            $saveBtn.prop('disabled', true);
+
+            // Send AJAX request to save the prompt
+            $.ajax({
+                url: '/admin/ai-dashboard/save-prompt',
+                type: 'POST',
+                data: data,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Show success message
+                        if (window.createAlert) {
+                            window.createAlert('Prompt đã được lưu thành công!', 'success', $savePromptModal.find('.modal-content'), true);
+                        }
+
+                        // Close the modal after a short delay
+                        setTimeout(function() {
+                            closeSavePromptModal();
+
+                            // Reload prompts for the current content type
+                            loadSavedPrompts(contentType);
+                        }, 1500);
+                    } else {
+                        // Show error message
+                        const errorMessage = response.error || 'Không xác định';
+                        if (window.createAlert) {
+                            window.createAlert('Lỗi khi lưu prompt: ' + errorMessage, 'danger', $savePromptModal.find('.modal-content'), true);
+                        } else {
+                            alert('Lỗi khi lưu prompt: ' + errorMessage);
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = 'Đã xảy ra lỗi khi lưu prompt.';
+
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        const errors = xhr.responseJSON.errors;
+                        errorMessage = $.map(errors, function(messages) {
+                            return messages;
+                        }).join('\n');
+                    }
+
+                    if (window.createAlert) {
+                        window.createAlert(errorMessage, 'danger', $savePromptModal.find('.modal-content'), true);
+                    } else {
+                        alert(errorMessage);
+                    }
+                },
+                complete: function() {
+                    // Restore button state
+                    $saveBtn.html(originalText);
+                    $saveBtn.prop('disabled', false);
+                }
+            });
+        }
+
+        // Public API
+        return {
+            init: init,
+            loadSavedPrompts: loadSavedPrompts,
+            getActiveContentType: getActiveContentType
+        };
+    })();
+
+    // Initialize prompt manager
+    promptManager.init();
+
+    // Make load saved prompts function available globally
+    // for other modules to call when needed
+    window.loadSavedPrompts = promptManager.loadSavedPrompts;
 });

@@ -1,8 +1,5 @@
 /**
- * Optimized AI Dashboard Main Script
- * - Async loading of dashboard stats
- * - Lazy loading of components
- * - Performance optimizations
+ * Optimized AI Dashboard Main Script without Bootstrap dependency
  */
 document.addEventListener('DOMContentLoaded', function() {
     // Load dashboard stats asynchronously
@@ -139,26 +136,13 @@ function setupEventHandlers() {
     // Handle modal buttons with event delegation
     document.addEventListener('click', function(e) {
         // Modal toggle buttons
-        if (e.target.matches('[data-bs-toggle="modal"]') || e.target.closest('[data-bs-toggle="modal"]')) {
-            const button = e.target.matches('[data-bs-toggle="modal"]') ?
-                e.target : e.target.closest('[data-bs-toggle="modal"]');
-            const targetModal = button.getAttribute('data-bs-target');
-            const modal = document.querySelector(targetModal);
-            if (modal) {
-                const bsModal = new bootstrap.Modal(modal);
-                bsModal.show();
-            }
-        }
+        if (e.target.matches('[data-toggle="modal"]') || e.target.closest('[data-toggle="modal"]')) {
+            const button = e.target.matches('[data-toggle="modal"]') ?
+                e.target : e.target.closest('[data-toggle="modal"]');
+            const targetModal = button.getAttribute('data-target');
 
-        // Modal dismiss buttons
-        if (e.target.matches('[data-bs-dismiss="modal"]') || e.target.closest('[data-bs-dismiss="modal"]')) {
-            const button = e.target.matches('[data-bs-dismiss="modal"]') ?
-                e.target : e.target.closest('[data-bs-dismiss="modal"]');
-            const modal = button.closest('.modal');
-            if (modal) {
-                const bsModal = bootstrap.Modal.getInstance(modal);
-                if (bsModal) bsModal.hide();
-            }
+            // Use our custom modal implementation
+            $(targetModal).customModal('show');
         }
     });
 }
@@ -198,19 +182,15 @@ function submitPromptForm(form) {
         .then(data => {
             if (data.success) {
                 // Hide modal
-                const modal = document.getElementById('createPromptModal');
-                if (modal) {
-                    const bsModal = bootstrap.Modal.getInstance(modal);
-                    if (bsModal) bsModal.hide();
-                }
+                $('#createPromptModal').customModal('hide');
 
                 // Show success message
-                alert('Mẫu đã được tạo thành công!');
+                createAlert('Mẫu đã được tạo thành công!', 'success', 'body', true);
 
                 // Reload the page
                 window.location.reload();
             } else {
-                alert('Lỗi: ' + (data.error || 'Không thể tạo mẫu'));
+                createAlert('Lỗi: ' + (data.error || 'Không thể tạo mẫu'), 'danger', 'body', true);
 
                 // Reset button
                 submitButton.innerHTML = originalButtonText;
@@ -219,7 +199,7 @@ function submitPromptForm(form) {
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Đã xảy ra lỗi. Vui lòng thử lại.');
+            createAlert('Đã xảy ra lỗi. Vui lòng thử lại.', 'danger', 'body', true);
 
             // Reset button
             submitButton.innerHTML = originalButtonText;
@@ -243,15 +223,15 @@ function deletePrompt(promptId) {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Mẫu đã được xóa thành công!');
+                    createAlert('Mẫu đã được xóa thành công!', 'success', 'body', true);
                     window.location.reload();
                 } else {
-                    alert('Lỗi: ' + (data.error || 'Không thể xóa mẫu'));
+                    createAlert('Lỗi: ' + (data.error || 'Không thể xóa mẫu'), 'danger', 'body', true);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Đã xảy ra lỗi. Vui lòng thử lại.');
+                createAlert('Đã xảy ra lỗi. Vui lòng thử lại.', 'danger', 'body', true);
             });
     }
 }
@@ -284,10 +264,3 @@ function updatePromptTemplate(contentType) {
             console.error('Error fetching prompt templates:', error);
         });
 }
-
-// Make functions globally available if needed
-window.AIPrompts = {
-    loadDashboardStats: loadDashboardStats,
-    deletePrompt: deletePrompt,
-    updatePromptTemplate: updatePromptTemplate
-};

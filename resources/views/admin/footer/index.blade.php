@@ -4,7 +4,7 @@
 
 @section('content')
     <!-- Main Container -->
-    <div class="container mx-auto p-4">
+    <div class="container-fluid px-4 py-5">
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
             <!-- Header -->
             <div class="p-6 border-b border-gray-200 flex flex-wrap items-center justify-between">

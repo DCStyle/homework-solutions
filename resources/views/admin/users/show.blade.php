@@ -1,25 +1,39 @@
 @extends('admin_layouts.admin')
 
 @section('content')
-    <div class="container px-6 mx-auto">
-        <!-- Back Navigation -->
-        <div class="mb-6">
-            <a href="{{ route('admin.users.index') }}" class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-900">
-                <span class="iconify mr-1" data-icon="mdi-arrow-left"></span>
-                Back to Users
-            </a>
+    <div class="container-fluid px-4 py-5">
+        <!-- Header Section with Gradient Background -->
+        <div class="relative overflow-hidden rounded-xl bg-primary p-6 shadow-lg mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 relative z-10">
+                <div>
+                    <h2 class="text-3xl font-bold text-white">
+                        Xem chi tiết thành viên
+                    </h2>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <a href="{{ route('admin.users.index') }}" class="inline-flex items-center justify-center gap-2 rounded-lg bg-white/20 py-2.5 px-4 text-center font-medium text-white hover:bg-white/30 transition-all duration-200">
+                        <span class="iconify" data-icon="mdi-arrow-left"></span>
+                        Quay Lại Danh Sách
+                    </a>
+                </div>
+            </div>
+
+            <!-- Decorative Elements -->
+            <div class="absolute top-0 right-0 -mt-8 -mr-8 h-40 w-40 rounded-full bg-white/10"></div>
+            <div class="absolute bottom-0 left-0 -mb-12 -ml-12 h-64 w-64 rounded-full bg-white/5"></div>
         </div>
 
         <!-- User Header Card -->
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
-            <div class="px-4 py-5 sm:px-6 flex flex-col md:flex-row md:items-center justify-between relative">
+        <div class="bg-white shadow rounded-lg mb-6 overflow-hidden">
+            <div class="px-4 py-5 sm:px-6 flex flex-col md:flex-row md:items-center justify-between relative border-b border-gray-200">
                 <div class="flex items-center">
                     <!-- User Avatar -->
                     <div class="mr-4 flex-shrink-0">
                         @if($user->avatar)
-                            <img class="h-16 w-16 rounded-full object-cover border-2 border-indigo-200" src="{{ asset('storage/avatars/' . $user->avatar) }}" alt="{{ $user->name }}">
+                            <img class="h-16 w-16 rounded-full object-cover border-2 border-primary-light" src="{{ asset('storage/avatars/' . $user->avatar) }}" alt="{{ $user->name }}">
                         @else
-                            <div class="h-16 w-16 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-500 text-white text-3xl font-bold">
+                            <div class="h-16 w-16 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-primary-light text-white text-3xl font-bold">
                                 {{ strtoupper(substr($user->name, 0, 1)) }}
                             </div>
                         @endif
@@ -32,17 +46,17 @@
                         </h1>
                         <div class="mt-1 flex items-center">
                             <span class="iconify mr-2 text-gray-500" data-icon="mdi-email"></span>
-                            <a href="mailto:{{ $user->email }}" class="text-gray-500 hover:text-indigo-500">{{ $user->email }}</a>
+                            <a href="mailto:{{ $user->email }}" class="text-gray-500 hover:text-primary">{{ $user->email }}</a>
 
                             @if($user->email_verified_at)
                                 <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                 <span class="iconify mr-1" data-icon="mdi-check-circle"></span>
-                                Verified
+                                Đã xác thực
                             </span>
                             @else
                                 <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
                                 <span class="iconify mr-1" data-icon="mdi-alert-circle-outline"></span>
-                                Unverified
+                                Chưa xác thực
                             </span>
                             @endif
                         </div>
@@ -57,11 +71,13 @@
                                 {{ $user->user_type == 'teacher' ? 'bg-blue-400' : '' }}
                                 {{ $user->user_type == 'parent' ? 'bg-amber-400' : '' }}
                             "></span>
-                            {{ ucfirst($user->user_type) }}
+                            {{ $user->user_type == 'student' ? 'Học Sinh' : '' }}
+                            {{ $user->user_type == 'teacher' ? 'Giáo Viên' : '' }}
+                            {{ $user->user_type == 'parent' ? 'Phụ Huynh' : '' }}
                         </span>
 
                             @foreach($user->roles as $role)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-light text-primary">
                                 <span class="iconify mr-1" data-icon="mdi-shield-account"></span>
                                 {{ $role->name }}
                             </span>
@@ -69,7 +85,7 @@
 
                             @if($user->roles->isEmpty())
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                Basic User
+                                Người Dùng Cơ Bản
                             </span>
                             @endif
                         </div>
@@ -78,15 +94,15 @@
 
                 <!-- Action Buttons -->
                 <div class="mt-4 md:mt-0 space-x-3 flex flex-wrap">
-                    <a href="{{ route('admin.users.edit', $user) }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <a href="{{ route('admin.users.edit', $user) }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-150">
                         <span class="iconify mr-2" data-icon="mdi-pencil"></span>
-                        Edit User
+                        Chỉnh Sửa
                     </a>
 
                     @if(auth()->id() !== $user->id)
-                        <button type="button" id="deleteUserBtn" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        <button type="button" id="deleteUserBtn" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150">
                             <span class="iconify mr-2" data-icon="mdi-delete"></span>
-                            Delete User
+                            Xóa Người Dùng
                         </button>
 
                         @php
@@ -99,10 +115,10 @@
                                 @method('PATCH')
                                 <button
                                     type="submit"
-                                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white {{ $user->isAdmin() ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-500 hover:bg-green-600' }} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-{{ $user->isAdmin() ? 'orange' : 'green' }}-500"
+                                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white {{ $user->isAdmin() ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-500 hover:bg-green-600' }} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-{{ $user->isAdmin() ? 'orange' : 'green' }}-500 transition duration-150"
                                 >
                                     <span class="iconify mr-2" data-icon="{{ $user->isAdmin() ? 'mdi-shield-off' : 'mdi-shield' }}"></span>
-                                    {{ $user->isAdmin() ? 'Remove Admin Rights' : 'Make Administrator' }}
+                                    {{ $user->isAdmin() ? 'Hủy Quyền Admin' : 'Cấp Quyền Admin' }}
                                 </button>
                             </form>
                         @endif
@@ -116,11 +132,11 @@
             <!-- Left Column -->
             <div class="md:col-span-1 space-y-6">
                 <!-- Account Information Card -->
-                <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="bg-white shadow rounded-lg overflow-hidden">
                     <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
                         <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
-                            <span class="iconify text-indigo-500 mr-2" data-icon="mdi-account-details"></span>
-                            Account Information
+                            <span class="iconify text-primary mr-2" data-icon="mdi-account-details"></span>
+                            Thông Tin Tài Khoản
                         </h3>
                     </div>
                     <div class="bg-white px-4 py-5 sm:p-0">
@@ -128,7 +144,7 @@
                             <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                 <dt class="text-sm font-medium text-gray-500 flex items-center">
                                     <span class="iconify mr-1" data-icon="mdi-identifier"></span>
-                                    User ID
+                                    ID Người Dùng
                                 </dt>
                                 <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                                     #{{ $user->id }}
@@ -137,38 +153,38 @@
                             <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                 <dt class="text-sm font-medium text-gray-500 flex items-center">
                                     <span class="iconify mr-1" data-icon="mdi-calendar"></span>
-                                    Joined
+                                    Tham Gia
                                 </dt>
                                 <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                    {{ $user->created_at->format('F j, Y') }}
+                                    {{ $user->created_at->format('d/m/Y') }}
                                     <span class="text-xs text-gray-500 block">{{ $user->created_at->diffForHumans() }}</span>
                                 </dd>
                             </div>
                             <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                 <dt class="text-sm font-medium text-gray-500 flex items-center">
                                     <span class="iconify mr-1" data-icon="mdi-update"></span>
-                                    Last Updated
+                                    Cập Nhật Lần Cuối
                                 </dt>
                                 <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                    {{ $user->updated_at->format('F j, Y') }}
+                                    {{ $user->updated_at->format('d/m/Y') }}
                                     <span class="text-xs text-gray-500 block">{{ $user->updated_at->diffForHumans() }}</span>
                                 </dd>
                             </div>
                             <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                 <dt class="text-sm font-medium text-gray-500 flex items-center">
                                     <span class="iconify mr-1" data-icon="mdi-check-decagram"></span>
-                                    Verification
+                                    Trạng Thái Xác Thực
                                 </dt>
                                 <dd class="mt-1 text-sm sm:mt-0 sm:col-span-2">
                                     @if($user->email_verified_at)
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                         <span class="iconify mr-1" data-icon="mdi-check-circle"></span>
-                                        Verified on {{ $user->email_verified_at->format('M j, Y') }}
+                                        Đã xác thực vào {{ $user->email_verified_at->format('d/m/Y') }}
                                     </span>
                                     @else
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
                                         <span class="iconify mr-1" data-icon="mdi-alert-circle-outline"></span>
-                                        Not verified
+                                        Chưa xác thực
                                     </span>
                                     @endif
                                 </dd>
@@ -176,11 +192,11 @@
                             <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                 <dt class="text-sm font-medium text-gray-500 flex items-center">
                                     <span class="iconify mr-1" data-icon="mdi-login"></span>
-                                    Last Login
+                                    Đăng Nhập Gần Đây
                                 </dt>
                                 <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                                     <!-- Placeholder data -->
-                                    {{ \Carbon\Carbon::now()->subDays(rand(0, 10))->format('M j, Y - h:i A') }}
+                                    {{ \Carbon\Carbon::now()->subDays(rand(0, 10))->format('d/m/Y - H:i') }}
                                 </dd>
                             </div>
                         </dl>
@@ -188,36 +204,36 @@
                 </div>
 
                 <!-- Roles & Permissions Card -->
-                <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="bg-white shadow rounded-lg overflow-hidden">
                     <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
                         <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
-                            <span class="iconify text-indigo-500 mr-2" data-icon="mdi-shield"></span>
-                            Roles & Permissions
+                            <span class="iconify text-primary mr-2" data-icon="mdi-shield"></span>
+                            Vai Trò & Quyền Hạn
                         </h3>
                     </div>
                     <div class="px-4 py-5 sm:p-6">
-                        <h4 class="text-base font-medium text-gray-900 mb-3">Assigned Roles</h4>
+                        <h4 class="text-base font-medium text-gray-900 mb-3">Vai Trò Đã Gán</h4>
                         <div class="space-y-3 mb-6">
                             @forelse($user->roles as $role)
-                                <div class="p-3 rounded-lg bg-indigo-50 border border-indigo-100">
+                                <div class="p-3 rounded-lg bg-primary-light border border-primary-lighter">
                                     <div class="flex items-center">
-                                        <div class="p-2 rounded-full bg-indigo-100 text-indigo-600 mr-3">
+                                        <div class="p-2 rounded-full bg-primary-lighter text-primary mr-3">
                                             <span class="iconify" data-icon="mdi-shield-account"></span>
                                         </div>
                                         <div>
                                             <h5 class="font-medium text-gray-900">{{ $role->name }}</h5>
-                                            <p class="text-xs text-gray-500">{{ $role->permissions->count() }} permissions</p>
+                                            <p class="text-xs text-gray-500">{{ $role->permissions->count() }} quyền hạn</p>
                                         </div>
                                     </div>
                                 </div>
                             @empty
                                 <div class="p-3 rounded-lg bg-gray-50 border border-gray-100 text-gray-500 text-sm">
-                                    No roles have been assigned to this user.
+                                    Người dùng này chưa được gán vai trò nào.
                                 </div>
                             @endforelse
                         </div>
 
-                        <h4 class="text-base font-medium text-gray-900 mb-3">Permissions</h4>
+                        <h4 class="text-base font-medium text-gray-900 mb-3">Quyền Hạn</h4>
                         <div class="space-y-2">
                             @php
                                 $permissions = [];
@@ -239,7 +255,7 @@
                                 </div>
                             @else
                                 <div class="p-3 rounded-lg bg-gray-50 border border-gray-100 text-gray-500 text-sm">
-                                    This user doesn't have any specific permissions.
+                                    Người dùng này không có quyền hạn cụ thể nào.
                                 </div>
                             @endif
                         </div>
@@ -250,26 +266,26 @@
             <!-- Right Column -->
             <div class="md:col-span-2 space-y-6">
                 <!-- Activity Stats Card -->
-                <div class="bg-white shadow sm:rounded-lg overflow-hidden">
+                <div class="bg-white shadow rounded-lg overflow-hidden">
                     <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
                         <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
-                            <span class="iconify text-indigo-500 mr-2" data-icon="mdi-chart-timeline-variant"></span>
-                            Activity Overview
+                            <span class="iconify text-primary mr-2" data-icon="mdi-chart-timeline-variant"></span>
+                            Tổng Quan Hoạt Động
                         </h3>
                     </div>
                     <div class="px-4 py-5 sm:p-6">
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <!-- Login Count Card -->
-                            <div class="bg-gradient-to-br from-indigo-50 to-blue-50 overflow-hidden rounded-lg shadow-sm border border-indigo-100">
+                            <div class="bg-gradient-to-br from-primary-lighter to-blue-50 overflow-hidden rounded-lg shadow-sm border border-primary-lighter">
                                 <div class="p-5">
                                     <div class="flex items-center">
-                                        <div class="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+                                        <div class="flex-shrink-0 bg-primary rounded-md p-3">
                                             <span class="iconify text-white text-xl" data-icon="mdi-login-variant"></span>
                                         </div>
                                         <div class="ml-5 w-0 flex-1">
                                             <dl>
                                                 <dt class="text-sm font-medium text-gray-500 truncate">
-                                                    Total Logins
+                                                    Tổng Số Đăng Nhập
                                                 </dt>
                                                 <dd>
                                                     <div class="text-lg font-bold text-gray-900">
@@ -280,9 +296,9 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="bg-indigo-50 px-5 py-3">
+                                <div class="bg-primary-lighter px-5 py-3">
                                     <div class="text-sm">
-                                        <span class="font-medium text-indigo-600 hover:text-indigo-900 cursor-pointer">Last login: {{ \Carbon\Carbon::now()->subDays(rand(0, 5))->format('M j, H:i') }}</span>
+                                        <span class="font-medium text-primary hover:text-primary-dark cursor-pointer">Đăng nhập gần đây: {{ \Carbon\Carbon::now()->subDays(rand(0, 5))->format('d/m, H:i') }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -297,7 +313,7 @@
                                         <div class="ml-5 w-0 flex-1">
                                             <dl>
                                                 <dt class="text-sm font-medium text-gray-500 truncate">
-                                                    Content Created
+                                                    Nội Dung Đã Tạo
                                                 </dt>
                                                 <dd>
                                                     <div class="text-lg font-bold text-gray-900">
@@ -310,7 +326,7 @@
                                 </div>
                                 <div class="bg-green-50 px-5 py-3">
                                     <div class="text-sm">
-                                        <span class="font-medium text-green-600 hover:text-green-900 cursor-pointer">View content</span>
+                                        <span class="font-medium text-green-600 hover:text-green-700 cursor-pointer">Xem nội dung</span>
                                     </div>
                                 </div>
                             </div>
@@ -325,7 +341,7 @@
                                         <div class="ml-5 w-0 flex-1">
                                             <dl>
                                                 <dt class="text-sm font-medium text-gray-500 truncate">
-                                                    Comments
+                                                    Bình Luận
                                                 </dt>
                                                 <dd>
                                                     <div class="text-lg font-bold text-gray-900">
@@ -338,7 +354,7 @@
                                 </div>
                                 <div class="bg-purple-50 px-5 py-3">
                                     <div class="text-sm">
-                                        <span class="font-medium text-purple-600 hover:text-purple-900 cursor-pointer">View comments</span>
+                                        <span class="font-medium text-purple-600 hover:text-purple-700 cursor-pointer">Xem bình luận</span>
                                     </div>
                                 </div>
                             </div>
@@ -347,11 +363,11 @@
                 </div>
 
                 <!-- Recent Activity Timeline -->
-                <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="bg-white shadow rounded-lg overflow-hidden">
                     <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
                         <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
-                            <span class="iconify text-indigo-500 mr-2" data-icon="mdi-history"></span>
-                            Recent Activity
+                            <span class="iconify text-primary mr-2" data-icon="mdi-history"></span>
+                            Hoạt Động Gần Đây
                         </h3>
                     </div>
                     <div class="bg-white overflow-hidden">
@@ -363,22 +379,22 @@
                                         <span class="absolute top-5 left-5 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
                                         <div class="relative flex items-start space-x-3">
                                             <div class="relative">
-                                                <div class="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center ring-8 ring-white">
+                                                <div class="h-10 w-10 rounded-full bg-primary flex items-center justify-center ring-8 ring-white">
                                                     <span class="iconify text-white" data-icon="mdi-login"></span>
                                                 </div>
                                             </div>
                                             <div class="min-w-0 flex-1">
                                                 <div>
                                                     <div class="text-sm">
-                                                        <span class="font-medium text-gray-900">Logged in</span>
+                                                        <span class="font-medium text-gray-900">Đăng nhập</span>
                                                     </div>
                                                     <p class="mt-0.5 text-sm text-gray-500">
-                                                        {{ \Carbon\Carbon::now()->subDays(1)->format('F j, Y') }} at {{ \Carbon\Carbon::now()->subDays(1)->format('g:i A') }}
+                                                        {{ \Carbon\Carbon::now()->subDays(1)->format('d/m/Y') }} lúc {{ \Carbon\Carbon::now()->subDays(1)->format('H:i') }}
                                                     </p>
                                                 </div>
                                                 <div class="mt-2 text-sm text-gray-700">
                                                     <p>
-                                                        Logged in from <span class="font-medium">192.168.1.1</span> using <span class="font-medium">Chrome on Windows</span>
+                                                        Đăng nhập từ <span class="font-medium">192.168.1.1</span> bằng <span class="font-medium">Chrome trên Windows</span>
                                                     </p>
                                                 </div>
                                             </div>
@@ -398,15 +414,15 @@
                                             <div class="min-w-0 flex-1">
                                                 <div>
                                                     <div class="text-sm">
-                                                        <span class="font-medium text-gray-900">Profile updated</span>
+                                                        <span class="font-medium text-gray-900">Cập nhật hồ sơ</span>
                                                     </div>
                                                     <p class="mt-0.5 text-sm text-gray-500">
-                                                        {{ \Carbon\Carbon::now()->subDays(5)->format('F j, Y') }} at {{ \Carbon\Carbon::now()->subDays(5)->format('g:i A') }}
+                                                        {{ \Carbon\Carbon::now()->subDays(5)->format('d/m/Y') }} lúc {{ \Carbon\Carbon::now()->subDays(5)->format('H:i') }}
                                                     </p>
                                                 </div>
                                                 <div class="mt-2 text-sm text-gray-700">
                                                     <p>
-                                                        Changed profile information and added avatar
+                                                        Thay đổi thông tin hồ sơ và thêm ảnh đại diện
                                                     </p>
                                                 </div>
                                             </div>
@@ -425,15 +441,15 @@
                                             <div class="min-w-0 flex-1">
                                                 <div>
                                                     <div class="text-sm">
-                                                        <span class="font-medium text-gray-900">Account created</span>
+                                                        <span class="font-medium text-gray-900">Tạo tài khoản</span>
                                                     </div>
                                                     <p class="mt-0.5 text-sm text-gray-500">
-                                                        {{ $user->created_at->format('F j, Y') }} at {{ $user->created_at->format('g:i A') }}
+                                                        {{ $user->created_at->format('d/m/Y') }} lúc {{ $user->created_at->format('H:i') }}
                                                     </p>
                                                 </div>
                                                 <div class="mt-2 text-sm text-gray-700">
                                                     <p>
-                                                        User registered with email {{ $user->email }}
+                                                        Người dùng đăng ký với email {{ $user->email }}
                                                     </p>
                                                 </div>
                                             </div>
@@ -444,9 +460,9 @@
                         </div>
                         <div class="bg-gray-50 px-4 py-4 sm:px-6">
                             <div class="flex items-center justify-center">
-                                <button type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <button type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-150">
                                     <span class="iconify mr-2" data-icon="mdi-history"></span>
-                                    View Full Activity History
+                                    Xem Toàn Bộ Lịch Sử
                                 </button>
                             </div>
                         </div>
@@ -471,11 +487,11 @@
                         </div>
                         <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                             <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                Delete User
+                                Xóa Người Dùng
                             </h3>
                             <div class="mt-2">
                                 <p class="text-sm text-gray-500">
-                                    Are you sure you want to delete <span class="font-medium text-gray-700">{{ $user->name }}</span>? This action cannot be undone and all data associated with this user will be permanently removed.
+                                    Bạn có chắc chắn muốn xóa <span class="font-medium text-gray-700">{{ $user->name }}</span>? Hành động này không thể hoàn tác và tất cả dữ liệu liên quan đến người dùng này sẽ bị xóa vĩnh viễn.
                                 </p>
                             </div>
                         </div>
@@ -486,11 +502,11 @@
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
-                            Delete
+                            Xóa
                         </button>
                     </form>
-                    <button type="button" id="cancelDelete" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                        Cancel
+                    <button type="button" id="cancelDelete" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Hủy
                     </button>
                 </div>
             </div>

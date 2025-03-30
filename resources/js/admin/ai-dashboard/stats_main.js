@@ -64,9 +64,13 @@
         // Highlight the active content type button
         highlightActiveContentType();
 
-        // Initialize Bootstrap modal
+        // Initialize custom modal
         if (document.getElementById('bulk-generate-modal')) {
-            bulkGenerateModal = new bootstrap.Modal(document.getElementById('bulk-generate-modal'));
+            bulkGenerateModal = $('#bulk-generate-modal').data('custom-modal');
+            if (!bulkGenerateModal) {
+                $('#bulk-generate-modal').customModal();
+                bulkGenerateModal = $('#bulk-generate-modal').data('custom-modal');
+            }
         }
 
         // Load default prompts
@@ -311,32 +315,32 @@
         // Prompt source toggle
         $("#modal-prompt-source").on('change', function() {
             if ($(this).val() === 'custom') {
-                $("#modal-saved-prompts-container").addClass('d-none');
-                $("#modal-prompt-editor").removeClass('d-none');
+                $("#modal-saved-prompts-container").addClass('hidden');
+                $("#modal-prompt-editor").removeClass('hidden');
             } else if ($(this).val() === 'saved') {
-                $("#modal-saved-prompts-container").removeClass('d-none');
-                $("#modal-prompt-editor").removeClass('d-none');
+                $("#modal-saved-prompts-container").removeClass('hidden');
+                $("#modal-prompt-editor").removeClass('hidden');
             } else {
-                $("#modal-saved-prompts-container").addClass('d-none');
-                $("#modal-prompt-editor").addClass('d-none');
+                $("#modal-saved-prompts-container").addClass('hidden');
+                $("#modal-prompt-editor").addClass('hidden');
             }
         });
 
         // Model toggle for system message
         $("#modal-model").on('change', function() {
             if ($(this).val().startsWith('deepseek')) {
-                $("#modal-system-message-container").removeClass('d-none');
+                $("#modal-system-message-container").removeClass('hidden');
             } else {
-                $("#modal-system-message-container").addClass('d-none');
+                $("#modal-system-message-container").addClass('hidden');
             }
         });
 
         // Bulk model toggle for system message
         $("#bulk-model").on('change', function() {
             if ($(this).val().startsWith('deepseek')) {
-                $("#bulk-system-message-container").removeClass('d-none');
+                $("#bulk-system-message-container").removeClass('hidden');
             } else {
-                $("#bulk-system-message-container").addClass('d-none');
+                $("#bulk-system-message-container").addClass('hidden');
             }
         });
 
@@ -351,10 +355,10 @@
 
             // Reset form state
             $("#bulk-prompt-source").val('default');
-            $("#bulk-saved-prompts-container").addClass('d-none');
-            $("#bulk-prompt-editor").addClass('d-none');
-            $("#bulk-system-message-container").addClass('d-none');
-            $("#bulk-progress-container").addClass('d-none');
+            $("#bulk-saved-prompts-container").addClass('hidden');
+            $("#bulk-prompt-editor").addClass('hidden');
+            $("#bulk-system-message-container").addClass('hidden');
+            $("#bulk-progress-container").addClass('hidden');
 
             // Set default prompt and system message
             setDefaultPrompt(currentContentType, 'bulk');
@@ -378,14 +382,14 @@
         // Bulk prompt source toggle
         $("#bulk-prompt-source").on('change', function() {
             if ($(this).val() === 'custom') {
-                $("#bulk-saved-prompts-container").addClass('d-none');
-                $("#bulk-prompt-editor").removeClass('d-none');
+                $("#bulk-saved-prompts-container").addClass('hidden');
+                $("#bulk-prompt-editor").removeClass('hidden');
             } else if ($(this).val() === 'saved') {
-                $("#bulk-saved-prompts-container").removeClass('d-none');
-                $("#bulk-prompt-editor").removeClass('d-none');
+                $("#bulk-saved-prompts-container").removeClass('hidden');
+                $("#bulk-prompt-editor").removeClass('hidden');
             } else {
-                $("#bulk-saved-prompts-container").addClass('d-none');
-                $("#bulk-prompt-editor").addClass('d-none');
+                $("#bulk-saved-prompts-container").addClass('hidden');
+                $("#bulk-prompt-editor").addClass('hidden');
             }
         });
 
@@ -441,7 +445,7 @@
                 return;
             }
             // Show progress
-            $("#bulk-progress-container").removeClass('d-none');
+            $("#bulk-progress-container").removeClass('hidden');
             $("#bulk-progress-message").html('<div class="text-indigo-600">Đang xếp hàng công việc...</div>');
             $("#bulk-progress-bar").css('width', '0%').attr('aria-valuenow', 0);
             $("#bulk-progress-percentage").text('0%');
@@ -518,6 +522,16 @@
                     $("#bulk-generate-start-btn").text('Bắt Đầu Tạo');
                 }
             });
+        });
+
+        // Close modal button
+        $(document).on('click', '[data-dismiss="modal"]', function(e) {
+            e.preventDefault();
+            const $modal = $(this).closest('.modal');
+            const modalInstance = $modal.data('custom-modal');
+            if (modalInstance) {
+                modalInstance.hide();
+            }
         });
     }
 

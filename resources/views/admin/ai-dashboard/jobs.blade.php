@@ -1,51 +1,61 @@
 @extends('admin_layouts.admin')
 
 @section('content')
-<div class="space-y-6">
-    <!-- Flash Messages -->
-    @if(session('success'))
-        <div class="alert alert-success bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4" role="alert">
-            <p class="font-medium">{{ session('success') }}</p>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="alert alert-danger bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-            <p class="font-medium">{{ session('error') }}</p>
-        </div>
-    @endif
-
-    <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-            <h2 class="text-3xl font-bold text-gray-800">Công Việc AI</h2>
-            <p class="mt-1 text-gray-600">Quản lý và theo dõi các công việc tạo nội dung AI</p>
-        </div>
-        <div class="flex items-center gap-3">
-            <a href="{{ route('admin.ai-dashboard.stats') }}" class="inline-flex items-center justify-center gap-2 rounded-md border border-stroke py-2 px-4 text-center font-medium text-black hover:bg-gray-50 sm:px-6">
-                <span class="iconify" data-icon="mdi-arrow-left"></span>
-                Quay Lại Thống Kê
-            </a>
-        </div>
-    </div>
-
-    <!-- Jobs Table -->
-    <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-md">
-        <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-xl font-semibold text-gray-800">Công Việc Đã Xếp Hàng</h3>
-        </div>
-        @if($jobs->isEmpty())
-            <div class="rounded-lg bg-gray-50 p-8 text-center">
-                <div class="mb-4">
-                    <span class="iconify text-4xl text-gray-400" data-icon="mdi-text-box-outline"></span>
+    <div class="space-y-6">
+        <!-- Flash Messages -->
+        @if(session('success'))
+            <div class="alert bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 transition-opacity duration-150 opacity-100" role="alert">
+                <div class="flex items-center justify-between">
+                    <p class="font-medium">{{ session('success') }}</p>
+                    <button type="button" class="text-green-700 hover:text-green-900" data-dismiss="alert">
+                        <span class="iconify" data-icon="mdi-close"></span>
+                    </button>
                 </div>
-                <h4 class="mb-2 text-lg font-medium text-gray-700">Không có công việc nào</h4>
-                <p class="text-gray-500">Bạn chưa tạo bất kỳ công việc tạo nội dung hàng loạt nào</p>
             </div>
-        @else
-            <div class="max-w-full overflow-x-auto">
-                <table class="w-full table-auto">
-                    <thead>
+        @endif
+
+        @if(session('error'))
+            <div class="alert bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 transition-opacity duration-150 opacity-100" role="alert">
+                <div class="flex items-center justify-between">
+                    <p class="font-medium">{{ session('error') }}</p>
+                    <button type="button" class="text-red-700 hover:text-red-900" data-dismiss="alert">
+                        <span class="iconify" data-icon="mdi-close"></span>
+                    </button>
+                </div>
+            </div>
+        @endif
+
+        <!-- Header Section -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+                <h2 class="text-3xl font-bold text-gray-800">Công Việc AI</h2>
+                <p class="mt-1 text-gray-600">Quản lý và theo dõi các công việc tạo nội dung AI</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('admin.ai-dashboard.stats') }}" class="inline-flex items-center justify-center gap-2 rounded-md border border-stroke py-2 px-4 text-center font-medium text-black hover:bg-gray-50 sm:px-6">
+                    <span class="iconify" data-icon="mdi-arrow-left"></span>
+                    Quay Lại Thống Kê
+                </a>
+            </div>
+        </div>
+
+        <!-- Jobs Table -->
+        <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-md">
+            <div class="mb-4 flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-gray-800">Công Việc Đã Xếp Hàng</h3>
+            </div>
+            @if($jobs->isEmpty())
+                <div class="rounded-lg bg-gray-50 p-8 text-center">
+                    <div class="mb-4">
+                        <span class="iconify text-4xl text-gray-400" data-icon="mdi-text-box-outline"></span>
+                    </div>
+                    <h4 class="mb-2 text-lg font-medium text-gray-700">Không có công việc nào</h4>
+                    <p class="text-gray-500">Bạn chưa tạo bất kỳ công việc tạo nội dung hàng loạt nào</p>
+                </div>
+            @else
+                <div class="max-w-full overflow-x-auto">
+                    <table class="w-full table-auto">
+                        <thead>
                         <tr class="bg-gray-50 text-left">
                             <th class="py-4 px-4 font-medium text-gray-700">ID</th>
                             <th class="py-4 px-4 font-medium text-gray-700">Loại Nội Dung</th>
@@ -54,8 +64,8 @@
                             <th class="py-4 px-4 font-medium text-gray-700">Ngày Tạo</th>
                             <th class="py-4 px-4 font-medium text-gray-700">Hành Động</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                        </thead>
+                        <tbody>
                         @foreach($jobs as $job)
                             <tr class="hover:bg-gray-50 job-row
                                     {{ $job->status === \App\Models\AIContentJob::$JOB_STATUS_COMPLETED ? 'bg-green-50/30' :
@@ -85,7 +95,7 @@
                                                         {{ $job->status === \App\Models\AIContentJob::$JOB_STATUS_COMPLETED ? 'bg-green-500' :
                                                             ($job->status === \App\Models\AIContentJob::$JOB_STATUS_FAILED ? 'bg-red-500' :
                                                             ($job->status === \App\Models\AIContentJob::$JOB_STATUS_REPLACED ? 'bg-gray-500' : 'bg-indigo-600')) }}"
-                                                    style="width: {{ $job->progress_percentage }}%"></div>
+                                                     style="width: {{ $job->progress_percentage }}%"></div>
                                             </div>
                                         </div>
                                         <span class="text-sm">{{ $job->processed_items }}/{{ $job->total_items }}</span>
@@ -118,7 +128,7 @@
                                         @endphp
 
                                         <span class="inline-flex items-center rounded-full {{ $isStuck ? 'bg-orange-100 text-orange-800' : 'bg-yellow-100 text-yellow-800' }} px-2.5 py-1 text-xs font-medium"
-                                            title="{{ $isStuck ? 'Có thể bị treo (đang xử lý hơn ' . $processingTime . ' phút)' : 'Đang xử lý' }}">
+                                              title="{{ $isStuck ? 'Có thể bị treo (đang xử lý hơn ' . $processingTime . ' phút)' : 'Đang xử lý' }}">
                                             <span class="iconify mr-1" data-icon="{{ $isStuck ? 'mdi-progress-alert' : 'mdi-progress-clock' }}"></span>
                                             {{ $isStuck ? 'Có thể bị treo' : 'Đang xử lý' }}
                                         </span>
@@ -220,72 +230,76 @@
                                 <td colspan="6" class="py-0">
                                     <div class="job-details-content bg-gray-50 p-6 border-t border-b border-gray-200">
                                         <div class="text-center py-4">
-                                            <div class="spinner-border text-indigo-600" role="status">
-                                                <span class="visually-hidden">Đang tải...</span>
-                                            </div>
+                                            <div class="w-10 h-10 mx-auto border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
                                             <p class="mt-2">Đang tải thông tin...</p>
                                         </div>
                                     </div>
                                 </td>
                             </tr>
                         @endforeach
-                    </tbody>
-                </table>
-            </div>
-            <div class="mt-6">
-                {{ $jobs->links() }}
-            </div>
-        @endif
-    </div>
-</div>
-
-<!-- Rerun Job Modal -->
-<div class="modal fade" id="rerunJobModal" tabindex="-1" aria-labelledby="rerunJobModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="rerunJobModalLabel">Chạy lại công việc</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="rerunJobForm" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <p class="text-gray-600 mb-4">Bạn có thể chọn nhà cung cấp AI và mô hình khác để tạo nội dung.</p>
-
-                    <div class="mb-3">
-                        <label for="rerun-provider" class="form-label font-medium text-gray-700">Nhà Cung Cấp AI</label>
-                        <select id="rerun-provider" name="provider" class="form-select w-full rounded border border-gray-300 py-2 px-3">
-                            <option value="">Đang tải...</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="rerun-model" class="form-label font-medium text-gray-700">Mô Hình AI</label>
-                        <select id="rerun-model" name="model" class="form-select w-full rounded border border-gray-300 py-2 px-3" disabled>
-                            <option value="">Chọn nhà cung cấp trước</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="rerun-temperature" class="form-label font-medium text-gray-700">
-                            Độ sáng tạo (Temperature): <span id="rerun-temperature-value">0.7</span>
-                        </label>
-                        <input type="range" class="form-range w-full" id="rerun-temperature" name="temperature"
-                               min="0" max="1" step="0.1" value="0.7">
-                        <div class="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>Chính xác</span>
-                            <span>Sáng tạo</span>
-                        </div>
-                    </div>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-primary">Chạy lại</button>
+                <div class="mt-6">
+                    {{ $jobs->links() }}
                 </div>
-            </form>
+            @endif
         </div>
     </div>
-</div>
+
+    <!-- Rerun Job Modal - Custom implementation -->
+    <div id="rerunJobModal" class="modal fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="rerunJobModalLabel" aria-hidden="true">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="modal-content transform transition-all opacity-0 scale-95 bg-white rounded-lg shadow-xl w-full max-w-md">
+                <div class="modal-header flex items-center justify-between p-4 border-b border-gray-200">
+                    <h5 class="modal-title font-medium text-lg" id="rerunJobModalLabel">Chạy lại công việc</h5>
+                    <button type="button" class="text-gray-400 hover:text-gray-500 focus:outline-none" data-dismiss="modal" aria-label="Close">
+                        <span class="iconify text-xl" data-icon="mdi-close"></span>
+                    </button>
+                </div>
+                <form id="rerunJobForm" method="POST">
+                    @csrf
+                    <div class="modal-body p-4">
+                        <p class="text-gray-600 mb-4">Bạn có thể chọn nhà cung cấp AI và mô hình khác để tạo nội dung.</p>
+
+                        <div class="mb-3">
+                            <label for="rerun-provider" class="block mb-2 text-sm font-medium text-gray-700">Nhà Cung Cấp AI</label>
+                            <select id="rerun-provider" name="provider" class="w-full rounded-md border border-gray-300 shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Đang tải...</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="rerun-model" class="block mb-2 text-sm font-medium text-gray-700">Mô Hình AI</label>
+                            <select id="rerun-model" name="model" class="w-full rounded-md border border-gray-300 shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" disabled>
+                                <option value="">Chọn nhà cung cấp trước</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="rerun-temperature" class="block mb-2 text-sm font-medium text-gray-700">
+                                Độ sáng tạo (Temperature): <span id="rerun-temperature-value">0.7</span>
+                            </label>
+                            <input type="range" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" id="rerun-temperature" name="temperature"
+                                   min="0" max="1" step="0.1" value="0.7">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>Chính xác</span>
+                                <span>Sáng tạo</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer flex items-center justify-end p-4 border-t border-gray-200 space-x-3">
+                        <button type="button" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50" data-dismiss="modal">
+                            Hủy
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                            Chạy lại
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('styles')
