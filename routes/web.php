@@ -358,6 +358,33 @@ Route::prefix('images')->group(function() {
 Route::get('/search', [SearchController::class, 'search'])->name('search');
 Route::get('/multi-search', [MultiSearchController::class, 'search'])->name('multi-search');
 
+// PayOS Integration
+Route::prefix('/payos')->group(function() {
+    Route::get('/', function () {
+        return view('checkout');
+    });
+
+    Route::get('/success.html', function () {
+        return view('success');
+    });
+
+    Route::get('/cancel.html', function () {
+        return view('cancel');
+    });
+
+    Route::post('/create-payment-link', [App\Http\Controllers\PayOS\CheckoutController::class, 'createPaymentLink']);
+
+    Route::prefix('/order')->group(function () {
+        Route::post('/create', [App\Http\Controllers\PayOS\OrderController::class, 'createOrder']);
+        Route::get('/{id}', [App\Http\Controllers\PayOS\OrderController::class, 'getPaymentLinkInfoOfOrder']);
+        Route::put('/{id}', [App\Http\Controllers\PayOS\OrderController::class, 'cancelPaymentLinkOfOrder']);
+    });
+
+    Route::prefix('/payment')->group(function () {
+        Route::post('/payos', [App\Http\Controllers\PayOS\PaymentController::class, 'handlePayOSWebhook']);
+    });
+});
+
 // Route::get('/{path?}', [ContentController::class, 'show'])
 //     ->where('path', '^(?!api|admin|proxy)(?!.*\.(jpg|jpeg|png|gif|bmp|webp|mp4|avi|mov|wmv|flv|mp3|wav|pdf|doc|docx|xls|xlsx|zip|rar)).*$')
 //     ->middleware(['web'])
