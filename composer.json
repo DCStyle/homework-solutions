@@ -21,6 +21,7 @@
         "laravel/ui": "^4.5",
         "league/flysystem-aws-s3-v3": "^3.29",
         "moe-mizrak/laravel-openrouter": "^2.0",
+        "payos/payos": "^1.0",
         "ralphjsmit/laravel-seo": "^1.6",
         "spatie/laravel-settings": "^3.4",
         "symfony/css-selector": "^6.4",
