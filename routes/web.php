@@ -361,15 +361,15 @@ Route::get('/multi-search', [MultiSearchController::class, 'search'])->name('mul
 // PayOS Integration
 Route::prefix('/payos')->group(function() {
     Route::get('/', function () {
-        return view('checkout');
+        return view('payos.checkout');
     });
 
     Route::get('/success.html', function () {
-        return view('success');
+        return view('payos.success');
     });
 
     Route::get('/cancel.html', function () {
-        return view('cancel');
+        return view('payos.cancel');
     });
 
     Route::post('/create-payment-link', [App\Http\Controllers\PayOS\CheckoutController::class, 'createPaymentLink']);
