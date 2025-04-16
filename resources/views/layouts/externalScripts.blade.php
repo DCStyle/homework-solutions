@@ -29,8 +29,3 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 
-<div class="gliaplayer-container" data-slot="thuvienloigiai_desktop"></div>
-<script src="https://player.gliacloud.com/player/thuvienloigiai_desktop" async></script>
-<div class="gliaplayer-container" data-slot="thuvienloigiai_mobile"></div>
-<script src="https://player.gliacloud.com/player/thuvienloigiai_mobile" async></script>
-

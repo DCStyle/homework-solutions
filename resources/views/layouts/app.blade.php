@@ -70,6 +70,12 @@
         <!-- Include the Header -->
         @include('layouts.header')
 
+        <div class="gliaplayer-container" data-slot="thuvienloigiai_desktop"></div>
+        <script src="https://player.gliacloud.com/player/thuvienloigiai_desktop" async></script>
+
+        <div class="gliaplayer-container" data-slot="thuvienloigiai_mobile"></div>
+        <script src="https://player.gliacloud.com/player/thuvienloigiai_mobile" async></script>
+
         <!-- Main Content -->
         <main class="w-full">
             @yield('content')
