@@ -70,11 +70,11 @@
         <!-- Include the Header -->
         @include('layouts.header')
 
+        <!-- ADS -->
         <div class="gliaplayer-container" data-slot="thuvienloigiai_desktop"></div>
-        <script src="https://player.gliacloud.com/player/thuvienloigiai_desktop" async></script>
-
+        <script src="https://player.gliacloud.com/player/thuvienloigiai_desktop" data-media-query="(min-width: 601px)" async></script>
         <div class="gliaplayer-container" data-slot="thuvienloigiai_mobile"></div>
-        <script src="https://player.gliacloud.com/player/thuvienloigiai_mobile" async></script>
+        <script src="https://player.gliacloud.com/player/thuvienloigiai_mobile" data-media-query="(max-width: 600px)" async></script>
 
         <!-- Main Content -->
         <main class="w-full">
