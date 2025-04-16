@@ -362,26 +362,26 @@ Route::get('/multi-search', [MultiSearchController::class, 'search'])->name('mul
 Route::prefix('/payos')->group(function() {
     Route::get('/', function () {
         return view('payos.checkout');
-    });
+    })->name('payos.checkout');
 
     Route::get('/success.html', function () {
         return view('payos.success');
-    });
+    })->name('payos.success');
 
     Route::get('/cancel.html', function () {
         return view('payos.cancel');
-    });
+    })->name('payos.cancel');
 
-    Route::post('/create-payment-link', [App\Http\Controllers\PayOS\CheckoutController::class, 'createPaymentLink']);
+    Route::post('/create-payment-link', [App\Http\Controllers\PayOS\CheckoutController::class, 'createPaymentLink'])->name('payos.create-payment-link');
 
     Route::prefix('/order')->group(function () {
-        Route::post('/create', [App\Http\Controllers\PayOS\OrderController::class, 'createOrder']);
-        Route::get('/{id}', [App\Http\Controllers\PayOS\OrderController::class, 'getPaymentLinkInfoOfOrder']);
-        Route::put('/{id}', [App\Http\Controllers\PayOS\OrderController::class, 'cancelPaymentLinkOfOrder']);
+        Route::post('/create', [App\Http\Controllers\PayOS\OrderController::class, 'createOrder'])->name('payos.create-order');
+        Route::get('/{id}', [App\Http\Controllers\PayOS\OrderController::class, 'getPaymentLinkInfoOfOrder'])->name('payos.get-payment-link-info-of-order');
+        Route::put('/{id}', [App\Http\Controllers\PayOS\OrderController::class, 'cancelPaymentLinkOfOrder'])->name('payos.cancel-payment-link');
     });
 
     Route::prefix('/payment')->group(function () {
-        Route::post('/payos', [App\Http\Controllers\PayOS\PaymentController::class, 'handlePayOSWebhook']);
+        Route::post('/payos', [App\Http\Controllers\PayOS\PaymentController::class, 'handlePayOSWebhook'])->name('payos.handle-payos-webhook');
     });
 });
 

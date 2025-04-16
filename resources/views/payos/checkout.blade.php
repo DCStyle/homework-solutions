@@ -14,7 +14,8 @@
             <p><strong>Giá tiền:</strong> 2000 VNĐ</p>
             <p><strong>Số lượng:</strong> 1</p>
         </div>
-        <form action="/create-payment-link" method="post">
+        <form action="{{ route('payos.create-payment-link') }}" method="post">
+            @csrf
             <button type="submit" id="create-payment-link-btn">
                 Tạo Link thanh toán
             </button>
